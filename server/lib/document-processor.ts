@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import { parse } from 'node-html-parser';
@@ -7,9 +7,7 @@ import path from 'path';
 import { pipeline } from 'stream/promises';
 import { promisify } from 'util';
 
-// pdfjs workerSrc configuration
-// @ts-ignore
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// We'll handle PDF worker in the extractPdfText function instead of at the module level
 
 // Constants
 const CHUNK_SIZE = 1000; // Characters per chunk

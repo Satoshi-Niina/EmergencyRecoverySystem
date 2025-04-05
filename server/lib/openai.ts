@@ -1,9 +1,9 @@
 import OpenAI from "openai";
+import { generateSystemPromptWithKnowledge } from './knowledge-base';
 
 // Check if API key is available
 const apiKey = process.env.OPENAI_API_KEY;
 console.log(`[DEBUG] OpenAI API KEY exists: ${apiKey ? 'YES' : 'NO'}`);
-console.log(`[DEBUG] Environment variables: ${Object.keys(process.env).join(', ')}`);
 
 if (!apiKey) {
   console.error('ERROR: OPENAI_API_KEY is not set in the environment variables');
@@ -26,8 +26,6 @@ function validateApiKey(): boolean {
 }
 
 // Process a text request and get an AI response
-import { generateSystemPromptWithKnowledge } from './knowledge-base';
-
 export async function processOpenAIRequest(prompt: string): Promise<string> {
   try {
     // Check if API key is available
@@ -78,15 +76,13 @@ export async function generateSearchQuery(selectedText: string): Promise<string>
     if (!validateApiKey()) {
       return selectedText;
     }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `あなたは保守用車のメンテナンス文書用の検索クエリ最適化ツールです。
-          ユーザーが選択したテキストを、関連するメンテナンス文書を見つけるための最適な検索クエリに変換することがあなたの任務です。
-          最も重要な技術用語や車両コンポーネントを抽出してください。
-          説明や追加テキストなしで、最適化された検索クエリ用語のみを返してください。`
+          content:  "あなたは鉄道保守用車（軌道モータカーなど）の熟練技術者です。\n以下の方針に従って、ユーザーの質問に簡潔かつ的確に回答してください。\n\n- 参考とする情報は「保守用車ナレッジ.txt」に記載された内容に限る\n- 質問の内容を以下の3つに分類して回答を組み立てること\n  - 【構造説明】：装置や構造の概要や仕組み\n  - 【点検基準】：点検・検査での確認項目、法令等の基準\n  - 【応急処置】：故障時に現地で行う対処。手順を1つずつ簡潔に説明\n- 応急処置は、現場の作業者が理解しやすいように、手順を番号付きで段階的に示す\n- 専門用語は、可能であれば簡単な表現で補足すること\n- 回答は端的・明確にし、長い説明は避ける"
         },
         {
           role: "user",
@@ -119,18 +115,19 @@ export async function analyzeVehicleImage(base64Image: string): Promise<{
         suggestedActions: ["システム管理者に連絡してAPIキーを確認してください。"]
       };
     }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
           content: `あなたは保守用車の部品や系統に関する専門家です。
-          提供された車両部品やシステムの画像を分析してください。
-          コンポーネントを特定し、潜在的な問題と推奨されるトラブルシューティング手順を提案してください。
-          重機、道路保守車両、線路保守車両などの保守用車に焦点を当ててください。
-          分析を以下の2つのフィールドを持つJSON形式で提供してください：
-          1. "analysis": 画像に見える内容の詳細な説明。車両のコンポーネントとその状態に焦点を当てる
-          2. "suggestedActions": トラブルシューティングや修理のための3〜5つの推奨される次のステップの配列`
+提供された車両部品やシステムの画像を分析してください。
+コンポーネントを特定し、潜在的な問題と推奨されるトラブルシューティング手順を提案してください。
+重機、道路保守車両、線路保守車両などの保守用車に焦点を当ててください。
+分析を以下の2つのフィールドを持つJSON形式で提供してください：
+1. "analysis": 画像に見える内容の詳細な説明。車両のコンポーネントとその状態に焦点を当てる
+2. "suggestedActions": トラブルシューティングや修理のための3〜5つの推奨される次のステップの配列`
         },
         {
           role: "user",

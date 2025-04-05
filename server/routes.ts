@@ -9,6 +9,12 @@ import { processOpenAIRequest, generateSearchQuery, analyzeVehicleImage } from "
 import fs from "fs";
 import path from "path";
 import { db } from "./db";
+import { upload } from './lib/multer-config';
+import { 
+  addDocumentToKnowledgeBase, 
+  listKnowledgeBaseDocuments, 
+  removeDocumentFromKnowledgeBase 
+} from './lib/knowledge-base';
 
 // Extend the express-session types
 declare module 'express-session' {
@@ -487,6 +493,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(documents);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Knowledge Base API routes
+  // ドキュメント一覧取得
+  app.get('/api/knowledge', requireAuth, requireAdmin, (req, res) => {
+    try {
+      const documents = listKnowledgeBaseDocuments();
+      res.json(documents);
+    } catch (error) {
+      console.error('Error listing knowledge base documents:', error);
+      res.status(500).json({ error: 'Failed to list documents' });
+    }
+  });
+  
+  // ドキュメントアップロード
+  app.post('/api/knowledge/upload', requireAuth, requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'ファイルがありません' });
+      }
+      
+      const filePath = req.file.path;
+      try {
+        const docId = await addDocumentToKnowledgeBase(filePath);
+        return res.status(201).json({ 
+          success: true, 
+          docId,
+          message: 'ドキュメントが正常に追加されました'
+        });
+      } catch (err) {
+        // エラー発生時にアップロードファイルを削除
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+        throw err;
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      res.status(500).json({ error: '知識ベースへの追加に失敗しました: ' + errorMessage });
+    }
+  });
+  
+  // ドキュメント削除
+  app.delete('/api/knowledge/:docId', requireAuth, requireAdmin, (req, res) => {
+    try {
+      const docId = req.params.docId;
+      const success = removeDocumentFromKnowledgeBase(docId);
+      
+      if (success) {
+        res.json({ success: true, message: 'ドキュメントが正常に削除されました' });
+      } else {
+        res.status(404).json({ error: '指定されたドキュメントが見つかりません' });
+      }
+    } catch (error) {
+      console.error('Error removing document:', error);
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      res.status(500).json({ error: 'ドキュメントの削除に失敗しました: ' + errorMessage });
     }
   });
 
