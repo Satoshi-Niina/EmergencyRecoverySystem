@@ -26,33 +26,24 @@ function validateApiKey(): boolean {
 }
 
 // Process a text request and get an AI response
+import { generateSystemPromptWithKnowledge } from './knowledge-base';
+
 export async function processOpenAIRequest(prompt: string): Promise<string> {
   try {
     // Check if API key is available
     if (!validateApiKey()) {
       return "OpenAI APIキーが設定されていません。システム管理者に連絡してください。";
     }
+
+    // ナレッジベースから関連情報を取得してシステムプロンプトを生成
+    const systemPrompt = await generateSystemPromptWithKnowledge(prompt);
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `あなたは保守用車の知識ベースを持つ緊急復旧サポートアシスタントです。
-          あなたの目的は、ユーザーが保守用車（重機、道路保守車両、線路保守車両など）のトラブルシューティングと修理を支援することです。
-          保守用車の整備、緊急時の対応手順、技術仕様に関する明確で簡潔で役立つ情報を提供してください。
-          常に安全を優先し、可能な限り公式ガイドラインを参照してください。
-          確信が持てないことがあれば、それを認め、メーカーや認定技術者に相談することを提案してください。
-          応答は専門的で、ユーザーの保守用車の問題解決に焦点を当ててください。
-          
-          保守用車の知識ベースには以下の内容が含まれています：
-          - 車両の基本構造と動作原理
-          - 一般的な故障とトラブルシューティング手順
-          - 部品交換と修理の手順
-          - 安全運用のためのガイドライン
-          - 緊急時の対応プロトコル
-          - メンテナンスのスケジュールと推奨事項
-          
-          ユーザーの質問に対して、常に親切で明確な回答を提供し、専門的な用語を使用する場合は簡潔な説明を加えてください。`
+          content: systemPrompt
         },
         {
           role: "user",

@@ -10,4 +10,34 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* High contrast elements for nighttime use */
+  .night-form {
+    @apply bg-blue-50 border-2 border-primary shadow-md;
+  }
+  
+  .night-text {
+    @apply text-primary font-medium;
+  }
+  
+  .night-button {
+    @apply bg-primary hover:bg-primary/90 text-white font-bold shadow-lg;
+  }
+  
+  .night-input {
+    @apply bg-white border-2 border-blue-300 focus:border-primary text-zinc-900 placeholder:text-zinc-500;
+  }
+  
+  .night-label {
+    @apply text-primary-foreground font-semibold;
+  }
+  
+  /* Enhanced visibility for camera elements */
+  .camera-button {
+    @apply bg-primary hover:bg-primary/90 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg;
+  }
+  
+  .camera-controls {
+    @apply bg-black/80 text-white p-4 rounded-lg shadow-lg;
+  }
 }
