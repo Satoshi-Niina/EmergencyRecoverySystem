@@ -8,7 +8,6 @@ import { WebSocket, WebSocketServer } from "ws";
 import { processOpenAIRequest, generateSearchQuery, analyzeVehicleImage } from "./lib/openai";
 import fs from "fs";
 import path from "path";
-import MemoryStore from "memorystore";
 
 // Extend the express-session types
 declare module 'express-session' {
@@ -18,8 +17,7 @@ declare module 'express-session' {
   }
 }
 
-// Create memory store for session
-const MemoryStoreSession = MemoryStore(session);
+// Session will now use Postgres via storage.sessionStore
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Add a health check endpoint for testing
@@ -58,9 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         secure: false, // Set to false for development in Replit
         maxAge: 86400000 // 24 hours
       },
-      store: new MemoryStoreSession({
-        checkPeriod: 86400000, // 24 hours
-      }),
+      store: storage.sessionStore,
     })
   );
 
