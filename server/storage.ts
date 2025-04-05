@@ -4,10 +4,13 @@ import {
   media, type Media, type InsertMedia,
   chats, type Chat, type InsertChat,
   documents, type Document, type InsertDocument,
-  keywords, type Keyword, type InsertKeyword
+  keywords, type Keyword, type InsertKeyword,
+  chatExports, type ChatExport, type InsertChatExport
 } from "@shared/schema";
 import session from "express-session";
 import { DatabaseStorage } from "./database-storage";
+
+// 注: schemaから直接ChatExportを使用します
 
 export interface IStorage {
   // Session store
@@ -26,6 +29,7 @@ export interface IStorage {
   // Message methods
   getMessage(id: number): Promise<Message | undefined>;
   getMessagesForChat(chatId: number): Promise<Message[]>;
+  getMessagesForChatAfterTimestamp(chatId: number, timestamp: Date): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   
   // Media methods
@@ -43,6 +47,10 @@ export interface IStorage {
   getKeywordsForDocument(documentId: number): Promise<Keyword[]>;
   createKeyword(keyword: InsertKeyword): Promise<Keyword>;
   searchDocumentsByKeyword(keyword: string): Promise<Document[]>;
+  
+  // Chat export methods
+  saveChatExport(chatId: number, userId: number, timestamp: Date): Promise<void>;
+  getLastChatExport(chatId: number): Promise<ChatExport | null>;
 }
 
 export const storage = new DatabaseStorage();

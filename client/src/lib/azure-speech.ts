@@ -96,10 +96,21 @@ export const stopSpeechRecognition = () => {
 // ブラウザによるフォールバック実装（Azureが使えない場合用）
 let browserRecognition: any = null;
 
-// 型定義を拡張してSpeechRecognitionをwindowオブジェクトに追加
+// ブラウザのSpeechRecognitionインターフェースの型定義
+interface BrowserSpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: (event: any) => void;
+  onerror: (event: any) => void;
+}
+
+// windowオブジェクトを拡張
 interface Window {
-  webkitSpeechRecognition?: typeof SpeechRecognition;
-  SpeechRecognition?: typeof SpeechRecognition;
+  webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+  SpeechRecognition?: new () => BrowserSpeechRecognition;
 }
 
 // Check if browser supports speech recognition

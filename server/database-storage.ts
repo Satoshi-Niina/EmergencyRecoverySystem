@@ -4,10 +4,11 @@ import {
   media, type Media, type InsertMedia,
   chats, type Chat, type InsertChat,
   documents, type Document, type InsertDocument,
-  keywords, type Keyword, type InsertKeyword
+  keywords, type Keyword, type InsertKeyword,
+  chatExports, type ChatExport, type InsertChatExport
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like } from "drizzle-orm";
+import { eq, desc, like, sql } from "drizzle-orm";
 import session from "express-session";
 import memorystore from "memorystore";
 import { IStorage } from "./storage";
@@ -90,10 +91,12 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getMessagesForChat(chatId: number): Promise<Message[]> {
-    return db.select()
+    const result = await db.select()
       .from(messages)
-      .where(eq(messages.chatId, chatId))
-      .orderBy(messages.timestamp);
+      .where(eq(messages.chatId, chatId));
+    
+    // resultをtimestampで昇順にソート
+    return result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
   
   async createMessage(message: InsertMessage): Promise<Message> {
@@ -123,10 +126,12 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getDocumentsForUser(userId: number): Promise<Document[]> {
-    return db.select()
+    const result = await db.select()
       .from(documents)
-      .where(eq(documents.userId, userId))
-      .orderBy(desc(documents.processedAt));
+      .where(eq(documents.userId, userId));
+    
+    // resultをprocessedAtで降順にソート
+    return result.sort((a, b) => b.processedAt.getTime() - a.processedAt.getTime());
   }
   
   async createDocument(document: InsertDocument): Promise<Document> {
@@ -178,5 +183,39 @@ export class DatabaseStorage implements IStorage {
     }
     
     return matchingDocuments;
+  }
+
+  // チャットエクスポート関連のメソッド
+  async getMessagesForChatAfterTimestamp(chatId: number, timestamp: Date): Promise<Message[]> {
+    // 基準日時より後のメッセージを取得
+    const allMessages = await db.select()
+      .from(messages)
+      .where(eq(messages.chatId, chatId));
+    
+    // JSでフィルタリング
+    return allMessages
+      .filter(msg => msg.timestamp > timestamp)
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
+
+  async saveChatExport(chatId: number, userId: number, timestamp: Date): Promise<void> {
+    await db.insert(chatExports).values({
+      chatId,
+      userId,
+      timestamp
+    });
+  }
+
+  async getLastChatExport(chatId: number): Promise<ChatExport | null> {
+    const exports = await db.select()
+      .from(chatExports)
+      .where(eq(chatExports.chatId, chatId));
+    
+    if (exports.length === 0) {
+      return null;
+    }
+    
+    // タイムスタンプの降順でソートし、最初の要素を返す
+    return exports.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
   }
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { startSpeechRecognition, stopSpeechRecognition } from '@/lib/azure-speech';
@@ -37,6 +37,10 @@ interface ChatContextValue {
   searchBySelectedText: (text: string) => Promise<void>;
   clearSearchResults: () => void;
   captureImage: (imageData: string, type: 'image' | 'video') => Promise<void>;
+  exportChatHistory: () => Promise<void>;
+  lastExportTimestamp: Date | null;
+  isExporting: boolean;
+  hasUnexportedMessages: boolean;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -57,6 +61,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [selectedText, setSelectedText] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [lastExportTimestamp, setLastExportTimestamp] = useState<Date | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [hasUnexportedMessages, setHasUnexportedMessages] = useState(false);
   const { toast } = useToast();
 
   const sendMessage = async (content: string, mediaUrls?: { type: string, url: string, thumbnail?: string }[]) => {
@@ -164,6 +171,76 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
     }
   };
+  
+  // チャット履歴をエクスポートする関数
+  const exportChatHistory = async () => {
+    try {
+      setIsExporting(true);
+      
+      // チャットID（固定）
+      const chatId = 1;
+      
+      // 最後のエクスポートタイムスタンプを送信
+      const response = await apiRequest(
+        'POST', 
+        `/api/chats/${chatId}/export`, 
+        { lastExportTimestamp: lastExportTimestamp ? lastExportTimestamp.toISOString() : null }
+      );
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // 新しいエクスポートタイムスタンプを設定
+        setLastExportTimestamp(new Date(result.exportTimestamp));
+        setHasUnexportedMessages(false);
+        
+        toast({
+          title: 'チャット履歴を送信しました',
+          description: `${result.messageCount}件のメッセージが正常に送信されました。`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: '履歴送信エラー',
+        description: 'チャット履歴の送信に失敗しました。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  
+  // 最後のエクスポート履歴を取得
+  const fetchLastExport = useCallback(async () => {
+    try {
+      const chatId = 1;
+      const response = await apiRequest('GET', `/api/chats/${chatId}/last-export`);
+      const data = await response.json();
+      
+      if (data.timestamp) {
+        setLastExportTimestamp(new Date(data.timestamp));
+      }
+    } catch (error) {
+      console.error('Failed to fetch last export:', error);
+    }
+  }, []);
+  
+  // コンポーネントがマウントされたときに最後のエクスポート履歴を取得
+  useEffect(() => {
+    fetchLastExport();
+  }, [fetchLastExport]);
+  
+  // メッセージが追加されたときに、未エクスポートのメッセージがあることを示す
+  useEffect(() => {
+    if (messages.length > 0 && lastExportTimestamp) {
+      // 最後のエクスポート以降のメッセージがあるかチェック
+      const hasNewMessages = messages.some(msg => new Date(msg.timestamp) > lastExportTimestamp);
+      setHasUnexportedMessages(hasNewMessages);
+    } else if (messages.length > 0) {
+      // まだエクスポートしていない場合は、メッセージがあれば未エクスポート状態
+      setHasUnexportedMessages(true);
+    }
+  }, [messages, lastExportTimestamp]);
 
   return (
     <ChatContext.Provider
@@ -182,6 +259,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         searchBySelectedText,
         clearSearchResults,
         captureImage,
+        exportChatHistory,
+        lastExportTimestamp,
+        isExporting,
+        hasUnexportedMessages,
       }}
     >
       {children}

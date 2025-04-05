@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertUserSchema, insertChatSchema, insertMessageSchema, insertMediaSchema, insertDocumentSchema, users } from "@shared/schema";
+import { loginSchema, insertUserSchema, insertChatSchema, insertMessageSchema, insertMediaSchema, insertDocumentSchema, insertChatExportSchema, users, chatExports } from "@shared/schema";
 import { z } from "zod";
 import session from "express-session";
 import { WebSocket, WebSocketServer } from "ws";
@@ -242,6 +242,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     return res.json(messagesWithMedia);
+  });
+  
+  // 履歴送信のためのAPI
+  app.post("/api/chats/:id/export", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const chatId = parseInt(req.params.id);
+      const { lastExportTimestamp } = req.body;
+      
+      const chat = await storage.getChat(chatId);
+      if (!chat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      
+      if (chat.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // 指定されたタイムスタンプ以降のメッセージを取得
+      const messages = await storage.getMessagesForChatAfterTimestamp(
+        chatId, 
+        lastExportTimestamp ? new Date(lastExportTimestamp) : new Date(0)
+      );
+      
+      // 現在のタイムスタンプを記録（次回の履歴送信で使用）
+      const exportTimestamp = new Date();
+      
+      // チャットのエクスポートレコードを保存
+      await storage.saveChatExport(chatId, userId, exportTimestamp);
+      
+      res.json({ 
+        success: true, 
+        exportTimestamp,
+        messageCount: messages.length
+      });
+    } catch (error) {
+      console.error("Error exporting chat history:", error);
+      res.status(500).json({ error: "Failed to export chat history" });
+    }
+  });
+  
+  // チャットの最後のエクスポート履歴を取得
+  app.get("/api/chats/:id/last-export", requireAuth, async (req, res) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      const chat = await storage.getChat(chatId);
+      
+      if (!chat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      
+      if (chat.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const lastExport = await storage.getLastChatExport(chatId);
+      res.json(lastExport || { timestamp: null });
+    } catch (error) {
+      console.error("Error fetching last export:", error);
+      res.status(500).json({ error: "Failed to fetch last export information" });
+    }
   });
 
   app.post("/api/chats/:id/messages", requireAuth, async (req, res) => {

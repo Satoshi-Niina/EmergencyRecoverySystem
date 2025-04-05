@@ -63,6 +63,14 @@ export const keywords = pgTable("keywords", {
   relevance: integer("relevance").notNull().default(1),
 });
 
+// チャット履歴エクスポートテーブル
+export const chatExports = pgTable("chat_exports", {
+  id: serial("id").primaryKey(),
+  chatId: integer("chat_id").references(() => chats.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
 // Schema validation
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -91,6 +99,11 @@ export const insertKeywordSchema = createInsertSchema(keywords).omit({
   id: true,
 });
 
+export const insertChatExportSchema = createInsertSchema(chatExports).omit({
+  id: true,
+  timestamp: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -110,6 +123,9 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Keyword = typeof keywords.$inferSelect;
 export type InsertKeyword = z.infer<typeof insertKeywordSchema>;
 
+export type ChatExport = typeof chatExports.$inferSelect;
+export type InsertChatExport = z.infer<typeof insertChatExportSchema>;
+
 // Auth types
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -121,6 +137,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const chatsRelations = relations(chats, ({ one, many }) => ({
   user: one(users, { fields: [chats.userId], references: [users.id] }),
   messages: many(messages),
+  exports: many(chatExports),
 }));
 
 export const messagesRelations = relations(messages, ({ one, many }) => ({
@@ -140,6 +157,11 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
 
 export const keywordsRelations = relations(keywords, ({ one }) => ({
   document: one(documents, { fields: [keywords.documentId], references: [documents.id] }),
+}));
+
+export const chatExportsRelations = relations(chatExports, ({ one }) => ({
+  chat: one(chats, { fields: [chatExports.chatId], references: [chats.id] }),
+  user: one(users, { fields: [chatExports.userId], references: [users.id] }),
 }));
 
 export const loginSchema = z.object({
