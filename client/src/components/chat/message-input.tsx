@@ -52,7 +52,7 @@ export default function MessageInput() {
   };
 
   return (
-    <div className="bg-white border-t border-neutral-200 p-3">
+    <div className="bg-blue-50 border-t border-blue-200 p-3">
       <form onSubmit={handleSubmit} className="flex items-center">
         {/* 終了ボタン */}
         <Button 
@@ -60,21 +60,24 @@ export default function MessageInput() {
           onClick={handleLogout}
           size="icon"
           variant="ghost"
-          className="p-2 rounded-full hover:bg-red-100 mr-2"
+          className="p-3 rounded-full hover:bg-red-100 mr-3"
         >
-          <LogOut className="h-5 w-5 text-red-600" />
+          <LogOut className="h-6 w-6 text-red-600" />
         </Button>
         
-        {/* カメラボタン */}
-        <Button 
-          type="button" 
-          onClick={handleCameraClick}
-          size="icon"
-          variant="ghost"
-          className="p-2 rounded-full hover:bg-neutral-100 mr-2"
-        >
-          <Camera className="h-5 w-5 text-neutral-800" />
-        </Button>
+        {/* カメラボタン - with label */}
+        <div className="flex flex-col items-center mr-3">
+          <span className="text-xs font-medium text-blue-700 mb-1">カメラ起動</span>
+          <Button 
+            type="button" 
+            onClick={handleCameraClick}
+            size="icon"
+            variant="ghost"
+            className="p-3 rounded-full hover:bg-blue-200"
+          >
+            <Camera className="h-7 w-7 text-blue-600" />
+          </Button>
+        </div>
         
         {/* マイクボタン */}
         <Button 
@@ -82,12 +85,12 @@ export default function MessageInput() {
           onClick={handleMicClick}
           size="icon"
           variant={isRecording ? "default" : "ghost"}
-          className={`p-2 rounded-full ${isRecording ? "bg-primary" : "hover:bg-neutral-100"} mr-2`}
+          className={`p-3 rounded-full ${isRecording ? "bg-blue-600" : "hover:bg-blue-200"} mr-3`}
         >
-          <Mic className={`h-5 w-5 ${isRecording ? "text-white" : "text-neutral-800"}`} />
+          <Mic className={`h-7 w-7 ${isRecording ? "text-white" : "text-blue-600"}`} />
         </Button>
         
-        <div className="flex-1 bg-neutral-100 rounded-full px-4 py-2 flex items-center">
+        <div className="flex-1 bg-white border border-blue-200 rounded-full px-4 py-2 flex items-center">
           <Input
             ref={inputRef}
             type="text"
@@ -102,9 +105,9 @@ export default function MessageInput() {
             disabled={isLoading || (!message.trim() && !recordedText.trim())}
             size="icon"
             variant="ghost"
-            className="ml-2"
+            className="ml-2 p-2 hover:bg-blue-100 rounded-full"
           >
-            <Send className="h-5 w-5 text-primary" />
+            <Send className="h-8 w-8 text-blue-600" />
           </Button>
         </div>
       </form>

@@ -162,23 +162,23 @@ export default function CameraModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b border-neutral-200 flex flex-row justify-between items-center">
-          <DialogTitle>カメラ</DialogTitle>
+      <DialogContent className="max-w-md p-0 overflow-hidden bg-blue-50 border border-blue-200">
+        <DialogHeader className="p-4 border-b border-blue-200 flex flex-row justify-between items-center bg-blue-100">
+          <DialogTitle className="text-blue-800 text-lg font-bold">カメラ起動</DialogTitle>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <TabletSmartphone className="h-4 w-4 mr-2" />
+            <div className="flex items-center bg-white px-2 py-1 rounded-full">
+              <TabletSmartphone className="h-4 w-4 mr-2 text-blue-600" />
               <Switch 
                 id="camera-mode" 
                 checked={isVideoMode}
                 onCheckedChange={toggleCameraMode}
               />
-              <VideoIcon className="h-4 w-4 ml-2" />
+              <VideoIcon className="h-4 w-4 ml-2 text-blue-600" />
             </div>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="p-2 rounded-full hover:bg-neutral-100"
+              className="p-2 rounded-full hover:bg-blue-200 text-blue-700"
               onClick={() => setIsOpen(false)}
             >
               <X />
@@ -227,7 +227,7 @@ export default function CameraModal() {
                         size="icon"
                         onClick={stopRecording}
                       >
-                        <Pause className="h-6 w-6 text-neutral-800" />
+                        <Pause className="h-6 w-6 text-blue-600" />
                       </Button>
                       <Button 
                         className="bg-red-500 rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
@@ -240,41 +240,41 @@ export default function CameraModal() {
                     </>
                   ) : (
                     <Button 
-                      className="bg-red-500 rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-white"
+                      className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-white"
                       variant="outline"
                       size="icon"
                       onClick={startRecording}
                     >
-                      <Circle className="h-6 w-6 text-white" />
+                      <Circle className="h-8 w-8 text-white" />
                     </Button>
                   )}
                 </>
               ) : (
                 // 写真モードのコントロール
                 <Button 
-                  className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-neutral-300"
+                  className="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-white"
                   variant="outline"
                   size="icon"
                   onClick={handleCapture}
                 >
-                  <Circle className="h-10 w-10 text-neutral-800" />
+                  <Circle className="h-12 w-12 text-white" />
                 </Button>
               )}
             </div>
           )}
         </div>
         
-        <div className="p-4">
+        <div className="p-4 bg-blue-50">
           {capturedImage ? (
             <Button 
-              className="w-full bg-primary text-white py-2 rounded-lg font-medium"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium text-lg"
               onClick={handleSend}
             >
               送信する
             </Button>
           ) : (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-blue-700 font-medium">
                 {isVideoMode ? 
                   (isRecording ? "録画中... 停止するには□をタップ" : "◎ をタップして録画開始") : 
                   "○ をタップして写真撮影"}

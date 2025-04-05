@@ -73,17 +73,17 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="border-b border-neutral-200 p-2 flex justify-between items-center">
-        <h1 className="text-lg font-semibold">緊急復旧サポート</h1>
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col w-full h-full bg-blue-50">
+      <div className="border-b border-blue-200 p-3 flex justify-between items-center bg-blue-100">
+        <h1 className="text-xl font-bold text-blue-800">緊急復旧サポート</h1>
+        <div className="flex items-center gap-3">
           {/* チャット履歴送信ボタン */}
           <Button 
             variant="outline"
             size="sm"
             onClick={exportChatHistory}
             disabled={isExporting || !hasUnexportedMessages}
-            className="flex items-center gap-1"
+            className="flex items-center gap-2 border-blue-300 bg-white hover:bg-blue-50 text-blue-700"
           >
             {isExporting ? (
               <>
@@ -103,7 +103,7 @@ export default function Chat() {
             variant="destructive"
             size="sm"
             onClick={handleEndChat}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 bg-red-500 hover:bg-red-600"
           >
             <span>チャット終了</span>
           </Button>
@@ -112,18 +112,18 @@ export default function Chat() {
       
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Chat Messages Area - Made wider for better visibility of images */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4">
+        <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4 bg-white">
           {/* Chat Messages */}
           <div id="chatMessages" className="flex-1 overflow-y-auto p-4 md:px-8 space-y-4">
             {messagesLoading || isLoading ? (
               <div className="flex items-center justify-center h-full">
-                <p>メッセージを読み込み中...</p>
+                <p className="text-blue-700">メッセージを読み込み中...</p>
               </div>
             ) : !displayMessages || displayMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <div>
-                  <p className="text-lg font-semibold mb-2">会話を始めましょう</p>
-                  <p className="text-sm text-neutral-300">緊急車両に関する質問を入力するか、マイクボタンをタップして話しかけてください。</p>
+                  <p className="text-xl font-semibold mb-2 text-blue-800">会話を始めましょう</p>
+                  <p className="text-sm text-blue-500">保守用車に関する質問を入力するか、マイクボタンをタップして話しかけてください。</p>
                 </div>
               </div>
             ) : (
@@ -137,8 +137,8 @@ export default function Chat() {
 
           {/* エクスポート状態表示 */}
           {hasUnexportedMessages && (
-            <div className="bg-yellow-50 p-2 text-sm text-yellow-800 flex items-center justify-center">
-              <AlertTriangle className="h-4 w-4 mr-2" />
+            <div className="bg-blue-50 p-2 text-sm text-blue-800 flex items-center justify-center border-t border-b border-blue-200">
+              <AlertTriangle className="h-4 w-4 mr-2 text-blue-600" />
               <span>{lastExportTimestamp ? '前回の送信以降、新しいメッセージがあります。送信してください。' : 'まだチャット履歴が送信されていません。'}</span>
             </div>
           )}
@@ -151,35 +151,44 @@ export default function Chat() {
         </div>
 
         {/* Information Panel - Hidden on mobile, shown on larger screens - Made narrower */}
-        <div className="hidden md:block md:w-1/4 border-l border-neutral-200 bg-white overflow-y-auto">
+        <div className="hidden md:block md:w-1/4 border-l border-blue-200 bg-blue-50 overflow-y-auto">
           <SearchResults results={searchResults} onClear={clearSearchResults} />
         </div>
       </div>
 
       {/* 未送信のチャット履歴がある場合の警告ダイアログ */}
       <Dialog open={isEndChatDialogOpen} onOpenChange={setIsEndChatDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>チャット履歴が未送信です</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="bg-blue-50 border border-blue-200">
+          <DialogHeader className="border-b border-blue-200 pb-3">
+            <DialogTitle className="text-blue-800 text-lg font-bold">チャット履歴が未送信です</DialogTitle>
+            <DialogDescription className="text-blue-700">
               まだ送信されていないチャット履歴があります。このまま終了すると、履歴が保存されません。
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => setIsEndChatDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEndChatDialogOpen(false)}
+              className="border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
               キャンセル
             </Button>
             <div className="flex gap-2">
-              <Button variant="destructive" onClick={() => {
-                setIsEndChatDialogOpen(false);
-                window.location.href = "/";
-              }}>
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  setIsEndChatDialogOpen(false);
+                  window.location.href = "/";
+                }}
+                className="bg-red-500 hover:bg-red-600"
+              >
                 送信せずに終了
               </Button>
               <Button 
                 variant="default" 
                 onClick={handleSendAndEnd}
                 disabled={isExporting}
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 {isExporting ? (
                   <>

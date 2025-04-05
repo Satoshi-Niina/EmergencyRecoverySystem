@@ -26,9 +26,9 @@ export default function ImagePreviewModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-5xl bg-black border-0 flex items-center justify-center p-0">
+      <DialogContent className="max-w-5xl bg-black bg-opacity-90 border border-blue-400 flex items-center justify-center p-0 rounded-xl">
         <Button 
-          className="absolute top-4 right-4 text-white" 
+          className="absolute top-4 right-4 text-white bg-blue-600 hover:bg-blue-700 rounded-full" 
           variant="ghost" 
           size="icon" 
           onClick={() => setIsOpen(false)}
@@ -36,11 +36,11 @@ export default function ImagePreviewModal() {
           <X className="h-6 w-6" />
         </Button>
         
-        <div className="max-w-full max-h-[80vh]">
+        <div className="max-w-full max-h-[80vh] p-2">
           <img 
             src={imageUrl} 
             alt="拡大画像" 
-            className="max-w-full max-h-[80vh] object-contain" 
+            className="max-w-full max-h-[80vh] object-contain rounded-lg border border-blue-500" 
           />
         </div>
       </DialogContent>

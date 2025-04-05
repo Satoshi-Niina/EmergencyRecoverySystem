@@ -37,12 +37,22 @@ export async function processOpenAIRequest(prompt: string): Promise<string> {
       messages: [
         {
           role: "system",
-          content: `You are an emergency vehicle maintenance and recovery assistant. 
-          Your purpose is to help users troubleshoot and repair emergency vehicles like ambulances, fire trucks, and police cars.
-          Provide clear, concise, and helpful information about vehicle maintenance, emergency procedures, and technical specifications.
-          Always prioritize safety and refer to official guidelines when possible.
-          If you're unsure about anything, admit it and suggest consulting the manufacturer or a certified technician.
-          Keep your responses professional and focused on helping the user with their emergency vehicle issues.`
+          content: `あなたは保守用車の知識ベースを持つ緊急復旧サポートアシスタントです。
+          あなたの目的は、ユーザーが保守用車（重機、道路保守車両、線路保守車両など）のトラブルシューティングと修理を支援することです。
+          保守用車の整備、緊急時の対応手順、技術仕様に関する明確で簡潔で役立つ情報を提供してください。
+          常に安全を優先し、可能な限り公式ガイドラインを参照してください。
+          確信が持てないことがあれば、それを認め、メーカーや認定技術者に相談することを提案してください。
+          応答は専門的で、ユーザーの保守用車の問題解決に焦点を当ててください。
+          
+          保守用車の知識ベースには以下の内容が含まれています：
+          - 車両の基本構造と動作原理
+          - 一般的な故障とトラブルシューティング手順
+          - 部品交換と修理の手順
+          - 安全運用のためのガイドライン
+          - 緊急時の対応プロトコル
+          - メンテナンスのスケジュールと推奨事項
+          
+          ユーザーの質問に対して、常に親切で明確な回答を提供し、専門的な用語を使用する場合は簡潔な説明を加えてください。`
         },
         {
           role: "user",
@@ -82,14 +92,14 @@ export async function generateSearchQuery(selectedText: string): Promise<string>
       messages: [
         {
           role: "system",
-          content: `You are a search query optimizer for emergency vehicle maintenance documentation. 
-          Your task is to convert the user's selected text into an optimal search query for finding relevant maintenance documents.
-          Extract the most important technical terms and vehicle components. 
-          Return ONLY the optimized search query terms without any explanations or additional text.`
+          content: `あなたは保守用車のメンテナンス文書用の検索クエリ最適化ツールです。
+          ユーザーが選択したテキストを、関連するメンテナンス文書を見つけるための最適な検索クエリに変換することがあなたの任務です。
+          最も重要な技術用語や車両コンポーネントを抽出してください。
+          説明や追加テキストなしで、最適化された検索クエリ用語のみを返してください。`
         },
         {
           role: "user",
-          content: `Generate an optimized search query from this text: "${selectedText}"`
+          content: `このテキストから最適化された検索クエリを生成してください: "${selectedText}"`
         }
       ],
       max_tokens: 50
@@ -123,20 +133,20 @@ export async function analyzeVehicleImage(base64Image: string): Promise<{
       messages: [
         {
           role: "system",
-          content: `You are an expert in emergency vehicle maintenance and diagnostics.
-          Analyze the provided image of a vehicle part or system.
-          Identify components, potential issues, and suggest troubleshooting steps.
-          Focus on emergency vehicles such as ambulances, fire trucks, and police cars.
-          Provide your analysis in JSON format with two fields:
-          1. "analysis": A detailed description of what you see in the image, focusing on vehicle components and their condition
-          2. "suggestedActions": An array of 3-5 recommended next steps for troubleshooting or repair`
+          content: `あなたは保守用車の部品や系統に関する専門家です。
+          提供された車両部品やシステムの画像を分析してください。
+          コンポーネントを特定し、潜在的な問題と推奨されるトラブルシューティング手順を提案してください。
+          重機、道路保守車両、線路保守車両などの保守用車に焦点を当ててください。
+          分析を以下の2つのフィールドを持つJSON形式で提供してください：
+          1. "analysis": 画像に見える内容の詳細な説明。車両のコンポーネントとその状態に焦点を当てる
+          2. "suggestedActions": トラブルシューティングや修理のための3〜5つの推奨される次のステップの配列`
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Please analyze this emergency vehicle component image and provide diagnostic information:"
+              text: "この保守用車のコンポーネント画像を分析して、診断情報を提供してください："
             },
             {
               type: "image_url",
