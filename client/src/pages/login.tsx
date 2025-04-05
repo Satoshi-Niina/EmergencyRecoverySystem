@@ -75,9 +75,9 @@ export default function Login() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2 text-center text-sm text-neutral-300">
+        <CardFooter className="flex flex-col space-y-2 text-center text-sm text-neutral-500">
           <p>デモ用ログイン情報:</p>
-          <p>管理者: admin / admin123</p>
+          <p>管理者: niina / 0077</p>
           <p>一般ユーザー: employee / employee123</p>
         </CardFooter>
       </Card>

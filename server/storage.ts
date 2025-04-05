@@ -72,9 +72,9 @@ export class MemStorage implements IStorage {
     
     // Create admin user by default
     this.createUser({
-      username: "admin",
-      password: "admin123", // In a real app, this would be hashed
-      displayName: "管理者",
+      username: "niina",
+      password: "0077", // In a real app, this would be hashed
+      displayName: "新名 管理者",
       role: "admin"
     });
     
