@@ -1,13 +1,14 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertUserSchema, insertChatSchema, insertMessageSchema, insertMediaSchema, insertDocumentSchema } from "@shared/schema";
+import { loginSchema, insertUserSchema, insertChatSchema, insertMessageSchema, insertMediaSchema, insertDocumentSchema, users } from "@shared/schema";
 import { z } from "zod";
 import session from "express-session";
 import { WebSocket, WebSocketServer } from "ws";
 import { processOpenAIRequest, generateSearchQuery, analyzeVehicleImage } from "./lib/openai";
 import fs from "fs";
 import path from "path";
+import { db } from "./db";
 
 // Extend the express-session types
 declare module 'express-session' {
@@ -133,8 +134,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       id: user.id, 
       username: user.username, 
       displayName: user.displayName, 
-      role: user.role 
+      role: user.role,
+      department: user.department
     });
+  });
+  
+  // User management routes (admin only)
+  app.get("/api/users", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const result = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        role: users.role,
+        department: users.department
+      }).from(users);
+      return res.json(result);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/users", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      const user = await storage.createUser(userData);
+      return res.status(201).json({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        role: user.role,
+        department: user.department
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      console.error("Error creating user:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // Chat routes

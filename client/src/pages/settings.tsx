@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Info, LogOut, User, Bell, Shield, Database, Volume2 } from "lucide-react";
+import { Settings, Info, User, Bell, Shield, Database, Volume2, UserPlus, FileType, Book, LogOut } from "lucide-react";
 import { WarningDialog } from "@/components/shared/warning-dialog";
+import { Link } from "wouter";
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -63,16 +64,12 @@ export default function SettingsPage() {
                 <div>
                   <p className="font-medium">{user?.displayName}</p>
                   <p className="text-sm text-neutral-300">{user?.username}</p>
+                  <p className="text-sm text-neutral-300">{user?.department || '部署未設定'}</p>
                 </div>
                 <div className="bg-primary text-white text-xs px-2 py-1 rounded-full">
                   {user?.role === 'admin' ? '管理者' : '一般ユーザー'}
                 </div>
               </div>
-              
-              <Button onClick={handleLogout} variant="outline" className="w-full">
-                <LogOut className="mr-2 h-4 w-4" />
-                ログアウト
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -176,12 +173,38 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2">
                   <div>
-                    <p className="font-medium">データベース管理</p>
-                    <p className="text-sm text-neutral-300">システムデータベースを管理する</p>
+                    <p className="font-medium">ユーザー管理</p>
+                    <p className="text-sm text-neutral-300">ユーザーアカウントを管理する</p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Database className="mr-2 h-4 w-4" />
-                    管理
+                  <Link href="/users">
+                    <Button variant="outline" size="sm">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      管理
+                    </Button>
+                  </Link>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <p className="font-medium">ドキュメント管理</p>
+                    <p className="text-sm text-neutral-300">検索対象の資料を管理する</p>
+                  </div>
+                  <Link href="/documents">
+                    <Button variant="outline" size="sm">
+                      <FileType className="mr-2 h-4 w-4" />
+                      管理
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <p className="font-medium">ログアウト</p>
+                    <p className="text-sm text-neutral-300">システムからログアウトする</p>
+                  </div>
+                  <Button onClick={handleLogout} variant="outline" size="sm">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    ログアウト
                   </Button>
                 </div>
               </div>

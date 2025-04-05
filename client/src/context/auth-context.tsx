@@ -7,6 +7,7 @@ interface User {
   username: string;
   displayName: string;
   role: "employee" | "admin";
+  department?: string;
 }
 
 interface AuthContextType {
@@ -16,14 +17,15 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isLoading: true,
-  login: async () => {},
-  logout: async () => {},
-});
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === null) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

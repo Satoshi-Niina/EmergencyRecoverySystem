@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   role: userRoleEnum("role").notNull().default('employee'),
+  department: text("department"),
 });
 
 // Messages table

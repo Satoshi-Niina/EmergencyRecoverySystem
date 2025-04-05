@@ -39,24 +39,15 @@ interface ChatContextValue {
   captureImage: (imageData: string, type: 'image' | 'video') => Promise<void>;
 }
 
-const ChatContext = createContext<ChatContextValue>({
-  messages: [],
-  isLoading: false,
-  searching: false,
-  searchResults: [],
-  selectedText: '',
-  setSelectedText: () => {},
-  sendMessage: async () => {},
-  startRecording: () => {},
-  stopRecording: () => {},
-  isRecording: false,
-  recordedText: '',
-  searchBySelectedText: async () => {},
-  clearSearchResults: () => {},
-  captureImage: async () => {},
-});
+const ChatContext = createContext<ChatContextValue | null>(null);
 
-export const useChat = () => useContext(ChatContext);
+export const useChat = () => {
+  const context = useContext(ChatContext);
+  if (context === null) {
+    throw new Error("useChat must be used within a ChatProvider");
+  }
+  return context;
+};
 
 export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<Message[]>([]);

@@ -7,6 +7,8 @@ import Login from "@/pages/login";
 import Chat from "@/pages/chat";
 import Processing from "@/pages/processing";
 import Settings from "@/pages/settings";
+import Users from "@/pages/users";
+import Documents from "@/pages/documents";
 import { useAuth, AuthProvider } from "./context/auth-context";
 import Header from "./components/navigation/header";
 import { Tabs } from "./components/navigation/tabs";
@@ -79,6 +81,22 @@ function Router() {
           <Route path="/settings">
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          </Route>
+          
+          <Route path="/users">
+            <ProtectedRoute>
+              <AdminRoute>
+                <Users />
+              </AdminRoute>
+            </ProtectedRoute>
+          </Route>
+          
+          <Route path="/documents">
+            <ProtectedRoute>
+              <AdminRoute>
+                <Documents />
+              </AdminRoute>
             </ProtectedRoute>
           </Route>
           
