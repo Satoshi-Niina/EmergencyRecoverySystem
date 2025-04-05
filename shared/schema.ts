@@ -1,0 +1,117 @@
+import { pgTable, text, serial, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// User role enum
+export const userRoleEnum = pgEnum('user_role', ['employee', 'admin']);
+
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  displayName: text("display_name").notNull(),
+  role: userRoleEnum("role").notNull().default('employee'),
+});
+
+// Messages table
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  senderId: integer("sender_id").references(() => users.id),
+  isAiResponse: boolean("is_ai_response").notNull().default(false),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  chatId: integer("chat_id").references(() => chats.id),
+});
+
+// Media attachments table
+export const media = pgTable("media", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").references(() => messages.id),
+  type: text("type").notNull(), // image, video
+  url: text("url").notNull(),
+  thumbnail: text("thumbnail"),
+});
+
+// Chats table
+export const chats = pgTable("chats", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  userId: integer("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Processed documents table
+export const documents = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  type: text("type").notNull(), // pdf, pptx, xlsx
+  url: text("url").notNull(),
+  jsonUrl: text("json_url"),
+  imagesUrl: text("images_url"),
+  processedAt: timestamp("processed_at").notNull().defaultNow(),
+  userId: integer("user_id").references(() => users.id),
+});
+
+// Search keywords table for document indexing
+export const keywords = pgTable("keywords", {
+  id: serial("id").primaryKey(),
+  word: text("word").notNull(),
+  documentId: integer("document_id").references(() => documents.id),
+  relevance: integer("relevance").notNull().default(1),
+});
+
+// Schema validation
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertMediaSchema = createInsertSchema(media).omit({
+  id: true,
+});
+
+export const insertChatSchema = createInsertSchema(chats).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDocumentSchema = createInsertSchema(documents).omit({
+  id: true,
+  processedAt: true,
+});
+
+export const insertKeywordSchema = createInsertSchema(keywords).omit({
+  id: true,
+});
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+export type Media = typeof media.$inferSelect;
+export type InsertMedia = z.infer<typeof insertMediaSchema>;
+
+export type Chat = typeof chats.$inferSelect;
+export type InsertChat = z.infer<typeof insertChatSchema>;
+
+export type Document = typeof documents.$inferSelect;
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+
+export type Keyword = typeof keywords.$inferSelect;
+export type InsertKeyword = z.infer<typeof insertKeywordSchema>;
+
+// Auth types
+export const loginSchema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(6),
+});
+
+export type LoginCredentials = z.infer<typeof loginSchema>;
