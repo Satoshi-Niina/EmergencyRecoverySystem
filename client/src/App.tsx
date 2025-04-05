@@ -10,6 +10,7 @@ import Settings from "@/pages/settings";
 import Users from "@/pages/users";
 import Documents from "@/pages/documents";
 import { useAuth, AuthProvider } from "./context/auth-context";
+import { ChatProvider } from "./context/chat-context";
 import Header from "./components/navigation/header";
 import { Tabs } from "./components/navigation/tabs";
 import { useEffect } from "react";
@@ -115,8 +116,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <ChatProvider>
+          <Router />
+          <Toaster />
+        </ChatProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,23 +1,26 @@
 // Speech recognition service using Azure Cognitive Services
+import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
 
-let recognition: any = null;
+let recognizer: sdk.SpeechRecognizer | null = null;
 
-// Check if browser supports speech recognition
-const browserSupportsSpeechRecognition = () => {
-  return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-};
-
-// Initialize speech recognition
-const initSpeechRecognition = () => {
-  if (browserSupportsSpeechRecognition()) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'ja-JP';
-    return true;
+// Azure Speech設定を初期化
+const initAzureSpeechConfig = () => {
+  try {
+    const speechKey = import.meta.env.VITE_AZURE_SPEECH_KEY;
+    const speechRegion = import.meta.env.VITE_AZURE_SPEECH_REGION;
+    
+    if (!speechKey || !speechRegion) {
+      console.error('Azure Speech credentials are not set');
+      return null;
+    }
+    
+    const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, speechRegion);
+    speechConfig.speechRecognitionLanguage = 'ja-JP';
+    return speechConfig;
+  } catch (error) {
+    console.error('Failed to initialize Azure Speech config:', error);
+    return null;
   }
-  return false;
 };
 
 // Start speech recognition
@@ -25,12 +28,104 @@ export const startSpeechRecognition = (
   onResult: (text: string) => void, 
   onError: (error: string) => void
 ) => {
-  if (!initSpeechRecognition()) {
+  try {
+    const speechConfig = initAzureSpeechConfig();
+    
+    if (!speechConfig) {
+      onError('Azure Speech認証情報が設定されていません。');
+      return;
+    }
+    
+    // マイクからの音声入力を設定
+    const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
+    recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+    
+    // 音声認識結果のイベントハンドラ
+    recognizer.recognized = (s, e) => {
+      if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
+        onResult(e.result.text);
+      }
+    };
+    
+    // 音声認識キャンセル時のイベントハンドラ
+    recognizer.canceled = (s, e) => {
+      if (e.reason === sdk.CancellationReason.Error) {
+        onError(`音声認識エラー: ${e.errorDetails}`);
+      }
+    };
+    
+    // 音声認識エラー時のイベントハンドラ
+    recognizer.recognizing = (s, e) => {
+      console.log(`認識中: ${e.result.text}`);
+    };
+    
+    // 途中結果も表示
+    recognizer.recognizing = (s, e) => {
+      if (e.result.text) {
+        onResult(e.result.text + '...');
+      }
+    };
+    
+    // 連続認識を開始
+    recognizer.startContinuousRecognitionAsync(
+      () => console.log('Azure Speech認識を開始しました'), 
+      (error) => {
+        console.error('認識開始エラー:', error);
+        onError(`認識開始エラー: ${error}`);
+      }
+    );
+  } catch (error) {
+    console.error('Azure Speech初期化エラー:', error);
+    onError(`Azure Speech初期化エラー: ${error}`);
+  }
+};
+
+// Stop speech recognition
+export const stopSpeechRecognition = () => {
+  if (recognizer) {
+    recognizer.stopContinuousRecognitionAsync(
+      () => {
+        console.log('Azure Speech認識を停止しました');
+        recognizer = null;
+      },
+      (error) => console.error('認識停止エラー:', error)
+    );
+  }
+};
+
+// ブラウザによるフォールバック実装（Azureが使えない場合用）
+let browserRecognition: any = null;
+
+// 型定義を拡張してSpeechRecognitionをwindowオブジェクトに追加
+interface Window {
+  webkitSpeechRecognition?: typeof SpeechRecognition;
+  SpeechRecognition?: typeof SpeechRecognition;
+}
+
+// Check if browser supports speech recognition
+const browserSupportsSpeechRecognition = () => {
+  return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+};
+
+// Start browser speech recognition (fallback)
+export const startBrowserSpeechRecognition = (
+  onResult: (text: string) => void, 
+  onError: (error: string) => void
+) => {
+  if (!browserSupportsSpeechRecognition()) {
     onError('お使いのブラウザは音声認識をサポートしていません。');
     return;
   }
 
-  recognition.onresult = (event: any) => {
+  // TypeScriptに型を教えるためのキャスト
+  const SpeechRecognitionAPI = (window as any).SpeechRecognition || 
+                          (window as any).webkitSpeechRecognition;
+  browserRecognition = new SpeechRecognitionAPI();
+  browserRecognition.continuous = true;
+  browserRecognition.interimResults = true;
+  browserRecognition.lang = 'ja-JP';
+
+  browserRecognition.onresult = (event: any) => {
     const transcript = Array.from(event.results)
       .map((result: any) => result[0])
       .map((result) => result.transcript)
@@ -39,56 +134,17 @@ export const startSpeechRecognition = (
     onResult(transcript);
   };
 
-  recognition.onerror = (event: any) => {
+  browserRecognition.onerror = (event: any) => {
     onError(`音声認識エラー: ${event.error}`);
   };
 
-  recognition.start();
+  browserRecognition.start();
 };
 
-// Stop speech recognition
-export const stopSpeechRecognition = () => {
-  if (recognition) {
-    recognition.stop();
-    recognition = null;
+// Stop browser speech recognition
+export const stopBrowserSpeechRecognition = () => {
+  if (browserRecognition) {
+    browserRecognition.stop();
+    browserRecognition = null;
   }
 };
-
-// In a real implementation, this would connect to Azure's Speech Service
-// For now, we're using the browser's built-in SpeechRecognition API
-// When integrating with Azure, you would use the Azure Speech SDK:
-/*
-import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
-
-const speechConfig = sdk.SpeechConfig.fromSubscription(
-  process.env.AZURE_SPEECH_KEY || '',
-  process.env.AZURE_SPEECH_REGION || ''
-);
-speechConfig.speechRecognitionLanguage = 'ja-JP';
-
-const startAzureSpeechRecognition = async (onResult, onError) => {
-  const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
-  const recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
-  
-  recognizer.recognized = (s, e) => {
-    if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
-      onResult(e.result.text);
-    }
-  };
-  
-  recognizer.canceled = (s, e) => {
-    if (e.reason === sdk.CancellationReason.Error) {
-      onError(`音声認識エラー: ${e.errorDetails}`);
-    }
-  };
-  
-  recognizer.startContinuousRecognitionAsync();
-  return recognizer;
-};
-
-const stopAzureSpeechRecognition = (recognizer) => {
-  if (recognizer) {
-    recognizer.stopContinuousRecognitionAsync();
-  }
-};
-*/

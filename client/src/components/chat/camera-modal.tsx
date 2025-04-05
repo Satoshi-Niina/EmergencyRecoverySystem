@@ -2,7 +2,17 @@ import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/chat-context";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Camera, VideoIcon, X } from "lucide-react";
+import { 
+  Camera, 
+  VideoIcon, 
+  X, 
+  Square, 
+  Pause, 
+  Circle, 
+  TabletSmartphone 
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CameraModal() {
@@ -155,15 +165,16 @@ export default function CameraModal() {
       <DialogContent className="max-w-md p-0 overflow-hidden">
         <DialogHeader className="p-4 border-b border-neutral-200 flex flex-row justify-between items-center">
           <DialogTitle>カメラ</DialogTitle>
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="p-2 rounded-full hover:bg-neutral-100 mr-2"
-              onClick={toggleCameraMode}
-            >
-              {isVideoMode ? <Camera /> : <VideoIcon />}
-            </Button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <TabletSmartphone className="h-4 w-4 mr-2" />
+              <Switch 
+                id="camera-mode" 
+                checked={isVideoMode}
+                onCheckedChange={toggleCameraMode}
+              />
+              <VideoIcon className="h-4 w-4 ml-2" />
+            </div>
             <Button 
               variant="ghost" 
               size="icon" 
@@ -182,53 +193,94 @@ export default function CameraModal() {
               autoPlay 
               playsInline 
               muted 
-              className="w-full h-64 bg-neutral-800 object-cover"
+              className="w-full h-80 bg-neutral-800 object-cover"
             />
           ) : (
             isVideoMode ? (
               <video 
                 src={capturedImage} 
                 controls 
-                className="w-full h-64 bg-neutral-800 object-contain"
+                className="w-full h-80 bg-neutral-800 object-contain"
+                onClick={() => window.dispatchEvent(new CustomEvent('preview-image', { detail: { url: capturedImage } }))}
               />
             ) : (
               <img 
                 src={capturedImage} 
                 alt="Captured" 
-                className="w-full h-64 bg-neutral-800 object-contain"
+                className="w-full h-80 bg-neutral-800 object-contain"
+                onClick={() => window.dispatchEvent(new CustomEvent('preview-image', { detail: { url: capturedImage } }))}
               />
             )
           )}
           
-          {/* Camera Controls */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-            <Button 
-              className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
-              variant="outline"
-              size="icon"
-              onClick={handleCapture}
-            >
+          {/* Camera Controls - Different for Photo and Video modes */}
+          {!capturedImage && (
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
               {isVideoMode ? (
-                isRecording ? (
-                  <span className="h-5 w-5 bg-red-500 rounded-sm" />
-                ) : (
-                  <VideoIcon className="h-6 w-6 text-neutral-800" />
-                )
+                // ビデオモードのコントロール
+                <>
+                  {isRecording ? (
+                    <>
+                      <Button 
+                        className="bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+                        variant="outline"
+                        size="icon"
+                        onClick={stopRecording}
+                      >
+                        <Pause className="h-6 w-6 text-neutral-800" />
+                      </Button>
+                      <Button 
+                        className="bg-red-500 rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
+                        variant="outline"
+                        size="icon"
+                        onClick={stopRecording}
+                      >
+                        <Square className="h-6 w-6 text-white" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      className="bg-red-500 rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-white"
+                      variant="outline"
+                      size="icon"
+                      onClick={startRecording}
+                    >
+                      <Circle className="h-6 w-6 text-white" />
+                    </Button>
+                  )}
+                </>
               ) : (
-                <Camera className="h-6 w-6 text-neutral-800" />
+                // 写真モードのコントロール
+                <Button 
+                  className="bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg border-2 border-neutral-300"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCapture}
+                >
+                  <Circle className="h-10 w-10 text-neutral-800" />
+                </Button>
               )}
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
         
         <div className="p-4">
-          <Button 
-            className="w-full bg-primary text-white py-2 rounded-lg font-medium"
-            onClick={handleSend}
-            disabled={!capturedImage}
-          >
-            送信する
-          </Button>
+          {capturedImage ? (
+            <Button 
+              className="w-full bg-primary text-white py-2 rounded-lg font-medium"
+              onClick={handleSend}
+            >
+              送信する
+            </Button>
+          ) : (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-neutral-500">
+                {isVideoMode ? 
+                  (isRecording ? "録画中... 停止するには□をタップ" : "◎ をタップして録画開始") : 
+                  "○ をタップして写真撮影"}
+              </p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

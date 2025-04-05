@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
 import { useChat } from "@/context/chat-context";
+import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Camera } from "lucide-react";
+import { Mic, Send, Camera, LogOut } from "lucide-react";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
   const { sendMessage, isLoading, startRecording, stopRecording, isRecording, recordedText } = useChat();
+  const { logout } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,9 +44,28 @@ export default function MessageInput() {
     window.dispatchEvent(new CustomEvent('open-camera'));
   };
 
+  const handleLogout = async () => {
+    if (isRecording) {
+      stopRecording();
+    }
+    await logout();
+  };
+
   return (
     <div className="bg-white border-t border-neutral-200 p-3">
       <form onSubmit={handleSubmit} className="flex items-center">
+        {/* 終了ボタン */}
+        <Button 
+          type="button" 
+          onClick={handleLogout}
+          size="icon"
+          variant="ghost"
+          className="p-2 rounded-full hover:bg-red-100 mr-2"
+        >
+          <LogOut className="h-5 w-5 text-red-600" />
+        </Button>
+        
+        {/* カメラボタン */}
         <Button 
           type="button" 
           onClick={handleCameraClick}
@@ -55,6 +76,7 @@ export default function MessageInput() {
           <Camera className="h-5 w-5 text-neutral-800" />
         </Button>
         
+        {/* マイクボタン */}
         <Button 
           type="button" 
           onClick={handleMicClick}

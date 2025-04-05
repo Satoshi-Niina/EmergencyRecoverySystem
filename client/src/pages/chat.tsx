@@ -48,10 +48,10 @@ export default function Chat() {
   return (
     <div className="flex flex-col w-full h-full">
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Chat Messages Area */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Chat Messages Area - Made wider for better visibility of images */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4">
           {/* Chat Messages */}
-          <div id="chatMessages" className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div id="chatMessages" className="flex-1 overflow-y-auto p-4 md:px-8 space-y-4">
             {messagesLoading || isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <p>メッセージを読み込み中...</p>
@@ -65,7 +65,9 @@ export default function Chat() {
               </div>
             ) : (
               displayMessages.map((message, index) => (
-                <MessageBubble key={index} message={message} />
+                <div key={index} className="w-full md:max-w-2xl mx-auto">
+                  <MessageBubble message={message} />
+                </div>
               ))
             )}
           </div>
@@ -77,8 +79,8 @@ export default function Chat() {
           <MessageInput />
         </div>
 
-        {/* Information Panel - Hidden on mobile, shown on larger screens */}
-        <div className="hidden md:block w-96 border-l border-neutral-200 bg-white overflow-y-auto">
+        {/* Information Panel - Hidden on mobile, shown on larger screens - Made narrower */}
+        <div className="hidden md:block md:w-1/4 border-l border-neutral-200 bg-white overflow-y-auto">
           <SearchResults results={searchResults} onClear={clearSearchResults} />
         </div>
       </div>
