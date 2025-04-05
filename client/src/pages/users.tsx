@@ -206,7 +206,18 @@ export default function UsersPage() {
   const deleteUserMutation = useMutation({
     mutationFn: async () => {
       if (!selectedUserId) throw new Error("ユーザーIDが選択されていません");
-      await apiRequest("DELETE", `/api/users/${selectedUserId}`);
+      // 自分自身のアカウントは削除できないチェックを追加
+      if (user && selectedUserId === user.id) {
+        throw new Error("自分自身のアカウントは削除できません");
+      }
+      
+      const res = await apiRequest("DELETE", `/api/users/${selectedUserId}`);
+      
+      // エラーレスポンスをハンドリング
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "ユーザー削除中にエラーが発生しました");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -222,6 +233,7 @@ export default function UsersPage() {
         description: error.message || "ユーザー削除中にエラーが発生しました",
         variant: "destructive",
       });
+      setShowDeleteConfirmDialog(false);
     },
   });
   
