@@ -1,10 +1,19 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Serve static files from public directory
+app.use('/static', express.static(path.join(process.cwd(), 'public')));
+
+// Add a test route to serve our HTML test page
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'api-test.html'));
+});
 
 // Log all requests for debugging
 app.use((req, res, next) => {

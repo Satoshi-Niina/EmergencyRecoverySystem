@@ -30,6 +30,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       openaiKeyExists: !!process.env.OPENAI_API_KEY
     });
   });
+  
+  // Add a public OpenAI test endpoint (for testing only)
+  app.post('/api/chatgpt-test', async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+      
+      const response = await processOpenAIRequest(text);
+      return res.json({ response });
+    } catch (error) {
+      console.error("Error in /api/chatgpt-test:", error);
+      return res.status(500).json({ message: "Error processing request", error: String(error) });
+    }
+  });
 
   // Setup session middleware
   app.use(
@@ -373,11 +390,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
   
-  // Set up WebSocket server for real-time chat
-  const wss = new WebSocketServer({ server: httpServer });
+  // Set up WebSocket server for real-time chat on a specific path to avoid conflict with Vite
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'  // Use a specific path to avoid conflict with Vite's WebSocket
+  });
   
+  // Make sure to properly import WebSocket type
   wss.on('connection', (ws: WebSocket) => {
+    console.log("WebSocket client connected");
+    
     ws.on('message', (message: string) => {
+      console.log("Received message:", message);
       // Broadcast message to all clients
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -385,6 +409,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     });
+    
+    ws.on('close', () => {
+      console.log("WebSocket client disconnected");
+    });
+    
+    ws.on('error', (error) => {
+      console.error("WebSocket error:", error);
+    });
+    
+    // Send a welcome message
+    ws.send(JSON.stringify({
+      type: 'system',
+      content: 'Connected to Emergency Recovery Chat WebSocket server'
+    }));
   });
 
   return httpServer;
