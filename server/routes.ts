@@ -182,6 +182,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Internal server error" });
     }
   });
+  
+  // ユーザー編集エンドポイント
+  app.patch("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // ユーザーの存在確認
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // ユーザー名の重複チェック（ユーザー名が変更される場合）
+      if (req.body.username && req.body.username !== existingUser.username) {
+        const userWithSameUsername = await storage.getUserByUsername(req.body.username);
+        if (userWithSameUsername && userWithSameUsername.id !== userId) {
+          return res.status(400).json({ message: "Username already exists" });
+        }
+      }
+      
+      // 更新データから不要なフィールドを除外
+      const { password, ...updateData } = req.body;
+      
+      // ユーザー情報更新
+      if (updateData.role && !['admin', 'employee'].includes(updateData.role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      // 保存
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      return res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        displayName: updatedUser.displayName,
+        role: updatedUser.role,
+        department: updatedUser.department
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // ユーザー削除エンドポイント
+  app.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // 自分自身は削除できない
+      if (userId === req.session.userId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      // ユーザーの存在確認
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // ユーザー削除
+      await storage.deleteUser(userId);
+      
+      return res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Chat routes
   app.get("/api/chats", requireAuth, async (req, res) => {
