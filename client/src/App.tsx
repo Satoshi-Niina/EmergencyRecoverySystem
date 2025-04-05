@@ -7,7 +7,7 @@ import Login from "@/pages/login";
 import Chat from "@/pages/chat";
 import Processing from "@/pages/processing";
 import Settings from "@/pages/settings";
-import { useAuth } from "./context/auth-context";
+import { useAuth, AuthProvider } from "./context/auth-context";
 import Header from "./components/navigation/header";
 import { Tabs } from "./components/navigation/tabs";
 import { useEffect } from "react";
@@ -96,8 +96,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
