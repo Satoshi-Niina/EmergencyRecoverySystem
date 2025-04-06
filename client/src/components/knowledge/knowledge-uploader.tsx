@@ -187,27 +187,27 @@ const KnowledgeUploader: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <Card className="night-form">
-        <CardHeader>
-          <CardTitle className="night-text">ナレッジベース管理</CardTitle>
-          <CardDescription>
+      <Card className="bg-white border border-cyan-200 shadow-sm mb-6">
+        <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-100">
+          <CardTitle className="text-cyan-700">ナレッジファイルのアップロード</CardTitle>
+          <CardDescription className="text-cyan-600">
             保守用車のマニュアルやガイドラインをアップロードし、AIチャットの知識ベースとして活用します
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="mb-6">
-            <Label htmlFor="file-upload" className="night-label">ファイルのアップロード</Label>
+            <Label htmlFor="file-upload" className="text-cyan-700 font-medium">ファイルを選択してください</Label>
             <div className="flex mt-2">
               <Input
                 id="file-upload"
                 type="file"
                 onChange={handleFileChange}
-                className="night-input"
+                className="bg-cyan-50 border-cyan-200 text-cyan-900"
               />
               <Button
                 onClick={handleUpload}
                 disabled={!selectedFile || isUploading}
-                className="ml-2 night-button"
+                className="ml-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
               >
                 {isUploading ? (
                   <>
@@ -222,55 +222,56 @@ const KnowledgeUploader: React.FC = () => {
                 )}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-cyan-600 mt-2">
               対応フォーマット: PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), テキストファイル (.txt)
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="night-form">
-        <CardHeader>
-          <CardTitle className="night-text">登録済みドキュメント</CardTitle>
-          <CardDescription>
-            知識ベースに登録されているドキュメント一覧
+      <Card className="bg-white border border-cyan-200 shadow-sm">
+        <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-100">
+          <CardTitle className="text-cyan-700">登録済みナレッジ一覧</CardTitle>
+          <CardDescription className="text-cyan-600">
+            AIがユーザーの質問に回答する際に参照する知識ベースファイル
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
             </div>
           ) : documents.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-cyan-400 bg-cyan-50 rounded-lg border border-cyan-100">
               登録されているドキュメントはありません
             </div>
           ) : (
             <Table>
-              <TableCaption>知識ベースに登録されているすべてのドキュメント</TableCaption>
+              <TableCaption className="text-cyan-500">AI回答生成に使用されるナレッジ文書一覧</TableCaption>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gradient-to-r from-cyan-50 to-blue-50">
                   <TableHead className="w-12"></TableHead>
-                  <TableHead>ファイル名</TableHead>
-                  <TableHead>タイプ</TableHead>
-                  <TableHead>追加日時</TableHead>
+                  <TableHead className="text-cyan-700">ファイル名</TableHead>
+                  <TableHead className="text-cyan-700">タイプ</TableHead>
+                  <TableHead className="text-cyan-700">追加日時</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {documents.map((doc) => (
-                  <TableRow key={doc.id}>
+                  <TableRow key={doc.id} className="hover:bg-cyan-50">
                     <TableCell>{getFileIcon(doc.type)}</TableCell>
-                    <TableCell className="font-medium">{doc.title}</TableCell>
-                    <TableCell>{doc.type}</TableCell>
-                    <TableCell>{new Date(doc.addedAt).toLocaleString("ja-JP")}</TableCell>
+                    <TableCell className="font-medium text-cyan-900">{doc.title}</TableCell>
+                    <TableCell className="text-cyan-700">{doc.type}</TableCell>
+                    <TableCell className="text-cyan-700">{new Date(doc.addedAt).toLocaleString("ja-JP")}</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                        className="hover:bg-red-100 text-red-500"
                       >
-                        <Trash2 className="h-5 w-5 text-red-500" />
+                        <Trash2 className="h-5 w-5" />
                       </Button>
                     </TableCell>
                   </TableRow>

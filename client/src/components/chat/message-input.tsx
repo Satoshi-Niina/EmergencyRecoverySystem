@@ -53,19 +53,19 @@ export default function MessageInput() {
   };
 
   return (
-    <div className="bg-blue-50 border-t border-blue-200 p-3">
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-t border-blue-200 p-3">
       <form onSubmit={handleSubmit} className="flex items-center">
         {/* カメラボタン - with label */}
         <div className="flex flex-col items-center mr-3">
-          <span className="text-xs font-medium text-blue-700 mb-1">カメラ起動</span>
+          <span className="text-xs font-medium text-indigo-700 mb-1">カメラ起動</span>
           <Button 
             type="button" 
             onClick={handleCameraClick}
             size="icon"
             variant="ghost"
-            className="p-4 rounded-full hover:bg-blue-200"
+            className="p-4 rounded-full bg-gradient-to-r from-indigo-100 to-cyan-100 hover:from-indigo-200 hover:to-cyan-200 border border-indigo-300"
           >
-            <Camera className="h-10 w-10 text-blue-600" />
+            <Camera className="h-10 w-10 text-indigo-600" />
           </Button>
         </div>
         
@@ -75,12 +75,14 @@ export default function MessageInput() {
           onClick={handleMicClick}
           size="icon"
           variant={isRecording ? "default" : "ghost"}
-          className={`p-3 rounded-full ${isRecording ? "bg-blue-600" : "hover:bg-blue-200"} mr-3`}
+          className={`p-3 rounded-full ${isRecording 
+            ? "bg-gradient-to-r from-red-500 to-pink-500" 
+            : "bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 border border-orange-300"} mr-3`}
         >
-          <Mic className={`h-7 w-7 ${isRecording ? "text-white" : "text-blue-600"}`} />
+          <Mic className={`h-7 w-7 ${isRecording ? "text-white" : "text-orange-600"}`} />
         </Button>
         
-        <div className="flex-1 bg-white border border-blue-200 rounded-full px-4 py-2 flex items-center">
+        <div className="flex-1 bg-white border border-blue-200 rounded-full px-4 py-2 flex items-center shadow-inner">
           <Input
             ref={inputRef}
             type="text"
@@ -95,7 +97,7 @@ export default function MessageInput() {
             disabled={isLoading || (!message.trim() && !recordedText.trim())}
             size="icon"
             variant="ghost"
-            className="ml-2 p-2 hover:bg-blue-100 rounded-full"
+            className="ml-2 p-2 bg-gradient-to-r from-sky-100 to-blue-100 hover:from-sky-200 hover:to-blue-200 rounded-full border border-blue-300"
           >
             <Send className="h-8 w-8 text-blue-600" />
           </Button>

@@ -96,16 +96,16 @@ export default function Chat() {
             size="sm"
             onClick={clearChatHistory}
             disabled={isClearing || (displayMessages.length === 0)}
-            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
+            className="flex items-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-300"
           >
             {isClearing ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
                 <span>クリア中...</span>
               </>
             ) : (
               <>
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-purple-600" />
                 <span>履歴クリア</span>
               </>
             )}
@@ -117,16 +117,16 @@ export default function Chat() {
             size="sm"
             onClick={exportChatHistory}
             disabled={isExporting || !hasUnexportedMessages}
-            className="flex items-center gap-2 border-blue-300 bg-white hover:bg-blue-50 text-blue-700"
+            className="flex items-center gap-2 border-green-400 bg-green-50 hover:bg-green-100 text-green-700"
           >
             {isExporting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin text-green-600" />
                 <span>送信中...</span>
               </>
             ) : (
               <>
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4 text-green-600" />
                 <span>履歴送信</span>
               </>
             )}
@@ -137,7 +137,7 @@ export default function Chat() {
             variant="destructive"
             size="sm"
             onClick={handleEndChat}
-            className="flex items-center gap-1 bg-red-500 hover:bg-red-600"
+            className="flex items-center gap-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white border-0"
           >
             <span>チャット終了</span>
           </Button>
