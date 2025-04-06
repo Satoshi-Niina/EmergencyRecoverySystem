@@ -545,10 +545,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Knowledge Base API routes
-  // ドキュメント一覧取得
-  app.get('/api/knowledge', requireAuth, requireAdmin, (req, res) => {
+  // ドキュメント一覧取得 (一般ユーザーも閲覧可能)
+  app.get('/api/knowledge', requireAuth, (req, res) => {
     try {
       const documents = listKnowledgeBaseDocuments();
+      console.log('ナレッジベース一覧結果:', documents);
       res.json(documents);
     } catch (error) {
       console.error('Error listing knowledge base documents:', error);

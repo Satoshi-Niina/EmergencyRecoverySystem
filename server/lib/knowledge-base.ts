@@ -254,8 +254,12 @@ export function listKnowledgeBaseDocuments(): { id: string, title: string, type:
     // まず知識ベースを初期化
     initializeKnowledgeBase();
     
+    console.log('ナレッジベースディレクトリ確認:', KNOWLEDGE_BASE_DIR);
+    console.log('ファイル存在確認:', fs.existsSync(path.join(KNOWLEDGE_BASE_DIR, '保守用車ナレッジ.txt')));
+    
     // インデックスを読み込み
     const index = loadKnowledgeBaseIndex();
+    console.log('既存インデックス:', index);
     
     // 実際にファイルシステムをスキャンして、ファイルが存在するかチェック
     // ルートディレクトリにある保守用車ナレッジ.txtなどのファイルも検出
@@ -264,13 +268,17 @@ export function listKnowledgeBaseDocuments(): { id: string, title: string, type:
       .filter(item => {
         const itemPath = path.join(KNOWLEDGE_BASE_DIR, item);
         // ファイルかどうかをチェック
-        return fs.statSync(itemPath).isFile() && 
-            (item.endsWith('.txt') || 
+        const isFile = fs.statSync(itemPath).isFile();
+        const isValidExt = item.endsWith('.txt') || 
              item.endsWith('.pdf') || 
              item.endsWith('.docx') || 
              item.endsWith('.xlsx') || 
-             item.endsWith('.pptx'));
+             item.endsWith('.pptx');
+        console.log(`ファイル検出: ${item}, isFile: ${isFile}, isValidExt: ${isValidExt}`);
+        return isFile && isValidExt;
       });
+    
+    console.log('ルートディレクトリファイル検出結果:', rootFiles);
     
     // インデックスに未追加のファイルを追加
     for (const file of rootFiles) {
@@ -287,8 +295,12 @@ export function listKnowledgeBaseDocuments(): { id: string, title: string, type:
         else if (file.endsWith('.xlsx')) type = 'excel';
         else if (file.endsWith('.pptx')) type = 'powerpoint';
         
-        // 新しいID生成
-        const newId = `doc_${Date.now()}`;
+        // 新しいID生成（重複を避けるために現在時刻とランダム値を組み合わせる）
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 1000);
+        const newId = `doc_${timestamp}_${random}`;
+        
+        console.log(`新規ファイル追加: ${file}, ID: ${newId}`);
         
         // インデックスに追加
         index.documents.push({
@@ -302,10 +314,50 @@ export function listKnowledgeBaseDocuments(): { id: string, title: string, type:
       }
     }
     
-    // サブディレクトリも検索
+    // サブディレクトリも検索してファイルを処理
     const directories = fs.readdirSync(KNOWLEDGE_BASE_DIR, { withFileTypes: true })
       .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.'))
       .map(dirent => dirent.name);
+      
+    // サブディレクトリ内のファイルも検索して追加
+    for (const dir of directories) {
+      const dirPath = path.join(KNOWLEDGE_BASE_DIR, dir);
+      const subFiles = fs.readdirSync(dirPath)
+        .filter(item => !item.startsWith('.') && 
+          (item.endsWith('.txt') || 
+           item.endsWith('.pdf') || 
+           item.endsWith('.docx') || 
+           item.endsWith('.xlsx') || 
+           item.endsWith('.pptx')));
+      
+      for (const file of subFiles) {
+        const filePath = path.join(dirPath, file);
+        // インデックスにファイルが存在するかチェック
+        const existingDoc = index.documents.find(doc => doc.path === filePath);
+        
+        if (!existingDoc) {
+          // ファイル拡張子を基にタイプを判定
+          let type = 'text';
+          if (file.endsWith('.pdf')) type = 'pdf';
+          else if (file.endsWith('.docx')) type = 'word';
+          else if (file.endsWith('.xlsx')) type = 'excel';
+          else if (file.endsWith('.pptx')) type = 'powerpoint';
+          
+          // 新しいID生成
+          const newId = `doc_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+          
+          // インデックスに追加
+          index.documents.push({
+            id: newId,
+            title: `${dir}/${file}`, // サブディレクトリのパスを含める
+            path: filePath,
+            type,
+            chunkCount: 1, // 仮の値
+            addedAt: new Date().toISOString()
+          });
+        }
+      }
+    }
     
     // インデックスを更新
     saveKnowledgeBaseIndex(index);
@@ -329,28 +381,55 @@ export function listKnowledgeBaseDocuments(): { id: string, title: string, type:
  */
 export function removeDocumentFromKnowledgeBase(docId: string): boolean {
   try {
+    console.log(`ドキュメント削除リクエスト: ${docId}`);
+    
     // インデックスを読み込み
     const index = loadKnowledgeBaseIndex();
     
     // ドキュメントが存在するか確認
     const docIndex = index.documents.findIndex(doc => doc.id === docId);
     if (docIndex === -1) {
+      console.log(`該当ドキュメントがインデックスに見つかりません: ${docId}`);
       return false;
     }
+    
+    // 削除対象ドキュメントのパスを保存
+    const docPath = index.documents[docIndex].path;
+    console.log(`削除対象ドキュメント: ${docPath}`);
     
     // インデックスから削除
     index.documents.splice(docIndex, 1);
     saveKnowledgeBaseIndex(index);
+    console.log(`インデックスから削除しました: ${docId}`);
     
-    // ドキュメントディレクトリを削除
+    // ドキュメントファイルまたはディレクトリを削除
+    if (fs.existsSync(docPath) && !docPath.includes('..')) {
+      // 通常のファイルの場合
+      try {
+        const stats = fs.statSync(docPath);
+        if (stats.isFile()) {
+          fs.unlinkSync(docPath);
+          console.log(`ファイルを削除しました: ${docPath}`);
+        }
+      } catch (err) {
+        console.error(`ファイル削除エラー: ${err.message}`);
+      }
+    }
+    
+    // ドキュメントディレクトリがある場合は削除（処理済みデータ用）
     const docDir = path.join(KNOWLEDGE_BASE_DIR, docId);
-    if (fs.existsSync(docDir)) {
-      fs.rmSync(docDir, { recursive: true, force: true });
+    if (fs.existsSync(docDir) && !docDir.includes('..')) {
+      try {
+        fs.rmSync(docDir, { recursive: true, force: true });
+        console.log(`ディレクトリを削除しました: ${docDir}`);
+      } catch (err) {
+        console.error(`ディレクトリ削除エラー: ${err.message}`);
+      }
     }
     
     return true;
   } catch (err) {
-    console.error(`Error removing document ${docId}:`, err);
+    console.error(`ドキュメント削除中のエラー ${docId}:`, err);
     return false;
   }
 }
