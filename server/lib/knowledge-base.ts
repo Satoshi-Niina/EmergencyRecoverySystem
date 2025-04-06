@@ -200,10 +200,38 @@ export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[
             const textChunks = chunkText(fileContent, { source: docInfo.title });
             console.log(`作成されたチャンク数: ${textChunks.length}`);
             
-            // クエリでフィルタリング
-            const matchingChunks = textChunks.filter((chunk: DocumentChunk) => 
-              chunk.text.toLowerCase().includes(query.toLowerCase())
-            );
+            // クエリでフィルタリング（より高度な検索を実装）
+            const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 2);
+            console.log(`検索キーワード分割: ${queryTerms.join(', ')}`);
+            
+            // 各チャンクのスコアを計算
+            const scoredChunks = textChunks.map((chunk: DocumentChunk) => {
+              const chunkText = chunk.text.toLowerCase();
+              let score = 0;
+              
+              // 各検索語について、含まれている場合はスコアを加算
+              for (const term of queryTerms) {
+                if (chunkText.includes(term)) {
+                  // 完全一致の場合は高いスコア
+                  score += 3;
+                }
+              }
+              
+              // クエリ全体が含まれている場合は特に高いスコア
+              if (chunkText.includes(query.toLowerCase())) {
+                score += 5;
+              }
+              
+              return { chunk, score };
+            });
+            
+            // スコアでソートし、閾値以上のチャンクのみ選択
+            const matchingChunks = scoredChunks
+              .filter(item => item.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .map(item => item.chunk);
+              
+            console.log(`スコアリング後のマッチチャンク数: ${matchingChunks.length}`);
             
             console.log(`マッチしたチャンク数: ${matchingChunks.length}`);
             relevantChunks.push(...matchingChunks);
@@ -225,8 +253,17 @@ export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[
       }
     }
     
-    // 上位15件に制限（結果を増やす）
-    return relevantChunks.slice(0, 15);
+    // より少数の高品質なチャンクを選択（上位7件に制限）
+    // これにより、本当に関連性の高いチャンクのみを返す
+    console.log(`選択前のチャンク数: ${relevantChunks.length}、検索クエリ: "${query}"`);
+    const limitedChunks = relevantChunks.slice(0, 7);
+    
+    // デバッグ用にチャンクの内容を出力
+    limitedChunks.forEach((chunk, idx) => {
+      console.log(`選択されたチャンク ${idx+1}:`, chunk.text.substring(0, 50) + '...');
+    });
+    
+    return limitedChunks;
   } catch (err) {
     console.error('Error searching knowledge base:', err);
     return [];

@@ -21,13 +21,13 @@ export function WarningDialog({
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="text-warning mb-2">
+          <div className="text-orange-500 mb-2">
             <AlertTriangle className="h-8 w-8" />
           </div>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
+          <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
+          <DialogDescription className="mt-2 text-sm">{message}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex justify-end sm:justify-end">
+        <DialogFooter className="flex justify-end space-x-2 pt-2">
           <Button
             variant="outline"
             onClick={onCancel}
@@ -35,10 +35,11 @@ export function WarningDialog({
             キャンセル
           </Button>
           <Button
-            className="bg-warning text-white"
+            variant="default"
+            className="bg-red-500 hover:bg-red-600 text-white"
             onClick={onConfirm}
           >
-            続行
+            OK
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -10,8 +10,8 @@ import { promisify } from 'util';
 // We'll handle PDF worker in the extractPdfText function instead of at the module level
 
 // Constants
-const CHUNK_SIZE = 1000; // Characters per chunk
-const CHUNK_OVERLAP = 200; // Overlap between chunks
+const CHUNK_SIZE = 500; // 小さめのチャンクサイズに設定（以前は1000）
+const CHUNK_OVERLAP = 150; // オーバーラップも調整（以前は200）
 
 // Interface for processed document
 export interface ProcessedDocument {

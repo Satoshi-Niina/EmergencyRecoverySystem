@@ -38,6 +38,9 @@ export async function processOpenAIRequest(prompt: string): Promise<string> {
     // ナレッジベースから関連情報を取得してシステムプロンプトを生成
     const systemPrompt = await generateSystemPromptWithKnowledge(prompt);
 
+    console.log("OpenAI APIに送信するシステムプロンプト:", systemPrompt.substring(0, 200) + "...");
+    console.log("ユーザープロンプト:", prompt);
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -50,7 +53,11 @@ export async function processOpenAIRequest(prompt: string): Promise<string> {
           content: prompt,
         },
       ],
+      temperature: 0.2, // 低い温度設定で確定的な回答を得る
     });
+    
+    // 応答内容をデバッグ出力
+    console.log("GPTからの応答:", response.choices[0].message.content?.substring(0, 100) + "...");
 
     const content =
       response.choices[0].message.content ||
