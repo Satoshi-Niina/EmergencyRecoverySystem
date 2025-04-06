@@ -65,7 +65,7 @@ export default function MessageInput() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-t border-blue-200 p-3">
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-t border-blue-200 p-3 message-input-container">
       <form onSubmit={handleSubmit} className="flex flex-wrap items-center">
         <div className="w-full flex justify-between mb-2 md:hidden">
           {/* カメラボタン (モバイル向け) */}

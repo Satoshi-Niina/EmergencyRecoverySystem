@@ -107,7 +107,7 @@ export default function MessageBubble({ message, isDraft = false }: MessageBubbl
       className={`flex items-end mb-4 ${isUserMessage ? "" : "flex-row-reverse"}`}
       onMouseUp={handleMouseUp}
     >
-      <div className={`mx-2 flex flex-col ${isUserMessage ? "items-start" : "items-end"} max-w-[70%]`}>
+      <div className={`mx-2 flex flex-col ${isUserMessage ? "items-start" : "items-end"} max-w-[70%] min-w-[230px]`}>
         <div className="flex items-center gap-2 mb-1">
           {/* AIメッセージの場合に音声読み上げボタンを表示 */}
           {!isUserMessage && (

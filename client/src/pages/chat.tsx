@@ -138,8 +138,32 @@ export default function Chat() {
   const isMobile = useIsMobile();
   const orientation = useOrientation();
   
+  // スクロール挙動の最適化 (特にiOS対応)
+  useEffect(() => {
+    // チャットページがマウントされた時にスクロール設定を適用
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    document.body.style.position = 'relative';
+    
+    // リサイズイベントの処理（iOS対応）
+    const handleResize = () => {
+      // レイアウト再計算を促進
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    // クリーンアップ
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+  
   return (
-    <div className="flex flex-col w-full h-full max-h-screen overflow-hidden bg-blue-50 chat-layout-container">
+    <div className="flex flex-col w-full h-full overflow-auto bg-blue-50 chat-layout-container overflow-scroll-container">
       <div className="border-b border-blue-200 p-2 md:p-3 flex justify-between items-center bg-blue-100 mobile-landscape-header">
         <div className="flex items-center">
           {/* タイトルはヘッダーに移動 */}
@@ -180,9 +204,9 @@ export default function Chat() {
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-auto">
         {/* Chat Messages Area - Made wider for better visibility of images */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4 bg-white chat-messages-container">
+        <div className="flex-1 flex flex-col h-full overflow-auto md:w-3/4 bg-white chat-messages-container">
           {/* Chat Messages */}
           <div id="chatMessages" className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 md:px-8 space-y-4 min-w-[300px]">
             {messagesLoading || isLoading ? (
