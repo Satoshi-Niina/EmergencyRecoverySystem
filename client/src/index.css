@@ -174,6 +174,28 @@
       min-width: 40% !important; /* 最小幅を設定 */
     }
     
+    /* 横向き時の検索結果パネル */
+    #mobile-search-slider {
+      width: 40% !important;
+      right: 0 !important;
+      left: auto !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      height: 100vh !important;
+      transform: translateX(100%) !important;
+      transition: transform 0.3s ease-in-out !important;
+      border-left: 1px solid #bfdbfe;
+      border-top: none !important;
+      border-radius: 0 !important;
+      position: fixed !important;
+      max-height: 100vh !important;
+      z-index: 1000 !important;
+    }
+    
+    #mobile-search-slider[style*="transform: none"] {
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    }
+    
     /* モバイル横向き時のヘッダー調整 */
     .mobile-landscape-header {
       position: sticky;

@@ -148,25 +148,67 @@ export default function Chat() {
     const handleOrientationChange = () => {
       // 検索結果を表示するスライダーがあれば位置調整
       const searchSlider = document.getElementById('mobile-search-slider');
+      const chatMessages = document.querySelector('.chat-messages-container') as HTMLElement;
+      
       if (searchSlider) {
-        // 横向きの場合は高さを調整
+        // 横向きの場合は画面右側に固定表示
         if (orientation === 'landscape') {
+          // チャットエリアを縮小して検索パネル用スペースを作る
+          if (chatMessages) {
+            chatMessages.style.width = '60%';
+            chatMessages.style.flex = '0 0 60%';
+            chatMessages.style.maxWidth = '60%';
+          }
+          
+          // 検索パネルを右側に固定
+          searchSlider.style.position = 'fixed';
           searchSlider.style.maxHeight = '100vh';
           searchSlider.style.height = '100vh';
           searchSlider.style.top = '0';
+          searchSlider.style.bottom = '0';
           searchSlider.style.width = '40%';
           searchSlider.style.right = '0';
           searchSlider.style.left = 'auto';
           searchSlider.style.transform = 'none';
           searchSlider.style.transition = 'none';
+          searchSlider.style.borderLeft = '1px solid #bfdbfe';
+          searchSlider.style.zIndex = '10';
+          searchSlider.style.backgroundColor = '#eff6ff';
+          searchSlider.style.paddingTop = '0';
+          searchSlider.style.overflowY = 'auto';
+          
+          // 丸ボタン位置調整
+          const searchButton = document.querySelector('.mobile-search-button') as HTMLElement;
+          if (searchButton) {
+            searchButton.style.bottom = '20px';
+            searchButton.style.right = '45%';
+          }
         } else {
+          // 縦向きは従来通り下から表示
+          if (chatMessages) {
+            chatMessages.style.width = '';
+            chatMessages.style.flex = '';
+            chatMessages.style.maxWidth = '';
+          }
+          
           searchSlider.style.maxHeight = '70vh';
           searchSlider.style.width = '100%';
           searchSlider.style.right = 'auto';
           searchSlider.style.left = '0';
           searchSlider.style.top = 'auto';
+          searchSlider.style.position = 'fixed';
+          searchSlider.style.bottom = '0';
           searchSlider.style.transform = 'translateY(100%)';
           searchSlider.style.transition = 'transform 300ms ease-in-out';
+          searchSlider.style.borderLeft = 'none';
+          searchSlider.style.borderTop = '1px solid #bfdbfe';
+          
+          // 丸ボタン位置を元に戻す
+          const searchButton = document.querySelector('.mobile-search-button') as HTMLElement;
+          if (searchButton) {
+            searchButton.style.bottom = '20px';
+            searchButton.style.right = '16px';
+          }
         }
       }
     };
@@ -324,7 +366,7 @@ export default function Chat() {
           className="fixed inset-x-0 bottom-0 transform translate-y-full transition-transform duration-300 ease-in-out md:hidden z-50"
           style={{ display: 'block' }}
         >
-          <div className="bg-blue-50 border-t border-blue-200 rounded-t-xl max-h-[70vh] overflow-y-auto">
+          <div className="bg-blue-50 border-t border-blue-200 rounded-t-xl overflow-y-auto" style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
             <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
               <h3 className="font-semibold text-blue-800">検索結果</h3>
               <Button
