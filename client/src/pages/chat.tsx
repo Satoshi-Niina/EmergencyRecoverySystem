@@ -163,7 +163,7 @@ export default function Chat() {
   }, []);
   
   return (
-    <div className="flex flex-col w-full h-full overflow-auto bg-blue-50 chat-layout-container overflow-scroll-container">
+    <div className="flex flex-col w-full h-full overflow-auto bg-blue-50 chat-layout-container overflow-scroll-container" style={{ minWidth: orientation === 'landscape' && window.innerHeight < 600 ? '740px' : '100%' }}>
       <div className="border-b border-blue-200 p-2 md:p-3 flex justify-between items-center bg-blue-100 mobile-landscape-header">
         <div className="flex items-center">
           {/* タイトルはヘッダーに移動 */}
