@@ -114,11 +114,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return newChat.id;
     } catch (error) {
       console.error('Failed to initialize chat:', error);
-      toast({
-        title: 'チャット初期化エラー',
-        description: 'チャットの初期化に失敗しました。',
-        variant: 'destructive',
-      });
+      // 401エラーの場合はトーストを表示しない（未ログイン時）
+      if (!(error instanceof Error && error.message.includes('401'))) {
+        toast({
+          title: 'チャット初期化エラー',
+          description: 'チャットの初期化に失敗しました。',
+          variant: 'destructive',
+        });
+      }
       return null;
     } finally {
       setIsInitializing(false);

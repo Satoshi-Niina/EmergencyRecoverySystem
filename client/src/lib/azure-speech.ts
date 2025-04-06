@@ -172,6 +172,17 @@ interface Window {
 
 // Check if browser supports speech recognition
 const browserSupportsSpeechRecognition = () => {
+  // Safari on iOS/iPadOS doesn't support SpeechRecognition API properly
+  const isIOSDevice = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  };
+  
+  // iOS/iPadOSデバイスの場合はfalseを返す（Azureを使用する）
+  if (isIOSDevice()) {
+    return false;
+  }
+  
   return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
 };
 
