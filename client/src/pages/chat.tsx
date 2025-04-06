@@ -145,11 +145,36 @@ export default function Chat() {
     document.documentElement.style.overflow = 'auto';
     document.body.style.position = 'relative';
     
+    // iOS向け特定のスタイルを追加
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isiOS) {
+      // iOSデバイスに対する特別な処理
+      document.body.classList.add('ios-device');
+      
+      // 横向き時の特別な処理
+      if (orientation === 'landscape') {
+        document.body.classList.add('ios-landscape');
+      } else {
+        document.body.classList.remove('ios-landscape');
+      }
+    }
+    
     // リサイズイベントの処理（iOS対応）
     const handleResize = () => {
       // レイアウト再計算を促進
       document.body.style.overflow = 'auto';
       document.documentElement.style.overflow = 'auto';
+      
+      if (isiOS && 'orientation' in window) {
+        // 横向きかどうかを確認
+        // @ts-ignore - TypeScript doesn't recognize window.orientation but it exists in browsers
+        const isLandscape = Math.abs(window.orientation as number) === 90;
+        if (isLandscape) {
+          document.body.classList.add('ios-landscape');
+        } else {
+          document.body.classList.remove('ios-landscape');
+        }
+      }
     };
     
     window.addEventListener('resize', handleResize);
@@ -159,8 +184,10 @@ export default function Chat() {
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
+      document.body.classList.remove('ios-device');
+      document.body.classList.remove('ios-landscape');
     };
-  }, []);
+  }, [orientation]);
   
   return (
     <div className="flex flex-col w-full h-full overflow-auto bg-blue-50 chat-layout-container overflow-scroll-container" style={{ minWidth: orientation === 'landscape' && window.innerHeight < 600 ? '740px' : '100%' }}>
@@ -204,7 +231,7 @@ export default function Chat() {
         </div>
       </div>
       
-      <div className={`flex-1 flex ${orientation === 'landscape' && isMobile ? 'flex-row' : 'flex-col md:flex-row'} overflow-auto`}>
+      <div className={`flex-1 flex ${orientation === 'landscape' && isMobile ? 'flex-row' : 'flex-col md:flex-row'} overflow-auto chat-layout-container`}>
         {/* Chat Messages Area - Made wider for better visibility of images */}
         <div className={`flex-1 flex flex-col h-full overflow-auto ${orientation === 'landscape' && isMobile ? 'w-3/5' : 'md:w-3/4'} bg-white chat-messages-container`}>
           {/* Chat Messages */}
@@ -269,7 +296,7 @@ export default function Chat() {
         </div>
 
         {/* Information Panel - モバイルではスライダーで表示、デスクトップ/横向きでは常に表示 */}
-        <div className={`${orientation === 'landscape' && isMobile ? 'block w-2/5' : 'hidden md:block md:w-1/4'} border-l border-blue-200 bg-blue-50 overflow-y-auto`}>
+        <div className={`${orientation === 'landscape' && isMobile ? 'block w-2/5' : 'hidden md:block md:w-1/4'} border-l border-blue-200 bg-blue-50 overflow-y-auto search-results-panel`}>
           <SearchResults results={searchResults} onClear={clearSearchResults} />
         </div>
         

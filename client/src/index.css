@@ -104,14 +104,50 @@
       height: -webkit-fill-available;
       overflow-x: auto !important;
       min-height: -webkit-fill-available;
+      overflow-y: auto !important;
+      width: 100vw;
     }
     #root {
       min-height: -webkit-fill-available;
+      width: 100vw;
+      overflow-x: auto !important;
     }
-    .chat-layout-container {
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-    }
+  }
+  
+  /* iOSデバイスのJavaScriptクラス追加による対応 */
+  body.ios-device {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  /* iOS横向き時の特別対応 */
+  body.ios-landscape {
+    width: 100vw;
+    overflow-x: auto !important;
+  }
+  
+  body.ios-landscape .chat-layout-container {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    overflow-x: auto !important;
+  }
+  
+  body.ios-landscape .chat-messages-container {
+    width: 60% !important;
+    min-width: 60% !important;
+    max-width: 60% !important;
+    overflow-y: auto !important;
+  }
+  
+  body.ios-landscape .search-results-panel {
+    display: block !important;
+    width: 40% !important;
+    min-width: 40% !important;
+    max-width: 40% !important;
+    overflow-y: auto !important;
   }
   
   /* モバイル横向き用のスタイル */
