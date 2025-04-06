@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
+import { useChat } from "@/context/chat-context";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
+import { Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface MessageBubbleProps {
   message: {
@@ -21,7 +24,10 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
   const { user } = useAuth();
-  const [selectedText, setSelectedText] = useState("");
+  const { setSelectedText } = useChat();
+  const [localSelectedText, setLocalSelectedText] = useState("");
+  const [showCopyButton, setShowCopyButton] = useState(false);
+  const { toast } = useToast();
   
   const isUserMessage = !message.isAiResponse;
   const formattedTime = format(
@@ -34,9 +40,24 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   const handleMouseUp = () => {
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0) {
-      setSelectedText(selection.toString().trim());
+      const selectedTextValue = selection.toString().trim();
+      setLocalSelectedText(selectedTextValue);
+      setShowCopyButton(true);
     } else {
-      setSelectedText("");
+      setLocalSelectedText("");
+      setShowCopyButton(false);
+    }
+  };
+  
+  // テキストをメッセージ入力欄にコピーする
+  const copyToInput = () => {
+    if (localSelectedText) {
+      setSelectedText(localSelectedText);
+      toast({
+        title: "テキストをコピーしました",
+        description: "選択したテキストが入力欄にコピーされました。",
+      });
+      setShowCopyButton(false);
     }
   };
 
@@ -53,7 +74,20 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
               : "chat-bubble-ai bg-white rounded-[18px_18px_18px_4px] border border-blue-200"
           }`}
         >
-          <p className={`${!isUserMessage ? "text-blue-800" : "text-blue-900"}`}>{message.content}</p>
+          <div className="relative">
+            <p className={`${!isUserMessage ? "text-indigo-700" : "text-blue-900"}`}>{message.content}</p>
+            
+            {/* テキスト選択時のコピーボタン */}
+            {showCopyButton && (
+              <button
+                onClick={copyToInput}
+                className="absolute -top-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full shadow-md hover:bg-blue-700 transition-colors"
+                title="入力欄にコピー"
+              >
+                <Copy size={14} />
+              </button>
+            )}
+          </div>
           
           {/* Display media attachments if any */}
           {message.media && message.media.length > 0 && (
@@ -120,7 +154,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       </div>
       <div>
         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-          isUserMessage ? "bg-blue-500" : "bg-blue-700"
+          isUserMessage ? "bg-blue-500" : "bg-indigo-600"
         }`}>
           <span className={`material-icons text-white text-sm ${
             isUserMessage ? "" : ""

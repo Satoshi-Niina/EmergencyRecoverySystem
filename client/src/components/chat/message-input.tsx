@@ -1,15 +1,23 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/chat-context";
-import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Camera, LogOut } from "lucide-react";
+import { Mic, Send, Camera } from "lucide-react";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
-  const { sendMessage, isLoading, startRecording, stopRecording, isRecording, recordedText } = useChat();
-  const { logout } = useAuth();
+  const { sendMessage, isLoading, startRecording, stopRecording, isRecording, recordedText, selectedText } = useChat();
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // 選択されたテキストが変更されたら入力欄に反映
+  useEffect(() => {
+    if (selectedText) {
+      setMessage(selectedText);
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }
+  }, [selectedText]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
@@ -44,27 +52,9 @@ export default function MessageInput() {
     window.dispatchEvent(new CustomEvent('open-camera'));
   };
 
-  const handleLogout = async () => {
-    if (isRecording) {
-      stopRecording();
-    }
-    await logout();
-  };
-
   return (
     <div className="bg-blue-50 border-t border-blue-200 p-3">
       <form onSubmit={handleSubmit} className="flex items-center">
-        {/* 終了ボタン */}
-        <Button 
-          type="button" 
-          onClick={handleLogout}
-          size="icon"
-          variant="ghost"
-          className="p-3 rounded-full hover:bg-red-100 mr-3"
-        >
-          <LogOut className="h-6 w-6 text-red-600" />
-        </Button>
-        
         {/* カメラボタン - with label */}
         <div className="flex flex-col items-center mr-3">
           <span className="text-xs font-medium text-blue-700 mb-1">カメラ起動</span>
@@ -73,9 +63,9 @@ export default function MessageInput() {
             onClick={handleCameraClick}
             size="icon"
             variant="ghost"
-            className="p-3 rounded-full hover:bg-blue-200"
+            className="p-4 rounded-full hover:bg-blue-200"
           >
-            <Camera className="h-7 w-7 text-blue-600" />
+            <Camera className="h-10 w-10 text-blue-600" />
           </Button>
         </div>
         

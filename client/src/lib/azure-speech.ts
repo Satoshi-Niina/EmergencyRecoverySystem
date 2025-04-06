@@ -59,10 +59,15 @@ export const startSpeechRecognition = (
       console.log(`認識中: ${e.result.text}`);
     };
     
-    // 途中結果も表示
+    // 前回の認識テキストを保存する変数
+    let lastRecognizedText = '';
+    
+    // 途中結果も表示（重複を防止）
     recognizer.recognizing = (s, e) => {
-      if (e.result.text) {
-        onResult(e.result.text + '...');
+      if (e.result.text && e.result.text !== lastRecognizedText) {
+        // 重複を防ぐため、前回の結果と異なる場合のみ通知
+        onResult(e.result.text);
+        lastRecognizedText = e.result.text;
       }
     };
     
@@ -136,13 +141,20 @@ export const startBrowserSpeechRecognition = (
   browserRecognition.interimResults = true;
   browserRecognition.lang = 'ja-JP';
 
+  // 前回の認識結果を保存
+  let lastTranscript = '';
+  
   browserRecognition.onresult = (event: any) => {
     const transcript = Array.from(event.results)
       .map((result: any) => result[0])
       .map((result) => result.transcript)
       .join('');
     
-    onResult(transcript);
+    // 重複を防ぐために前回と同じ結果でない場合のみ通知
+    if (transcript !== lastTranscript) {
+      onResult(transcript);
+      lastTranscript = transcript;
+    }
   };
 
   browserRecognition.onerror = (event: any) => {

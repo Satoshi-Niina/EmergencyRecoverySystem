@@ -164,16 +164,16 @@ export default function CameraModal() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-md p-0 overflow-hidden bg-blue-50 border border-blue-200">
         <DialogHeader className="p-4 border-b border-blue-200 flex flex-row justify-between items-center bg-blue-100">
-          <DialogTitle className="text-blue-800 text-lg font-bold">カメラ起動</DialogTitle>
+          <DialogTitle className="text-indigo-600 text-lg font-bold">カメラ起動</DialogTitle>
           <div className="flex items-center space-x-4">
             <div className="flex items-center bg-white px-2 py-1 rounded-full">
-              <TabletSmartphone className="h-4 w-4 mr-2 text-blue-600" />
+              <TabletSmartphone className="h-6 w-6 mr-2 text-indigo-600" />
               <Switch 
                 id="camera-mode" 
                 checked={isVideoMode}
                 onCheckedChange={toggleCameraMode}
               />
-              <VideoIcon className="h-4 w-4 ml-2 text-blue-600" />
+              <VideoIcon className="h-6 w-6 ml-2 text-indigo-600" />
             </div>
             <Button 
               variant="ghost" 

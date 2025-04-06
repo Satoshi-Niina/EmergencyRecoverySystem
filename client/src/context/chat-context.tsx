@@ -66,6 +66,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hasUnexportedMessages, setHasUnexportedMessages] = useState(false);
   const [chatId, setChatId] = useState<number | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [tempMedia, setTempMedia] = useState<{ type: string, url: string, thumbnail?: string }[]>([]);
   const { toast } = useToast();
   
   // チャットの初期化
@@ -160,24 +161,39 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const data = await response.json();
       
-      // Add user message and AI response to the state
+      // 一時保存されたメディアとパラメータで渡されたメディアを結合
+      const allMedia = [
+        ...(tempMedia || []),
+        ...(mediaUrls || [])
+      ];
+      
+      // Add user message to the messages state
       setMessages(prev => [
         ...prev, 
         { 
           ...data.userMessage, 
           timestamp: new Date(data.userMessage.timestamp),
-          media: mediaUrls ? mediaUrls.map((media, idx) => ({
+          media: allMedia.length > 0 ? allMedia.map((media, idx) => ({
             id: Date.now() + idx,
             messageId: data.userMessage.id,
             ...media
           })) : []
-        },
-        { 
-          ...data.aiMessage, 
-          timestamp: new Date(data.aiMessage.timestamp),
-          media: []
         }
       ]);
+      
+      // AI 応答を検索結果として表示する
+      setSearchResults([
+        {
+          id: data.aiMessage.id,
+          title: "AIによる回答",
+          type: "ai-response",
+          content: data.aiMessage.content,
+          timestamp: new Date(data.aiMessage.timestamp)
+        }
+      ]);
+      
+      // 一時メディアをクリア
+      setTempMedia([]);
       
       setRecordedText('');
     } catch (error) {
@@ -232,25 +248,31 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const captureImage = async (imageData: string, type: 'image' | 'video') => {
     try {
-      // In a real implementation, you would upload this to a server
-      // For now, we'll just add it to the message directly
-      const content = type === 'image' ? '画像を共有しました' : '動画を共有しました';
-      await sendMessage(content, [
-        {
-          type,
+      // 一時的にメディアを保存
+      const newMedia = {
+        type,
+        url: imageData,
+        thumbnail: type === 'video' ? imageData : undefined
+      };
+      
+      setTempMedia(prev => [...prev, newMedia]);
+      
+      // プレビュー用のイベントを発火
+      window.dispatchEvent(new CustomEvent('preview-image', { 
+        detail: { 
           url: imageData,
-          thumbnail: type === 'video' ? imageData : undefined
+          isTemp: true 
         }
-      ]);
+      }));
       
       toast({
-        title: `${type === 'image' ? '画像' : '動画'}がアップロードされました`,
-        description: 'メディアが正常にアップロードされました。',
+        title: `${type === 'image' ? '画像' : '動画'}がキャプチャされました`,
+        description: 'メッセージを入力して送信してください。',
       });
     } catch (error) {
       toast({
-        title: 'アップロードエラー',
-        description: 'メディアのアップロードに失敗しました。',
+        title: 'キャプチャエラー',
+        description: 'メディアのキャプチャに失敗しました。',
         variant: 'destructive',
       });
     }
