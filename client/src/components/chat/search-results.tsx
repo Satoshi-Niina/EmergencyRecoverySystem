@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { X, ExternalLink, FileText, MessageCircle } from "lucide-react";
+import { useOrientation } from "@/hooks/use-orientation";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SearchResult {
   id: number;
@@ -17,6 +19,8 @@ interface SearchResultsProps {
 }
 
 export default function SearchResults({ results, onClear }: SearchResultsProps) {
+  const orientation = useOrientation();
+  const isMobile = useIsMobile();
   if (results.length === 0) {
     return (
       <div className="p-4">
@@ -29,8 +33,13 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
     );
   }
 
+  // モバイル&横向きの場合は全画面表示、それ以外は通常表示
+  const containerClass = isMobile && orientation === 'landscape'
+    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto"
+    : "p-4 overflow-x-auto";
+
   return (
-    <div className="p-4">
+    <div className={containerClass}>
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-semibold text-lg text-blue-700">検索結果</h2>
         <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
@@ -38,7 +47,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
         </Button>
       </div>
       
-      <div className="space-y-4">
+      <div className={`space-y-4 ${isMobile ? 'w-full max-w-md mx-auto' : ''}`}>
         {results.map((result) => (
           <div key={result.id} className="rounded-lg border border-blue-200 overflow-hidden bg-white shadow-sm">
             {result.url ? (

@@ -9,11 +9,13 @@ import {
   Square, 
   Pause, 
   Circle, 
-  TabletSmartphone 
+  TabletSmartphone,
+  RotateCcw
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useOrientation } from "@/hooks/use-orientation";
 
 export default function CameraModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +23,7 @@ export default function CameraModal() {
   const [isRecording, setIsRecording] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [useBackCamera, setUseBackCamera] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -28,6 +31,7 @@ export default function CameraModal() {
   
   const { captureImage } = useChat();
   const { toast } = useToast();
+  const orientation = useOrientation();
 
   useEffect(() => {
     // Listen for open-camera event
@@ -52,7 +56,9 @@ export default function CameraModal() {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: true,
+        video: { 
+          facingMode: useBackCamera ? "environment" : "user" 
+        },
         audio: isVideoMode 
       });
       
@@ -69,6 +75,12 @@ export default function CameraModal() {
         variant: "destructive",
       });
     }
+  };
+  
+  const toggleCamera = () => {
+    setUseBackCamera(!useBackCamera);
+    stopCamera();
+    setTimeout(() => startCamera(), 300);
   };
 
   const stopCamera = () => {
@@ -162,7 +174,7 @@ export default function CameraModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md p-0 overflow-hidden bg-blue-50 border border-blue-200">
+      <DialogContent className={`${orientation === 'landscape' ? 'max-w-3xl' : 'max-w-md'} p-0 overflow-hidden bg-blue-50 border border-blue-200`}>
         <DialogHeader className="p-4 border-b border-blue-200 flex flex-row justify-between items-center bg-blue-100">
           <DialogTitle className="text-indigo-600 text-lg font-bold">カメラ起動</DialogTitle>
           <div className="flex items-center space-x-4">
@@ -193,24 +205,36 @@ export default function CameraModal() {
               autoPlay 
               playsInline 
               muted 
-              className="w-full h-80 bg-neutral-800 object-cover"
+              className={`w-full ${orientation === 'landscape' ? 'h-64' : 'h-80'} bg-neutral-800 object-cover`}
             />
           ) : (
             isVideoMode ? (
               <video 
                 src={capturedImage} 
                 controls 
-                className="w-full h-80 bg-neutral-800 object-contain"
+                className={`w-full ${orientation === 'landscape' ? 'h-64' : 'h-80'} bg-neutral-800 object-contain`}
                 onClick={() => window.dispatchEvent(new CustomEvent('preview-image', { detail: { url: capturedImage } }))}
               />
             ) : (
               <img 
                 src={capturedImage} 
                 alt="Captured" 
-                className="w-full h-80 bg-neutral-800 object-contain"
+                className={`w-full ${orientation === 'landscape' ? 'h-64' : 'h-80'} bg-neutral-800 object-contain`}
                 onClick={() => window.dispatchEvent(new CustomEvent('preview-image', { detail: { url: capturedImage } }))}
               />
             )
+          )}
+          
+          {/* カメラ切り替えボタン */}
+          {!capturedImage && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleCamera}
+              className="absolute top-2 left-2 bg-white/80 rounded-full p-2 shadow-md"
+            >
+              <RotateCcw className="h-5 w-5 text-blue-600" />
+            </Button>
           )}
           
           {/* Camera Controls - Different for Photo and Video modes */}
