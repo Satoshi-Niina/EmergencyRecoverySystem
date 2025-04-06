@@ -209,17 +209,43 @@ export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[
               const chunkText = chunk.text.toLowerCase();
               let score = 0;
               
-              // 各検索語について、含まれている場合はスコアを加算
-              for (const term of queryTerms) {
-                if (chunkText.includes(term)) {
-                  // 完全一致の場合は高いスコア
-                  score += 3;
+              // 単一キーワード検索の強化対応
+              if (queryTerms.length === 1 && query.length >= 2) {
+                // 「エンジン」などの単一キーワード検索の場合は特別な処理
+                const singleKeyword = query.toLowerCase();
+                
+                // 単語の完全一致（「エンジン」と「エンジン」）
+                if (chunkText.includes(singleKeyword)) {
+                  score += 10; // 単一キーワードの完全一致は最も重要
+                  
+                  // 重要キーワードの特別ボーナス
+                  if (singleKeyword === 'エンジン' || 
+                      singleKeyword === 'フレーム' || 
+                      singleKeyword === 'キャビン' || 
+                      singleKeyword === '運転室') {
+                    score += 5; // 特に重要なキーワードならさらにボーナススコア
+                  }
                 }
-              }
-              
-              // クエリ全体が含まれている場合は特に高いスコア
-              if (chunkText.includes(query.toLowerCase())) {
-                score += 5;
+                
+                // 単語の部分一致（「エンジン」と「メインエンジン」）
+                const keywordMatches = (chunkText.match(new RegExp(singleKeyword, 'g')) || []).length;
+                if (keywordMatches > 0) {
+                  score += keywordMatches * 2;
+                }
+              } else {
+                // 通常の複数キーワード検索の場合
+                // 各検索語について、含まれている場合はスコアを加算
+                for (const term of queryTerms) {
+                  if (chunkText.includes(term)) {
+                    // 完全一致の場合は高いスコア
+                    score += 3;
+                  }
+                }
+                
+                // クエリ全体が含まれている場合は特に高いスコア
+                if (chunkText.includes(query.toLowerCase())) {
+                  score += 5;
+                }
               }
               
               return { chunk, score };
@@ -284,22 +310,25 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 
 ## 厳守事項（最重要）
 - 提供された知識ベースの情報のみを使用し、それ以外の一般知識や推測による回答は絶対に行わない
-- 情報がない場合は「ナレッジベースに情報なし」とだけ回答し、代替情報は提供しない
 - 知識ベースにない質問に対して一般的な知識で答えることは禁止
 
+## 重要な検索語句のヒント
+- 「エンジン」の場合：軌道モータカーのディーゼルエンジン構造、分類（600型、400型、300型、200型）、製造メーカー別の型式（堀川工機、松山重車両など）、機械式と電子噴射式、高トルク、油圧ポンプ、エアーコンプレッサーの情報を含める
+- 「フレーム」の場合：軌道モータカーのフレーム構造、H鋼、メーンフレーム、サイドメンバー、クロスメンバー、強度、はしご状構造に関する情報を含める
+- 「キャビン」「運転室」の場合：防振ゴム、ガラス、モール、ひねり対策、ワイパー、冷暖房、乗務、労働安全衛生規則に関する情報を含める
+
 ## 回答方針（最重要）
-- 【応急処置】だけに絞って回答する
-- 他の情報は一切含めない
+- 【緊急復旧】のタイトルで回答
 - 「〜です」「〜ます」などの丁寧表現は省略し「〜する」など簡潔な表現を使用する
 - 具体的な操作・部品・工具名を明記する
 - 手順は番号付きリストで表示し、各ステップは具体的行動を指示する
 
 ## 回答方法（必ず守る）
-- タイトルとして【応急処置】だけを表示する
+- タイトルとして【緊急復旧】を表示
 - 実際の作業手順を番号付きリストで示す
 - 例：「1. エンジンキーをOFF」「2. 燃料バルブを閉める」
 - 点検項目や原因は含めない
-- 知識ベースに情報がない場合は「ナレッジベースに情報なし」とだけ回答する
+- 知識ベースに明確に関連する情報が全くない場合のみ「ナレッジベースに情報なし」と回答する
 
 ## 安全注意事項
 - 危険性がある場合のみ、先頭に【危険】と記載する
@@ -316,7 +345,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
       basePrompt += `---\n出典: ${chunk.metadata.source}\n\n${chunk.text}\n---\n\n`;
     }
     
-    basePrompt += `\n上記の情報のみを参考にしながら、回答します。情報にない場合は「ナレッジベースに情報なし」と短く伝えてください。必ず【応急処置】のみを示し、番号付きリストでステップバイステップの作業手順のみを提示してください。`;
+    basePrompt += `\n上記の情報のみを参考にしながら、回答します。もし情報が不足している場合でも、少しでも関連する情報があれば抽出して回答してください。必ず【緊急復旧】のタイトルで、番号付きリストでステップバイステップの作業手順を提示してください。`;
   } else {
     // 関連情報が見つからない場合
     basePrompt += `\n\n質問に関する情報がナレッジベースにありません。「ナレッジベースに該当情報なし」と短く回答してください。一般知識での回答は避け、具体的な内容が提供できない場合は明確にその旨を伝えてください。`;
