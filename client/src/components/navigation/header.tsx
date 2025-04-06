@@ -39,7 +39,7 @@ export default function Header() {
               size="sm"
               onClick={clearChatHistory}
               disabled={isClearing}
-              className="bg-transparent border border-red-300 hover:bg-red-100 hover:text-red-800 text-red-100"
+              className="bg-transparent border border-white hover:bg-red-100 hover:text-red-800 text-white"
             >
               {isClearing ? (
                 <>

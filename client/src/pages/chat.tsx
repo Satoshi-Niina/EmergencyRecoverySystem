@@ -179,7 +179,7 @@ export default function Chat() {
         {/* Chat Messages Area - Made wider for better visibility of images */}
         <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4 bg-white">
           {/* Chat Messages */}
-          <div id="chatMessages" className="flex-1 overflow-y-auto p-4 md:px-8 space-y-4">
+          <div id="chatMessages" className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 md:px-8 space-y-4">
             {messagesLoading || isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <p className="text-blue-700">メッセージを読み込み中...</p>
@@ -239,9 +239,43 @@ export default function Chat() {
           <MessageInput />
         </div>
 
-        {/* Information Panel - Hidden on mobile, shown on larger screens - Made narrower */}
+        {/* Information Panel - モバイルではスライダーで表示、デスクトップでは常に表示 */}
         <div className="hidden md:block md:w-1/4 border-l border-blue-200 bg-blue-50 overflow-y-auto">
           <SearchResults results={searchResults} onClear={clearSearchResults} />
+        </div>
+        
+        {/* モバイル用検索結果スライダー */}
+        {searchResults && searchResults.length > 0 && (
+          <div className="fixed bottom-20 right-4 md:hidden">
+            <Button
+              onClick={() => document.getElementById('mobile-search-slider')?.classList.toggle('translate-y-full')}
+              className="rounded-full w-12 h-12 bg-blue-500 hover:bg-blue-600 shadow-lg flex items-center justify-center"
+            >
+              <span className="text-white font-bold">{searchResults.length}</span>
+            </Button>
+          </div>
+        )}
+        
+        <div 
+          id="mobile-search-slider" 
+          className="fixed inset-x-0 bottom-0 transform translate-y-full transition-transform duration-300 ease-in-out md:hidden z-50"
+        >
+          <div className="bg-blue-50 border-t border-blue-200 rounded-t-xl max-h-[70vh] overflow-y-auto">
+            <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
+              <h3 className="font-semibold text-blue-800">検索結果</h3>
+              <Button
+                size="sm" 
+                variant="ghost"
+                onClick={() => document.getElementById('mobile-search-slider')?.classList.add('translate-y-full')}
+                className="text-blue-700"
+              >
+                閉じる
+              </Button>
+            </div>
+            <div className="p-2">
+              <SearchResults results={searchResults} onClear={clearSearchResults} />
+            </div>
+          </div>
         </div>
       </div>
 
