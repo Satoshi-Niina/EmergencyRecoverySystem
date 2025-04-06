@@ -2,6 +2,8 @@
 import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
 
 let recognizer: sdk.SpeechRecognizer | null = null;
+let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+const SILENCE_TIMEOUT = 30000; // 30秒の無音タイムアウト
 
 // Azure Speech設定を初期化
 const initAzureSpeechConfig = () => {
@@ -23,6 +25,21 @@ const initAzureSpeechConfig = () => {
   }
 };
 
+// 無音タイマーをリセットする関数
+const resetSilenceTimer = (onSilenceTimeout: () => void) => {
+  // 既存のタイマーをクリア
+  if (silenceTimer) {
+    clearTimeout(silenceTimer);
+    silenceTimer = null;
+  }
+  
+  // 新しいタイマーを設定
+  silenceTimer = setTimeout(() => {
+    console.log('無音タイムアウト: 30秒間音声入力がありませんでした');
+    onSilenceTimeout();
+  }, SILENCE_TIMEOUT);
+};
+
 // Start speech recognition
 export const startSpeechRecognition = (
   onResult: (text: string) => void, 
@@ -40,10 +57,31 @@ export const startSpeechRecognition = (
     const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
     recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
     
-    // 音声認識結果のイベントハンドラ
+    // 前回の認識テキストを保存する変数
+    let lastRecognizedText = '';
+    
+    // 無音タイマーの初期設定
+    resetSilenceTimer(() => {
+      // タイムアウト時は音声認識を停止
+      stopSpeechRecognition();
+      onError('30秒間音声が検出されなかったため、音声認識を停止しました。');
+    });
+    
+    // 音声認識結果のイベントハンドラ - 最終結果のみを通知
     recognizer.recognized = (s, e) => {
       if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
-        onResult(e.result.text);
+        const newText = e.result.text.trim();
+        if (newText && newText !== lastRecognizedText) {
+          // 重複を防ぐため、前回の結果と異なる場合のみ通知
+          onResult(newText);
+          lastRecognizedText = newText;
+          
+          // 音声が検出されたので無音タイマーをリセット
+          resetSilenceTimer(() => {
+            stopSpeechRecognition();
+            onError('30秒間音声が検出されなかったため、音声認識を停止しました。');
+          });
+        }
       }
     };
     
@@ -52,23 +90,21 @@ export const startSpeechRecognition = (
       if (e.reason === sdk.CancellationReason.Error) {
         onError(`音声認識エラー: ${e.errorDetails}`);
       }
+      // タイマーをクリア
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
     };
     
-    // 音声認識エラー時のイベントハンドラ
+    // 途中結果は表示しない - 最終結果のみ使用
     recognizer.recognizing = (s, e) => {
       console.log(`認識中: ${e.result.text}`);
-    };
-    
-    // 前回の認識テキストを保存する変数
-    let lastRecognizedText = '';
-    
-    // 途中結果も表示（重複を防止）
-    recognizer.recognizing = (s, e) => {
-      if (e.result.text && e.result.text !== lastRecognizedText) {
-        // 重複を防ぐため、前回の結果と異なる場合のみ通知
-        onResult(e.result.text);
-        lastRecognizedText = e.result.text;
-      }
+      // 音声が検出されたので無音タイマーをリセット
+      resetSilenceTimer(() => {
+        stopSpeechRecognition();
+        onError('30秒間音声が検出されなかったため、音声認識を停止しました。');
+      });
     };
     
     // 連続認識を開始
@@ -77,16 +113,32 @@ export const startSpeechRecognition = (
       (error) => {
         console.error('認識開始エラー:', error);
         onError(`認識開始エラー: ${error}`);
+        // エラー発生時はタイマーをクリア
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+          silenceTimer = null;
+        }
       }
     );
   } catch (error) {
     console.error('Azure Speech初期化エラー:', error);
     onError(`Azure Speech初期化エラー: ${error}`);
+    // エラー発生時はタイマーをクリア
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
   }
 };
 
 // Stop speech recognition
 export const stopSpeechRecognition = () => {
+  // 無音タイマーをクリア
+  if (silenceTimer) {
+    clearTimeout(silenceTimer);
+    silenceTimer = null;
+  }
+  
   if (recognizer) {
     recognizer.stopContinuousRecognitionAsync(
       () => {

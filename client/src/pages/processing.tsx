@@ -85,8 +85,8 @@ export default function Processing() {
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-neutral-200">
-        <h2 className="font-semibold text-lg">データ処理</h2>
-        <p className="text-sm text-neutral-300">ファイルをアップロードして処理します</p>
+        <h2 className="font-semibold text-lg text-indigo-600">画像検索用データ処理</h2>
+        <p className="text-sm text-neutral-500">画像検索のため、テキストと画像を分ける処理を行います</p>
       </div>
       
       <div className="flex-1 p-4 overflow-y-auto">

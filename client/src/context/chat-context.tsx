@@ -209,8 +209,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const startRecording = useCallback(() => {
     setIsRecording(true);
+    setRecordedText(''); // 録音開始時にテキストをクリア
     startSpeechRecognition((text) => {
-      setRecordedText(prev => prev + ' ' + text);
+      // 直前のテキストと完全に置き換える（追加ではなく）
+      setRecordedText(text);
     }, (error) => {
       toast({
         title: '音声認識エラー',
