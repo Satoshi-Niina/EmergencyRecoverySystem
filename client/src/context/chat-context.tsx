@@ -64,16 +64,100 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [lastExportTimestamp, setLastExportTimestamp] = useState<Date | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [hasUnexportedMessages, setHasUnexportedMessages] = useState(false);
+  const [chatId, setChatId] = useState<number | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
   const { toast } = useToast();
+  
+  // チャットの初期化
+  const initializeChat = useCallback(async () => {
+    try {
+      setIsInitializing(true);
+      
+      // 既存のチャットを取得する
+      const chatsResponse = await apiRequest('GET', '/api/chats');
+      
+      if (!chatsResponse.ok) {
+        // 認証エラーなどの場合は処理を中断
+        throw new Error('チャットの取得に失敗しました');
+      }
+      
+      const chats = await chatsResponse.json();
+      
+      // チャットが存在する場合は最初のチャットを使用
+      if (chats && chats.length > 0) {
+        setChatId(chats[0].id);
+        return chats[0].id;
+      }
+      
+      // チャットが存在しない場合は新しいチャットを作成
+      const createResponse = await apiRequest('POST', '/api/chats', {
+        title: '保守用車ナレッジチャット'
+      });
+      
+      const newChat = await createResponse.json();
+      setChatId(newChat.id);
+      return newChat.id;
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
+      toast({
+        title: 'チャット初期化エラー',
+        description: 'チャットの初期化に失敗しました。',
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [toast]);
+  
+  // コンポーネントマウント時にチャットを初期化
+  useEffect(() => {
+    initializeChat();
+  }, [initializeChat]);
+
+  // チャットメッセージの初期読み込み
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (!chatId) return;
+      
+      try {
+        const response = await apiRequest('GET', `/api/chats/${chatId}/messages`);
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })));
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+    };
+    
+    if (chatId) {
+      loadMessages();
+    }
+  }, [chatId]);
 
   const sendMessage = async (content: string, mediaUrls?: { type: string, url: string, thumbnail?: string }[]) => {
     try {
+      if (!chatId) {
+        // チャットが初期化されていない場合は初期化
+        const newChatId = await initializeChat();
+        if (!newChatId) {
+          throw new Error('チャットの初期化に失敗しました');
+        }
+      }
+      
       setIsLoading(true);
       
-      // Create a default chat if none exists
-      let chatId = 1; // For simplicity in this implementation
+      const currentChatId = chatId || 1;
       
-      const response = await apiRequest('POST', `/api/chats/${chatId}/messages`, { content });
+      const response = await apiRequest('POST', `/api/chats/${currentChatId}/messages`, { content });
+      if (!response.ok) {
+        throw new Error('メッセージの送信に失敗しました');
+      }
+      
       const data = await response.json();
       
       // Add user message and AI response to the state
@@ -174,11 +258,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // チャット履歴をエクスポートする関数
   const exportChatHistory = async () => {
+    if (!chatId) return;
+    
     try {
       setIsExporting(true);
-      
-      // チャットID（固定）
-      const chatId = 1;
       
       // 最後のエクスポートタイムスタンプを送信
       const response = await apiRequest(
@@ -212,8 +295,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // 最後のエクスポート履歴を取得
   const fetchLastExport = useCallback(async () => {
+    if (!chatId) return;
+    
     try {
-      const chatId = 1;
       const response = await apiRequest('GET', `/api/chats/${chatId}/last-export`);
       const data = await response.json();
       
@@ -223,7 +307,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Failed to fetch last export:', error);
     }
-  }, []);
+  }, [chatId]);
   
   // コンポーネントがマウントされたときに最後のエクスポート履歴を取得
   useEffect(() => {
