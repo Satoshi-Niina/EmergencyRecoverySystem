@@ -20,7 +20,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   if (results.length === 0) {
     return (
       <div className="p-4">
-        <h2 className="font-semibold text-lg mb-3 text-indigo-600">検索結果</h2>
+        <h2 className="font-semibold text-lg mb-3 text-blue-700">検索結果</h2>
         <p className="text-center text-blue-400 py-4">検索結果はありません</p>
         <p className="text-sm text-center text-blue-400">
           テキストを選択して検索するか、画像検索機能を使用してください。
@@ -32,7 +32,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-3">
-        <h2 className="font-semibold text-lg text-indigo-600">検索結果</h2>
+        <h2 className="font-semibold text-lg text-blue-700">検索結果</h2>
         <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
           <X className="h-5 w-5" />
         </Button>
@@ -56,18 +56,18 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
               // AI応答
               <div className="p-4 bg-blue-50 border-b border-blue-100">
                 <div className="flex items-center mb-2">
-                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center mr-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2">
                     <span className="material-icons text-white text-sm">smart_toy</span>
                   </div>
                   <div>
-                    <h3 className="font-medium text-indigo-700">{result.title}</h3>
-                    <p className="text-xs text-indigo-500">
+                    <h3 className="font-medium text-blue-700">{result.title}</h3>
+                    <p className="text-xs text-blue-500">
                       {result.timestamp && new Date(result.timestamp).toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'})}
                     </p>
                   </div>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm mt-2">
-                  <p className="text-indigo-700 whitespace-pre-wrap">{result.content}</p>
+                  <p className="text-blue-700 whitespace-pre-wrap">{result.content}</p>
                 </div>
               </div>
             ) : (

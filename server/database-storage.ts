@@ -117,6 +117,28 @@ export class DatabaseStorage implements IStorage {
     return newMessage;
   }
   
+  // チャットメッセージをクリアする関数
+  async clearChatMessages(chatId: number): Promise<void> {
+    try {
+      // このチャットに関連するメディアを先に削除する
+      const chatMessages = await this.getMessagesForChat(chatId);
+      const messageIds = chatMessages.map(message => message.id);
+      
+      // メディアの削除（存在する場合）
+      if (messageIds.length > 0) {
+        await db.delete(media).where(sql`${media.messageId} IN (${messageIds.join(',')})`);
+      }
+      
+      // メッセージの削除
+      await db.delete(messages).where(eq(messages.chatId, chatId));
+      
+      console.log(`[INFO] Cleared all messages for chat ID: ${chatId}`);
+    } catch (error) {
+      console.error(`[ERROR] Failed to clear messages for chat ID: ${chatId}:`, error);
+      throw error;
+    }
+  }
+  
   // Media methods
   async getMedia(id: number): Promise<Media | undefined> {
     const [mediaItem] = await db.select().from(media).where(eq(media.id, id));

@@ -346,10 +346,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      // UIだけでクリアするためのフラグを返す
-      // 実際のデータは削除せず、UI表示のみをクリアする
-      console.log(`[DEBUG] Chat UI cleared for chat ID: ${chatId}`);
+      // メッセージとそれに関連するメディアを実際に削除する
+      try {
+        // データベースからメッセージを削除する
+        await storage.clearChatMessages(chatId);
+        console.log(`[DEBUG] Chat messages cleared for chat ID: ${chatId}`);
+      } catch (dbError) {
+        console.error(`Error clearing messages from database: ${dbError}`);
+        // データベースエラーが発生した場合でもUIクリアは続行
+      }
       
+      // クライアント側でのクリア用フラグをセット
       return res.json({ 
         cleared: true,
         message: "Chat cleared successfully" 

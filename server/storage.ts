@@ -33,6 +33,7 @@ export interface IStorage {
   getMessagesForChat(chatId: number): Promise<Message[]>;
   getMessagesForChatAfterTimestamp(chatId: number, timestamp: Date): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  clearChatMessages(chatId: number): Promise<void>; // チャットメッセージをクリアする新メソッド
   
   // Media methods
   getMedia(id: number): Promise<Media | undefined>;

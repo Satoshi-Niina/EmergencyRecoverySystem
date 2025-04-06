@@ -103,13 +103,13 @@ export default function Chat() {
         fetchClearedData();
         
         // 少し間をおいて再確認
-        const clearInterval = setInterval(() => {
+        const intervalId = setInterval(() => {
           queryClient.setQueryData(['/api/chats/1/messages'], []);
         }, 500);
         
         // 10秒後にクリア監視を終了
         setTimeout(() => {
-          clearInterval(clearInterval);
+          clearInterval(intervalId);
         }, 10000);
       }
     }
