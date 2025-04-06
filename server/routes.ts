@@ -296,7 +296,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/chats/:id/messages", requireAuth, async (req, res) => {
-    const chat = await storage.getChat(parseInt(req.params.id));
+    const chatId = parseInt(req.params.id);
+    const clearCache = req.query.clear === 'true';
+    
+    const chat = await storage.getChat(chatId);
     
     if (!chat) {
       return res.status(404).json({ message: "Chat not found" });
@@ -304,6 +307,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (chat.userId !== req.session.userId) {
       return res.status(403).json({ message: "Forbidden" });
+    }
+    
+    // クリアフラグが立っている場合、空の配列を返す
+    if (clearCache) {
+      // キャッシュクリアが要求された場合は空配列を返す
+      console.log(`[DEBUG] Chat messages cache cleared for chat ID: ${chatId}`);
+      // キャッシュクリアヘッダーを追加
+      res.setHeader('X-Chat-Cleared', 'true');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.json([]);
     }
     
     const messages = await storage.getMessagesForChat(chat.id);
@@ -317,6 +330,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     return res.json(messagesWithMedia);
+  });
+  
+  // チャット履歴をクリアするAPI
+  app.post("/api/chats/:id/clear", requireAuth, async (req, res) => {
+    try {
+      const chatId = parseInt(req.params.id);
+      
+      const chat = await storage.getChat(chatId);
+      if (!chat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      
+      if (chat.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // UIだけでクリアするためのフラグを返す
+      // 実際のデータは削除せず、UI表示のみをクリアする
+      console.log(`[DEBUG] Chat UI cleared for chat ID: ${chatId}`);
+      
+      return res.json({ 
+        cleared: true,
+        message: "Chat cleared successfully" 
+      });
+    } catch (error) {
+      console.error('Chat clear error:', error);
+      return res.status(500).json({ message: "Error clearing chat" });
+    }
   });
   
   // 履歴送信のためのAPI

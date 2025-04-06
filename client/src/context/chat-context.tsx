@@ -441,43 +441,83 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTempMedia([]);
       setDraftMessage(null);
       
-      // クエリキャッシュをより強力にクリア
+      // クエリキャッシュのキーを定義
       const chatKey = chatId ? `/api/chats/${chatId}/messages` : '/api/chats/1/messages';
       
-      // 完全にキャッシュをリセット
-      queryClient.resetQueries({ queryKey: [chatKey] });
-      queryClient.resetQueries({ queryKey: ['/api/chats/1/messages'] });
+      // サーバーにクリア要求を送信
+      try {
+        await apiRequest('POST', `/api/chats/${chatId || 1}/clear`);
+        console.log('サーバーサイドキャッシュクリア要求が成功しました');
+      } catch (serverError) {
+        console.error('サーバーサイドキャッシュクリアに失敗:', serverError);
+      }
       
-      // キャッシュを空配列で上書き
+      // クリアフラグ付きで空配列を返すようにAPIを呼び出す
+      try {
+        await apiRequest('GET', `${chatKey}?clear=true`);
+      } catch (apiError) {
+        console.error('クリアフラグ付きAPIの呼び出しに失敗:', apiError);
+      }
+      
+      // LocalStorageのリアクトクエリキャッシュをクリア
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('rq-')) {
+          localStorage.removeItem(key);
+        }
+      }
+      
+      // リアクトクエリのキャッシュを完全にリセット
+      queryClient.removeQueries({ queryKey: [chatKey] });
+      queryClient.removeQueries({ queryKey: ['/api/chats/1/messages'] });
+      
+      // 新しい空の配列をキャッシュに設定
       queryClient.setQueryData([chatKey], []);
-      queryClient.setQueryData(['/api/chats/1/messages'], []);
       
-      // 即座に結果を反映するため、複数の方法でクリア実行
-      window.localStorage.removeItem(`rq-${chatKey}`);
-      window.localStorage.removeItem('rq-/api/chats/1/messages');
+      // クリアマーカーを設定
+      localStorage.setItem('chat_cleared_timestamp', Date.now().toString());
       
-      // フラグを立てて一定期間クリア状態を維持
-      localStorage.setItem('chat_cleared', 'true');
+      // ブラウザキャッシュ無効化のため、urlにタイムスタンプを追加して再読み込み
+      const currentRoute = window.location.pathname;
+      if (currentRoute.includes('/chat')) {
+        const timestamp = Date.now();
+        const newUrl = `${currentRoute}?t=${timestamp}`;
+        window.history.replaceState(null, '', newUrl);
+      }
       
       toast({
         title: 'チャット履歴をクリアしました',
         description: '履歴を完全にクリアしました。新しいメッセージを送信できます。',
       });
       
-      // サーバーからの再取得をブロックするため、空の状態を強制
+      // サーバーからの再取得をブロックする (長めの期間でブロック)
+      const blockRefetch = () => {
+        const shouldBlockRefetch = localStorage.getItem('chat_cleared_timestamp');
+        if (shouldBlockRefetch) {
+          // 10秒以内のクリアなら再取得をブロック
+          const clearTime = parseInt(shouldBlockRefetch);
+          const now = Date.now();
+          if (now - clearTime < 10000) {
+            console.log('キャッシュクリア直後のため再取得をブロック');
+            return [];
+          } else {
+            localStorage.removeItem('chat_cleared_timestamp');
+          }
+        }
+        return undefined; // ブロックしない場合はundefinedを返して通常の動作を許可
+      };
+      
+      // メッセージクエリのデフォルト値として空の配列を優先的に使用
+      // queryClient.setDefaultQueryData([chatKey], blockRefetch); // この関数は利用不可
+      // 代わりに直接空配列を設定
+      queryClient.setQueryData([chatKey], []);
+      
+      // キャッシュ削除を安全に行うため、3秒間隔で3回試行
       for (let i = 0; i < 3; i++) {
         setTimeout(() => {
           queryClient.setQueryData([chatKey], []);
-          queryClient.setQueryData(['/api/chats/1/messages'], []);
-        }, i * 300); // 0ms, 300ms, 600msでリセット
+          queryClient.removeQueries({ queryKey: [chatKey] });
+        }, i * 3000); // 0秒, 3秒, 6秒でリセット
       }
-      
-      // 最後に再検証を許可
-      setTimeout(() => {
-        localStorage.removeItem('chat_cleared');
-        // 念のため最後に再フェッチ
-        queryClient.invalidateQueries({ queryKey: [chatKey] });
-      }, 1000);
       
     } catch (error) {
       console.error('チャット履歴クリアエラー:', error);
@@ -487,10 +527,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         variant: 'destructive',
       });
     } finally {
-      // 少し遅延してクリア状態を解除
+      // クリア状態を解除 (10秒待ってから)
       setTimeout(() => {
+        localStorage.removeItem('chat_cleared_timestamp');
         setIsClearing(false);
-      }, 1000);
+      }, 10000);
     }
   };
 

@@ -63,16 +63,55 @@ export default function Chat() {
   
   // メッセージクリア時にデータも更新
   useEffect(() => {
-    // messagesが空になった場合（クリアされた場合）はリロードして再読み込み
+    // メッセージが空になった場合（クリアされた場合）のハンドリング
     if (messages !== undefined && messages.length === 0) {
-      // queryClientを使用して強制リフレッシュ
-      queryClient.resetQueries({ queryKey: ['/api/chats/1/messages'] });
-      queryClient.setQueryData(['/api/chats/1/messages'], []);
-      
-      // 少し遅延させて再フェッチ
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/chats/1/messages'] });
-      }, 200);
+      const chatClearedTimestamp = localStorage.getItem('chat_cleared_timestamp');
+      if (chatClearedTimestamp) {
+        console.log('チャット履歴クリア後の状態を維持します');
+        
+        // ローカルストレージのクエリキャッシュをクリア
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith('rq-/api/chats/')) {
+            localStorage.removeItem(key);
+          }
+        }
+        
+        // クエリキャッシュを完全に削除
+        queryClient.removeQueries({ queryKey: ['/api/chats/1/messages'] });
+        
+        // 空の配列を強制的にセット
+        queryClient.setQueryData(['/api/chats/1/messages'], []);
+        
+        // 特殊パラメータを付けて明示的にサーバーにクリア要求を送信
+        const fetchClearedData = async () => {
+          try {
+            const clearUrl = `/api/chats/1/messages?clear=true&_t=${Date.now()}`;
+            await fetch(clearUrl, {
+              credentials: 'include',
+              cache: 'no-cache',
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
+            });
+          } catch (error) {
+            console.error('クリア要求送信エラー:', error);
+          }
+        };
+        
+        fetchClearedData();
+        
+        // 少し間をおいて再確認
+        const clearInterval = setInterval(() => {
+          queryClient.setQueryData(['/api/chats/1/messages'], []);
+        }, 500);
+        
+        // 10秒後にクリア監視を終了
+        setTimeout(() => {
+          clearInterval(clearInterval);
+        }, 10000);
+      }
     }
   }, [messages]);
 
