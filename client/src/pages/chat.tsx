@@ -136,7 +136,9 @@ export default function Chat() {
   return (
     <div className="flex flex-col w-full h-full bg-blue-50">
       <div className="border-b border-blue-200 p-3 flex justify-between items-center bg-blue-100">
-        <h1 className="text-xl font-bold text-blue-800">緊急復旧サポート</h1>
+        <div className="flex items-center">
+          {/* タイトルはヘッダーに移動 */}
+        </div>
         <div className="flex items-center gap-3">
           {/* チャット履歴送信ボタン */}
           <Button 
@@ -159,26 +161,7 @@ export default function Chat() {
             )}
           </Button>
           
-          {/* チャット履歴クリアボタン - 送信ボタンの右に配置 */}
-          <Button 
-            variant="secondary"
-            size="sm"
-            onClick={clearChatHistory}
-            disabled={isClearing || (displayMessages.length === 0)}
-            className="flex items-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-300"
-          >
-            {isClearing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-                <span>クリア中...</span>
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4 text-purple-600" />
-                <span>履歴クリア</span>
-              </>
-            )}
-          </Button>
+          {/* チャット履歴クリアボタンはヘッダーに移動 */}
           
           {/* チャット終了ボタン */}
           <Button 
