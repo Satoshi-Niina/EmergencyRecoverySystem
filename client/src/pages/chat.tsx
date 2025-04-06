@@ -204,9 +204,9 @@ export default function Chat() {
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col md:flex-row overflow-auto">
+      <div className={`flex-1 flex ${orientation === 'landscape' && isMobile ? 'flex-row' : 'flex-col md:flex-row'} overflow-auto`}>
         {/* Chat Messages Area - Made wider for better visibility of images */}
-        <div className="flex-1 flex flex-col h-full overflow-auto md:w-3/4 bg-white chat-messages-container">
+        <div className={`flex-1 flex flex-col h-full overflow-auto ${orientation === 'landscape' && isMobile ? 'w-3/5' : 'md:w-3/4'} bg-white chat-messages-container`}>
           {/* Chat Messages */}
           <div id="chatMessages" className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 md:px-8 space-y-4 min-w-[300px]">
             {messagesLoading || isLoading ? (
@@ -268,13 +268,13 @@ export default function Chat() {
           <MessageInput />
         </div>
 
-        {/* Information Panel - モバイルではスライダーで表示、デスクトップでは常に表示 */}
-        <div className="hidden md:block md:w-1/4 border-l border-blue-200 bg-blue-50 overflow-y-auto">
+        {/* Information Panel - モバイルではスライダーで表示、デスクトップ/横向きでは常に表示 */}
+        <div className={`${orientation === 'landscape' && isMobile ? 'block w-2/5' : 'hidden md:block md:w-1/4'} border-l border-blue-200 bg-blue-50 overflow-y-auto`}>
           <SearchResults results={searchResults} onClear={clearSearchResults} />
         </div>
         
-        {/* モバイル用検索結果スライダー */}
-        {searchResults && searchResults.length > 0 && (
+        {/* モバイル用検索結果スライダー - 縦向きのモバイルのみ表示 */}
+        {searchResults && searchResults.length > 0 && orientation === 'portrait' && isMobile && (
           <div className="fixed bottom-20 right-4 md:hidden">
             <Button
               onClick={() => document.getElementById('mobile-search-slider')?.classList.toggle('translate-y-full')}

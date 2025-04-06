@@ -70,11 +70,31 @@
   @media screen and (max-width: 740px) {
     body {
       overflow-x: auto !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
     }
     .chat-layout-container {
-      min-width: 740px;
+      min-width: 320px;
       max-width: none;
       overflow-x: visible !important;
+    }
+  }
+  
+  /* iPhoneの横向き表示に対する特別な対応 */
+  @media screen and (orientation: landscape) and (max-height: 450px) {
+    body, html, #root {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+    }
+    
+    .chat-layout-container {
+      width: 100% !important;
+      min-width: 100% !important;
+      overflow-x: auto !important;
+      display: flex !important;
+      flex-direction: row !important;
     }
   }
   
@@ -102,6 +122,7 @@
       width: 100%;
       min-width: 100%;
       min-height: 100%;
+      max-height: none !important;
     }
     
     /* 横向き時のチャットレイアウト調整 */
@@ -110,7 +131,7 @@
       flex-direction: row !important;
       min-height: 100vh;
       width: 100%;
-      min-width: 740px; /* 最小幅を設定 */
+      min-width: 100%;
       overflow-x: auto !important;
       overflow-y: auto !important;
     }
@@ -119,14 +140,15 @@
       width: 60% !important;
       min-height: 100vh;
       overflow-y: auto !important;
-      min-width: 380px; /* 最小幅を設定 */
+      overflow-x: visible !important;
+      min-width: 60% !important; /* 最小幅を設定 */
     }
     
     .chat-controls-container {
       width: 40% !important;
       display: flex;
       flex-direction: column;
-      min-width: 320px; /* 最小幅を設定 */
+      min-width: 40% !important; /* 最小幅を設定 */
     }
     
     /* モバイル横向き時のヘッダー調整 */

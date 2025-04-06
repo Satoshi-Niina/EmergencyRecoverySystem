@@ -104,7 +104,7 @@ export default function MessageBubble({ message, isDraft = false }: MessageBubbl
 
   return (
     <div 
-      className={`flex items-end mb-4 ${isUserMessage ? "" : "flex-row-reverse"}`}
+      className={`flex items-end mb-4 ${isUserMessage ? "" : "flex-row-reverse"} min-w-[250px]`}
       onMouseUp={handleMouseUp}
     >
       <div className={`mx-2 flex flex-col ${isUserMessage ? "items-start" : "items-end"} max-w-[70%] min-w-[230px]`}>
