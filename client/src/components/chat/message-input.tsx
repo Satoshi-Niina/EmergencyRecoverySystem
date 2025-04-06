@@ -2,24 +2,30 @@ import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/chat-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Mic, Send, Camera } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
   const { sendMessage, isLoading, startRecording, stopRecording, isRecording, recordedText, selectedText } = useChat();
+  const isMobile = useIsMobile();
   const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // 選択されたテキストが変更されたら入力欄に反映
   useEffect(() => {
     if (selectedText) {
       setMessage(selectedText);
-      if (inputRef.current) {
+      if (isMobile && textareaRef.current) {
+        textareaRef.current.focus();
+      } else if (inputRef.current) {
         inputRef.current.focus();
       }
     }
-  }, [selectedText]);
+  }, [selectedText, isMobile]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setMessage(e.target.value);
   };
 
@@ -32,7 +38,13 @@ export default function MessageInput() {
     await sendMessage(textToSend);
     setMessage("");
     
-    if (inputRef.current) {
+    if (isMobile && textareaRef.current) {
+      textareaRef.current.focus();
+      // モバイルでキーボードが消えないように少し遅延
+      setTimeout(() => {
+        textareaRef.current?.blur();
+      }, 100);
+    } else if (inputRef.current) {
       inputRef.current.focus();
     }
   };
@@ -115,15 +127,36 @@ export default function MessageInput() {
         </Button>
         
         <div className="flex-1 bg-white border border-blue-200 rounded-full px-4 py-2 flex items-center shadow-inner">
-          <Input
-            ref={inputRef}
-            type="text"
-            className="flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            placeholder={isRecording ? "話しかけてください..." : "メッセージを入力..."}
-            value={message}
-            onChange={handleInputChange}
-            disabled={isLoading}
-          />
+          {isMobile ? (
+            /* モバイル用テキストエリア（高さ自動調整、最大2行） */
+            <Textarea
+              ref={textareaRef}
+              className="flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[40px] max-h-[80px] py-2 overflow-y-auto"
+              placeholder={isRecording ? "話しかけてください..." : "メッセージを入力..."}
+              value={message}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              rows={1}
+              style={{ lineHeight: '1.2' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+          ) : (
+            /* デスクトップ用インプット */
+            <Input
+              ref={inputRef}
+              type="text"
+              className="flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder={isRecording ? "話しかけてください..." : "メッセージを入力..."}
+              value={message}
+              onChange={handleInputChange}
+              disabled={isLoading}
+            />
+          )}
           <Button 
             type="submit" 
             disabled={isLoading || (!message.trim() && !recordedText.trim())}

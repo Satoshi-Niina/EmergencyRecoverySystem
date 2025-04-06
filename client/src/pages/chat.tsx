@@ -134,19 +134,19 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-blue-50">
-      <div className="border-b border-blue-200 p-3 flex justify-between items-center bg-blue-100">
+    <div className="flex flex-col w-full h-full max-h-screen overflow-hidden bg-blue-50">
+      <div className="border-b border-blue-200 p-2 md:p-3 flex justify-between items-center bg-blue-100">
         <div className="flex items-center">
           {/* タイトルはヘッダーに移動 */}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* チャット履歴送信ボタン */}
           <Button 
             variant="outline"
             size="sm"
             onClick={exportChatHistory}
             disabled={isExporting || !hasUnexportedMessages}
-            className="flex items-center gap-2 border-green-400 bg-green-50 hover:bg-green-100 text-green-700"
+            className="flex items-center gap-1 md:gap-2 border-green-400 bg-green-50 hover:bg-green-100 text-green-700 text-xs md:text-sm"
           >
             {isExporting ? (
               <>

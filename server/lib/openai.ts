@@ -53,7 +53,8 @@ export async function processOpenAIRequest(prompt: string): Promise<string> {
           content: prompt,
         },
       ],
-      temperature: 0.2, // 低い温度設定で確定的な回答を得る
+      temperature: 0.1, // 非常に低い温度設定で確定的な回答を得る（デフォルトよりさらに低く設定）
+      max_tokens: 800, // 回答の長さを制限して具体的にする
     });
     
     // 応答内容をデバッグ出力
