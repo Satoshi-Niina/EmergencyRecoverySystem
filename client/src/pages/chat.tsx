@@ -7,6 +7,7 @@ import SearchResults from "@/components/chat/search-results";
 import CameraModal from "@/components/chat/camera-modal";
 import ImagePreviewModal from "@/components/chat/image-preview-modal";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Send, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -56,6 +57,15 @@ export default function Chat() {
 
   // Show messages from the context or from the query
   const displayMessages = messages?.length > 0 ? messages : (data as any[] || []);
+  
+  // メッセージクリア時にデータも更新
+  useEffect(() => {
+    // messagesが空になった場合（クリアされた場合）はリロードして再読み込み
+    if (messages !== undefined && messages.length === 0 && !isClearing) {
+      // 読み込み完了後に再フェッチ
+      queryClient.invalidateQueries({ queryKey: ['/api/chats/1/messages'] });
+    }
+  }, [messages]);
 
   // チャット終了確認ダイアログを表示
   const handleEndChat = () => {
