@@ -56,14 +56,23 @@ export default function Chat() {
   }, [setSelectedText]);
 
   // Show messages from the context or from the query
-  const displayMessages = messages?.length > 0 ? messages : (data as any[] || []);
+  // クリア処理中は空配列を表示し、それ以外の場合はmessagesまたはデータを表示
+  const displayMessages = isClearing 
+    ? [] 
+    : (messages?.length > 0 ? messages : (data as any[] || []));
   
   // メッセージクリア時にデータも更新
   useEffect(() => {
     // messagesが空になった場合（クリアされた場合）はリロードして再読み込み
-    if (messages !== undefined && messages.length === 0 && !isClearing) {
-      // 読み込み完了後に再フェッチ
-      queryClient.invalidateQueries({ queryKey: ['/api/chats/1/messages'] });
+    if (messages !== undefined && messages.length === 0) {
+      // queryClientを使用して強制リフレッシュ
+      queryClient.resetQueries({ queryKey: ['/api/chats/1/messages'] });
+      queryClient.setQueryData(['/api/chats/1/messages'], []);
+      
+      // 少し遅延させて再フェッチ
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/chats/1/messages'] });
+      }, 200);
     }
   }, [messages]);
 

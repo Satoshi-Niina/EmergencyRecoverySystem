@@ -75,8 +75,8 @@ export default function SettingsPage() {
         </Card>
 
         {/* Notifications */}
-        <Card className="border border-green-200 shadow-md overflow-hidden">
-          <CardHeader className="pb-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+        <Card className="border border-blue-200 shadow-md overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-r from-blue-400 to-sky-500 text-white">
             <CardTitle className="text-lg flex items-center">
               <Bell className="mr-2 h-5 w-5" />
               通知設定
@@ -86,41 +86,41 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <p className="font-medium text-green-700">通知を有効にする</p>
-                  <p className="text-sm text-green-400">新しいメッセージの通知を受け取る</p>
+                  <p className="font-medium text-blue-700">通知を有効にする</p>
+                  <p className="text-sm text-blue-400">新しいメッセージの通知を受け取る</p>
                 </div>
                 <Switch 
                   checked={notifications} 
                   onCheckedChange={setNotifications}
-                  className="data-[state=checked]:bg-green-500"
+                  className="data-[state=checked]:bg-blue-500"
                 />
               </div>
               
-              <div className="flex items-center justify-between py-2 border-t border-green-100 pt-3">
+              <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
                 <div>
-                  <p className="font-medium text-green-700">音声読み上げ</p>
-                  <p className="text-sm text-green-400">AI応答を音声で読み上げる</p>
+                  <p className="font-medium text-blue-700">音声読み上げ</p>
+                  <p className="text-sm text-blue-400">AI応答を音声で読み上げる</p>
                 </div>
                 <Switch 
                   checked={textToSpeech} 
                   onCheckedChange={setTextToSpeech}
-                  className="data-[state=checked]:bg-green-500"
+                  className="data-[state=checked]:bg-blue-500"
                 />
               </div>
               
               {textToSpeech && (
-                <div className="py-2 border-t border-green-100 pt-3">
-                  <p className="font-medium mb-2 text-green-700">音声の音量</p>
+                <div className="py-2 border-t border-blue-100 pt-3">
+                  <p className="font-medium mb-2 text-blue-700">音声の音量</p>
                   <Slider 
                     value={speechVolume} 
                     onValueChange={setSpeechVolume}
                     max={100}
                     step={1}
-                    className="data-[state=checked]:bg-green-500"
+                    className="data-[state=checked]:bg-blue-500"
                   />
                   <div className="flex justify-between mt-1">
-                    <Volume2 className="h-4 w-4 text-green-400" />
-                    <span className="text-sm text-green-500 font-medium">{speechVolume[0]}%</span>
+                    <Volume2 className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm text-blue-500 font-medium">{speechVolume[0]}%</span>
                   </div>
                 </div>
               )}
@@ -129,8 +129,8 @@ export default function SettingsPage() {
         </Card>
 
         {/* App Settings */}
-        <Card className="border border-purple-200 shadow-md overflow-hidden">
-          <CardHeader className="pb-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+        <Card className="border border-blue-200 shadow-md overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-r from-indigo-500 to-blue-600 text-white">
             <CardTitle className="text-lg flex items-center">
               <Settings className="mr-2 h-5 w-5" />
               アプリ設定
@@ -140,25 +140,25 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <p className="font-medium text-purple-700">ダークモード</p>
-                  <p className="text-sm text-purple-400">暗い色のテーマを使用する</p>
+                  <p className="font-medium text-indigo-700">ダークモード</p>
+                  <p className="text-sm text-indigo-400">暗い色のテーマを使用する</p>
                 </div>
                 <Switch 
                   checked={darkMode} 
                   onCheckedChange={setDarkMode}
-                  className="data-[state=checked]:bg-purple-500"
+                  className="data-[state=checked]:bg-indigo-500"
                 />
               </div>
               
-              <div className="flex items-center justify-between py-2 border-t border-purple-100 pt-3">
+              <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
                 <div>
-                  <p className="font-medium text-purple-700">自動保存</p>
-                  <p className="text-sm text-purple-400">会話を自動的に保存する</p>
+                  <p className="font-medium text-indigo-700">自動保存</p>
+                  <p className="text-sm text-indigo-400">会話を自動的に保存する</p>
                 </div>
                 <Switch 
                   checked={autoSave} 
                   onCheckedChange={setAutoSave}
-                  className="data-[state=checked]:bg-purple-500"
+                  className="data-[state=checked]:bg-indigo-500"
                 />
               </div>
             </div>
@@ -167,8 +167,8 @@ export default function SettingsPage() {
 
         {/* Admin Settings (only shown for admins) */}
         {user?.role === 'admin' && (
-          <Card className="border border-amber-200 shadow-md overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+          <Card className="border border-blue-200 shadow-md overflow-hidden">
+            <CardHeader className="pb-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white">
               <CardTitle className="text-lg flex items-center">
                 <Shield className="mr-2 h-5 w-5" />
                 管理者設定
@@ -178,34 +178,34 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2">
                   <div>
-                    <p className="font-medium text-amber-700">ユーザー管理</p>
-                    <p className="text-sm text-amber-400">ユーザーアカウントを管理する</p>
+                    <p className="font-medium text-blue-800">ユーザー管理</p>
+                    <p className="text-sm text-blue-400">ユーザーアカウントを管理する</p>
                   </div>
                   <Link href="/users">
-                    <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-50">
-                      <UserPlus className="mr-2 h-4 w-4 text-amber-500" />
+                    <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <UserPlus className="mr-2 h-4 w-4 text-blue-500" />
                       管理
                     </Button>
                   </Link>
                 </div>
                 
-                <div className="flex items-center justify-between py-2 border-t border-amber-100 pt-3">
+                <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
                   <div>
-                    <p className="font-medium text-amber-700">ドキュメント管理</p>
-                    <p className="text-sm text-amber-400">検索対象の資料を管理する</p>
+                    <p className="font-medium text-blue-800">ドキュメント管理</p>
+                    <p className="text-sm text-blue-400">検索対象の資料を管理する</p>
                   </div>
                   <Link href="/documents">
-                    <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-50">
-                      <FileType className="mr-2 h-4 w-4 text-amber-500" />
+                    <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <FileType className="mr-2 h-4 w-4 text-blue-500" />
                       管理
                     </Button>
                   </Link>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-t border-amber-100 pt-3">
+                <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
                   <div>
-                    <p className="font-medium text-amber-700">ログアウト</p>
-                    <p className="text-sm text-amber-400">システムからログアウトする</p>
+                    <p className="font-medium text-blue-800">ログアウト</p>
+                    <p className="text-sm text-blue-400">システムからログアウトする</p>
                   </div>
                   <Button 
                     onClick={handleLogout} 

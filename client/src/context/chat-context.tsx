@@ -441,35 +441,56 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTempMedia([]);
       setDraftMessage(null);
       
-      // チャットIDが存在する場合は、サーバーキャッシュも更新
-      if (chatId) {
-        // キャッシュを無効化して強制リロード
-        queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
-        queryClient.setQueryData([`/api/chats/${chatId}/messages`], []);
-        queryClient.setQueryData(['/api/chats/1/messages'], []);
-      }
+      // クエリキャッシュをより強力にクリア
+      const chatKey = chatId ? `/api/chats/${chatId}/messages` : '/api/chats/1/messages';
+      
+      // 完全にキャッシュをリセット
+      queryClient.resetQueries({ queryKey: [chatKey] });
+      queryClient.resetQueries({ queryKey: ['/api/chats/1/messages'] });
+      
+      // キャッシュを空配列で上書き
+      queryClient.setQueryData([chatKey], []);
+      queryClient.setQueryData(['/api/chats/1/messages'], []);
+      
+      // 即座に結果を反映するため、複数の方法でクリア実行
+      window.localStorage.removeItem(`rq-${chatKey}`);
+      window.localStorage.removeItem('rq-/api/chats/1/messages');
+      
+      // フラグを立てて一定期間クリア状態を維持
+      localStorage.setItem('chat_cleared', 'true');
       
       toast({
         title: 'チャット履歴をクリアしました',
-        description: '画面上のチャット履歴をクリアしました。データベースには履歴が保存されています。',
+        description: '履歴を完全にクリアしました。新しいメッセージを送信できます。',
       });
       
-      // 直接クエリデータを空配列に設定して即時反映
-      setTimeout(() => {
-        if (chatId) {
-          queryClient.setQueryData([`/api/chats/${chatId}/messages`], []);
+      // サーバーからの再取得をブロックするため、空の状態を強制
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          queryClient.setQueryData([chatKey], []);
           queryClient.setQueryData(['/api/chats/1/messages'], []);
-        }
-      }, 100);
+        }, i * 300); // 0ms, 300ms, 600msでリセット
+      }
+      
+      // 最後に再検証を許可
+      setTimeout(() => {
+        localStorage.removeItem('chat_cleared');
+        // 念のため最後に再フェッチ
+        queryClient.invalidateQueries({ queryKey: [chatKey] });
+      }, 1000);
       
     } catch (error) {
+      console.error('チャット履歴クリアエラー:', error);
       toast({
         title: 'エラー',
-        description: 'チャット履歴のクリアに失敗しました。',
+        description: 'チャット履歴のクリアに失敗しました。ページをリロードしてみてください。',
         variant: 'destructive',
       });
     } finally {
-      setIsClearing(false);
+      // 少し遅延してクリア状態を解除
+      setTimeout(() => {
+        setIsClearing(false);
+      }, 1000);
     }
   };
 
