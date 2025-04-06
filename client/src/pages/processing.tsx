@@ -16,7 +16,7 @@ export default function Processing() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Fetch processed documents
-  const { data: documents, isLoading } = useQuery({
+  const { data: documents = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/documents'],
   });
 

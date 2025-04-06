@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { startSpeechRecognition, stopSpeechRecognition } from '@/lib/azure-speech';
+import { 
+  startSpeechRecognition, 
+  stopSpeechRecognition,
+  startBrowserSpeechRecognition,
+  stopBrowserSpeechRecognition
+} from '@/lib/azure-speech';
 import { searchByText } from '@/lib/image-search';
 
 interface Media {
@@ -221,22 +226,55 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const startRecording = useCallback(() => {
     setIsRecording(true);
     setRecordedText(''); // 録音開始時にテキストをクリア
-    startSpeechRecognition((text) => {
-      // 直前のテキストと完全に置き換える（追加ではなく）
-      setRecordedText(text);
-    }, (error) => {
+    
+    try {
+      // まずブラウザの標準音声認識を試す（マイク許可ダイアログが確実に表示される）
+      startBrowserSpeechRecognition(
+        (text: string) => {
+          // 認識されたテキストをセット
+          setRecordedText(text);
+        },
+        (error: string) => {
+          console.log('ブラウザ音声認識エラー:', error);
+          
+          // エラー時はAzure Speech APIをフォールバックとして使用
+          toast({
+            title: 'ブラウザ音声認識が使用できません',
+            description: 'Azure音声認識を使用します',
+            duration: 2000,
+          });
+          
+          // Azure Speech APIを使用して音声認識を開始
+          startSpeechRecognition(
+            (text: string) => {
+              setRecordedText(text);
+            }, 
+            (error: string) => {
+              toast({
+                title: '音声認識エラー',
+                description: error,
+                variant: 'destructive',
+              });
+              setIsRecording(false);
+            }
+          );
+        }
+      );
+    } catch (error) {
+      console.error('音声認識初期化エラー:', error);
       toast({
         title: '音声認識エラー',
-        description: error,
+        description: '音声認識の初期化に失敗しました',
         variant: 'destructive',
       });
       setIsRecording(false);
-    });
+    }
   }, [toast]);
 
   const stopRecording = useCallback(() => {
     setIsRecording(false);
     stopSpeechRecognition();
+    stopBrowserSpeechRecognition();
   }, []);
 
   const searchBySelectedText = async (text: string) => {

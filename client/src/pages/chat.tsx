@@ -85,7 +85,7 @@ export default function Chat() {
             variant="secondary"
             size="sm"
             onClick={clearChatHistory}
-            disabled={isClearing || (!messages || messages.length === 0)}
+            disabled={isClearing || (displayMessages.length === 0)}
             className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
           >
             {isClearing ? (
