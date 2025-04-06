@@ -114,40 +114,27 @@
     }
   }
   
-  /* iOSデバイスのJavaScriptクラス追加による対応 */
-  body.ios-device {
-    -webkit-overflow-scrolling: touch;
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-  }
-  
-  /* iOS横向き時の特別対応 */
-  body.ios-landscape {
-    width: 100vw;
-    overflow-x: auto !important;
-  }
-  
-  body.ios-landscape .chat-layout-container {
-    display: flex !important;
-    flex-direction: row !important;
-    width: 100% !important;
-    min-width: 100% !important;
-    overflow-x: auto !important;
-  }
-  
-  body.ios-landscape .chat-messages-container {
-    width: 60% !important;
-    min-width: 60% !important;
-    max-width: 60% !important;
-    overflow-y: auto !important;
-  }
-  
-  body.ios-landscape .search-results-panel {
-    display: block !important;
-    width: 40% !important;
-    min-width: 40% !important;
-    max-width: 40% !important;
-    overflow-y: auto !important;
+  /* シンプルなモバイル対応スタイル */
+  @media screen and (max-width: 768px) {
+    /* 横スクロールを許可 */
+    html, body, #root {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 横向き時のスタイル */
+    @media screen and (orientation: landscape) {
+      #mobile-search-slider {
+        max-height: 80vh !important;
+        width: 100% !important;
+      }
+      
+      .mobile-search-button {
+        bottom: 10px !important;
+        right: 10px !important;
+        z-index: 60 !important;
+      }
+    }
   }
   
   /* モバイル横向き用のスタイル */

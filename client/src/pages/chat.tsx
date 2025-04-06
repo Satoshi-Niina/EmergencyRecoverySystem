@@ -138,54 +138,50 @@ export default function Chat() {
   const isMobile = useIsMobile();
   const orientation = useOrientation();
   
-  // スクロール挙動の最適化 (特にiOS対応)
+  // スクロール挙動の最適化 (モバイル対応)
   useEffect(() => {
-    // チャットページがマウントされた時にスクロール設定を適用
+    // 基本スクロール設定を適用
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
-    document.body.style.position = 'relative';
     
-    // iOS向け特定のスタイルを追加
-    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isiOS) {
-      // iOSデバイスに対する特別な処理
-      document.body.classList.add('ios-device');
-      
-      // 横向き時の特別な処理
-      if (orientation === 'landscape') {
-        document.body.classList.add('ios-landscape');
-      } else {
-        document.body.classList.remove('ios-landscape');
-      }
-    }
-    
-    // リサイズイベントの処理（iOS対応）
-    const handleResize = () => {
-      // レイアウト再計算を促進
-      document.body.style.overflow = 'auto';
-      document.documentElement.style.overflow = 'auto';
-      
-      if (isiOS && 'orientation' in window) {
-        // 横向きかどうかを確認
-        // @ts-ignore - TypeScript doesn't recognize window.orientation but it exists in browsers
-        const isLandscape = Math.abs(window.orientation as number) === 90;
-        if (isLandscape) {
-          document.body.classList.add('ios-landscape');
+    // モバイル端末の場合、横向きの時に検索ボタンの位置を調整する
+    const handleOrientationChange = () => {
+      // 検索結果を表示するスライダーがあれば位置調整
+      const searchSlider = document.getElementById('mobile-search-slider');
+      if (searchSlider) {
+        // 横向きの場合は高さを調整
+        if (orientation === 'landscape') {
+          searchSlider.style.maxHeight = '100vh';
+          searchSlider.style.height = '100vh';
+          searchSlider.style.top = '0';
+          searchSlider.style.width = '40%';
+          searchSlider.style.right = '0';
+          searchSlider.style.left = 'auto';
+          searchSlider.style.transform = 'none';
+          searchSlider.style.transition = 'none';
         } else {
-          document.body.classList.remove('ios-landscape');
+          searchSlider.style.maxHeight = '70vh';
+          searchSlider.style.width = '100%';
+          searchSlider.style.right = 'auto';
+          searchSlider.style.left = '0';
+          searchSlider.style.top = 'auto';
+          searchSlider.style.transform = 'translateY(100%)';
+          searchSlider.style.transition = 'transform 300ms ease-in-out';
         }
       }
     };
     
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
+    // 初期実行
+    handleOrientationChange();
+    
+    // イベントリスナー登録
+    window.addEventListener('resize', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
     
     // クリーンアップ
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-      document.body.classList.remove('ios-device');
-      document.body.classList.remove('ios-landscape');
+      window.removeEventListener('resize', handleOrientationChange);
+      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, [orientation]);
   
@@ -231,9 +227,9 @@ export default function Chat() {
         </div>
       </div>
       
-      <div className={`flex-1 flex ${orientation === 'landscape' && isMobile ? 'flex-row' : 'flex-col md:flex-row'} overflow-auto chat-layout-container`}>
+      <div className="flex-1 flex flex-col md:flex-row overflow-auto chat-layout-container">
         {/* Chat Messages Area - Made wider for better visibility of images */}
-        <div className={`flex-1 flex flex-col h-full overflow-auto ${orientation === 'landscape' && isMobile ? 'w-3/5' : 'md:w-3/4'} bg-white chat-messages-container`}>
+        <div className="flex-1 flex flex-col h-full overflow-auto md:w-3/4 bg-white chat-messages-container">
           {/* Chat Messages */}
           <div id="chatMessages" className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 md:px-8 space-y-4 min-w-[300px]">
             {messagesLoading || isLoading ? (
@@ -295,16 +291,27 @@ export default function Chat() {
           <MessageInput />
         </div>
 
-        {/* Information Panel - モバイルではスライダーで表示、デスクトップ/横向きでは常に表示 */}
-        <div className={`${orientation === 'landscape' && isMobile ? 'block w-2/5' : 'hidden md:block md:w-1/4'} border-l border-blue-200 bg-blue-50 overflow-y-auto search-results-panel`}>
+        {/* Information Panel - モバイルとデスクトップで別々の表示方法 */}
+        <div className="hidden md:block md:w-1/4 border-l border-blue-200 bg-blue-50 overflow-y-auto search-results-panel">
           <SearchResults results={searchResults} onClear={clearSearchResults} />
         </div>
         
-        {/* モバイル用検索結果スライダー - 縦向きのモバイルのみ表示 */}
-        {searchResults && searchResults.length > 0 && orientation === 'portrait' && isMobile && (
-          <div className="fixed bottom-20 right-4 md:hidden">
+        {/* モバイル用検索結果スライダー - すべてのモバイル向け表示 (向きに関係なく表示) */}
+        {searchResults && searchResults.length > 0 && isMobile && (
+          <div className="fixed bottom-20 right-4 md:hidden mobile-search-button">
             <Button
-              onClick={() => document.getElementById('mobile-search-slider')?.classList.toggle('translate-y-full')}
+              onClick={() => {
+                const slider = document.getElementById('mobile-search-slider');
+                if (slider) {
+                  if (orientation === 'landscape') {
+                    // 横向きの場合、右側に表示
+                    slider.style.transform = slider.style.transform === 'none' ? 'translateX(100%)' : 'none';
+                  } else {
+                    // 縦向きの場合、下から表示
+                    slider.style.transform = slider.style.transform === 'translateY(100%)' ? 'translateY(0)' : 'translateY(100%)';
+                  }
+                }
+              }}
               className="rounded-full w-12 h-12 bg-blue-500 hover:bg-blue-600 shadow-lg flex items-center justify-center"
             >
               <span className="text-white font-bold">{searchResults.length}</span>
@@ -315,6 +322,7 @@ export default function Chat() {
         <div 
           id="mobile-search-slider" 
           className="fixed inset-x-0 bottom-0 transform translate-y-full transition-transform duration-300 ease-in-out md:hidden z-50"
+          style={{ display: 'block' }}
         >
           <div className="bg-blue-50 border-t border-blue-200 rounded-t-xl max-h-[70vh] overflow-y-auto">
             <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
@@ -322,7 +330,18 @@ export default function Chat() {
               <Button
                 size="sm" 
                 variant="ghost"
-                onClick={() => document.getElementById('mobile-search-slider')?.classList.add('translate-y-full')}
+                onClick={() => {
+                const slider = document.getElementById('mobile-search-slider');
+                if (slider) {
+                  if (orientation === 'landscape') {
+                    // 横向きの場合、右側から外す
+                    slider.style.transform = 'translateX(100%)';
+                  } else {
+                    // 縦向きの場合、下から外す
+                    slider.style.transform = 'translateY(100%)';
+                  }
+                }
+              }}
                 className="text-blue-700"
               >
                 閉じる
