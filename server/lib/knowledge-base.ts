@@ -157,22 +157,28 @@ async function storeProcessedDocument(docId: string, doc: ProcessedDocument): Pr
  */
 export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[]> {
   try {
+    console.log(`検索クエリ: "${query}"`);
+    
     // 知識ベースを初期化
     initializeKnowledgeBase();
     
     // インデックスを読み込み
     const index = loadKnowledgeBaseIndex();
+    console.log(`インデックス内のドキュメント数: ${index.documents.length}`);
     
     // 検索結果を格納する配列
     const relevantChunks: DocumentChunk[] = [];
     
     // すべてのドキュメントを検索
     for (const docInfo of index.documents) {
+      console.log(`ドキュメント検索: ${docInfo.title} (ID: ${docInfo.id})`);
       const docDir = path.join(KNOWLEDGE_BASE_DIR, docInfo.id);
       
       // チャンクファイルが存在する場合は読み込む
       const chunksFile = path.join(docDir, 'chunks.json');
+      
       if (fs.existsSync(chunksFile)) {
+        console.log(`チャンクファイル発見: ${chunksFile}`);
         const chunks: DocumentChunk[] = JSON.parse(fs.readFileSync(chunksFile, 'utf8'));
         
         // 単純なキーワードマッチング（本来はベクトル検索やより高度な方法を使用）
@@ -180,12 +186,46 @@ export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[
           chunk.text.toLowerCase().includes(query.toLowerCase())
         );
         
+        console.log(`マッチしたチャンク数: ${matchingChunks.length}`);
         relevantChunks.push(...matchingChunks);
+      } else {
+        // チャンクファイルが存在しない場合は、オリジナルのファイルを直接検索
+        console.log(`チャンクファイルが見つからないため、オリジナルファイルを検索: ${docInfo.path}`);
+        if (fs.existsSync(docInfo.path)) {
+          try {
+            const fileContent = fs.readFileSync(docInfo.path, 'utf8');
+            
+            // テキストをチャンクに分割
+            const textChunks = chunkText(fileContent, { source: docInfo.title });
+            console.log(`作成されたチャンク数: ${textChunks.length}`);
+            
+            // クエリでフィルタリング
+            const matchingChunks = textChunks.filter(chunk => 
+              chunk.text.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            console.log(`マッチしたチャンク数: ${matchingChunks.length}`);
+            relevantChunks.push(...matchingChunks);
+            
+            // チャンクをファイルに保存するためのディレクトリを作成
+            if (!fs.existsSync(docDir)) {
+              fs.mkdirSync(docDir, { recursive: true });
+            }
+            
+            // チャンクをファイルに保存
+            fs.writeFileSync(chunksFile, JSON.stringify(textChunks, null, 2));
+            console.log(`チャンクを保存しました: ${chunksFile}`);
+          } catch (fileErr) {
+            console.error(`ファイル読み込みエラー (${docInfo.path}):`, fileErr);
+          }
+        } else {
+          console.log(`オリジナルファイルも見つかりません: ${docInfo.path}`);
+        }
       }
     }
     
-    // 上位10件に制限
-    return relevantChunks.slice(0, 10);
+    // 上位15件に制限（結果を増やす）
+    return relevantChunks.slice(0, 15);
   } catch (err) {
     console.error('Error searching knowledge base:', err);
     return [];
