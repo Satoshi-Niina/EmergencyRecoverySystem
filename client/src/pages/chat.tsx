@@ -151,15 +151,23 @@ export default function Chat() {
       const chatMessages = document.querySelector('.chat-messages-container') as HTMLElement;
       
       if (searchSlider) {
+        // チャットエリアのスタイルを初期化
+        if (chatMessages) {
+          chatMessages.style.width = '';
+          chatMessages.style.flex = '';
+          chatMessages.style.maxWidth = '';
+        }
+        
+        // 初期状態では検索パネルは非表示にする
+        if (!searchResults || searchResults.length === 0) {
+          searchSlider.style.display = 'none';
+          return;
+        } else {
+          searchSlider.style.display = 'block';
+        }
+        
         // 横向きの場合は画面右側に固定表示
         if (orientation === 'landscape') {
-          // チャットエリアを縮小して検索パネル用スペースを作る
-          if (chatMessages) {
-            chatMessages.style.width = '60%';
-            chatMessages.style.flex = '0 0 60%';
-            chatMessages.style.maxWidth = '60%';
-          }
-          
           // 検索パネルを右側に固定
           searchSlider.style.position = 'fixed';
           searchSlider.style.maxHeight = '100vh';
@@ -169,8 +177,8 @@ export default function Chat() {
           searchSlider.style.width = '40%';
           searchSlider.style.right = '0';
           searchSlider.style.left = 'auto';
-          searchSlider.style.transform = 'none';
-          searchSlider.style.transition = 'none';
+          searchSlider.style.transform = 'translateX(100%)'; // 初期状態では非表示
+          searchSlider.style.transition = 'transform 300ms ease-in-out';
           searchSlider.style.borderLeft = '1px solid #bfdbfe';
           searchSlider.style.zIndex = '10';
           searchSlider.style.backgroundColor = '#eff6ff';
@@ -181,16 +189,11 @@ export default function Chat() {
           const searchButton = document.querySelector('.mobile-search-button') as HTMLElement;
           if (searchButton) {
             searchButton.style.bottom = '20px';
-            searchButton.style.right = '45%';
+            searchButton.style.right = '16px';
+            searchButton.style.zIndex = '20';
           }
         } else {
           // 縦向きは従来通り下から表示
-          if (chatMessages) {
-            chatMessages.style.width = '';
-            chatMessages.style.flex = '';
-            chatMessages.style.maxWidth = '';
-          }
-          
           searchSlider.style.maxHeight = '70vh';
           searchSlider.style.width = '100%';
           searchSlider.style.right = 'auto';
@@ -224,8 +227,16 @@ export default function Chat() {
     return () => {
       window.removeEventListener('resize', handleOrientationChange);
       window.removeEventListener('orientationchange', handleOrientationChange);
+      
+      // 検索結果エリアを元に戻す
+      const chatMessages = document.querySelector('.chat-messages-container') as HTMLElement;
+      if (chatMessages) {
+        chatMessages.style.width = '';
+        chatMessages.style.flex = '';
+        chatMessages.style.maxWidth = '';
+      }
     };
-  }, [orientation]);
+  }, [orientation, searchResults]);
   
   return (
     <div className="flex flex-col w-full h-full overflow-auto bg-blue-50 chat-layout-container overflow-scroll-container" style={{ minWidth: orientation === 'landscape' && window.innerHeight < 600 ? '740px' : '100%' }}>
@@ -364,7 +375,7 @@ export default function Chat() {
         <div 
           id="mobile-search-slider" 
           className="fixed inset-x-0 bottom-0 transform translate-y-full transition-transform duration-300 ease-in-out md:hidden z-50"
-          style={{ display: 'block' }}
+          style={{ display: searchResults && searchResults.length > 0 ? 'block' : 'none' }}
         >
           <div className="bg-blue-50 border-t border-blue-200 rounded-t-xl overflow-y-auto" style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
             <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
