@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import { parse } from 'node-html-parser';
@@ -33,6 +33,7 @@ export interface DocumentChunk {
     source: string;
     pageNumber?: number;
     chunkNumber: number;
+    isImportant?: boolean;
   };
 }
 
@@ -147,7 +148,33 @@ export function chunkText(text: string, metadata: { source: string, pageNumber?:
   const chunks: DocumentChunk[] = [];
   let chunkNumber = 0;
   
-  // Simple chunking by character count with overlap
+  // 特定の重要な情報を含む行を独立したチャンクとして抽出
+  // 運転室ドアの幅に関する情報を検索
+  const doorWidthRegex = /運転キャビンへ乗務員が出入りするドア.+?(幅|寸法).+?(\d+).+?(\d+)mm/g;
+  const doorMatches = text.match(doorWidthRegex);
+  
+  if (doorMatches && doorMatches.length > 0) {
+    // ドアの幅に関する記述がある場合は、独立したチャンクとして保存
+    for (const match of doorMatches) {
+      // 前後の文脈も含めるため、マッチした行を含む少し大きめのテキストを抽出
+      const startIndex = Math.max(0, text.indexOf(match) - 50);
+      const endIndex = Math.min(text.length, text.indexOf(match) + match.length + 50);
+      const doorChunk = text.substring(startIndex, endIndex);
+      
+      chunks.push({
+        text: doorChunk,
+        metadata: {
+          ...metadata,
+          chunkNumber: chunkNumber++,
+          isImportant: true
+        }
+      });
+      
+      console.log(`特別な抽出: ドア幅情報を独立チャンクとして保存: ${match}`);
+    }
+  }
+  
+  // 通常のチャンキング処理
   for (let i = 0; i < text.length; i += CHUNK_SIZE - CHUNK_OVERLAP) {
     const chunk = text.substring(i, i + CHUNK_SIZE);
     if (chunk.trim().length > 0) {

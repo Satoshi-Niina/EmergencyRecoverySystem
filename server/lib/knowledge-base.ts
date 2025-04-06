@@ -222,8 +222,20 @@ export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[
                   if (singleKeyword === 'エンジン' || 
                       singleKeyword === 'フレーム' || 
                       singleKeyword === 'キャビン' || 
-                      singleKeyword === '運転室') {
+                      singleKeyword === '運転室' || 
+                      singleKeyword === 'ドア' ||
+                      singleKeyword === '幅' ||
+                      singleKeyword === '扉') {
                     score += 5; // 特に重要なキーワードならさらにボーナススコア
+                    
+                    // ドアや幅に関する検索をさらに強化
+                    if (singleKeyword === 'ドア' || singleKeyword === '扉' || singleKeyword === '幅') {
+                      // 特にドアの寸法に関連する数値を含むチャンクを優先
+                      if (chunkText.includes('mm') || chunkText.includes('センチ') || 
+                          /\d+(\.\d+)?(mm|cm|m)/.test(chunkText)) {
+                        score += 8; // 寸法情報を含む場合は大幅ボーナス
+                      }
+                    }
                   }
                 }
                 
@@ -316,6 +328,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 - 「エンジン」の場合：軌道モータカーのディーゼルエンジン構造、分類（600型、400型、300型、200型）、製造メーカー別の型式（堀川工機、松山重車両など）、機械式と電子噴射式、高トルク、油圧ポンプ、エアーコンプレッサーの情報を含める
 - 「フレーム」の場合：軌道モータカーのフレーム構造、H鋼、メーンフレーム、サイドメンバー、クロスメンバー、強度、はしご状構造に関する情報を含める
 - 「キャビン」「運転室」の場合：防振ゴム、ガラス、モール、ひねり対策、ワイパー、冷暖房、乗務、労働安全衛生規則に関する情報を含める
+- 「ドア」「扉」「幅」の場合：運転室のドア幅（600mm～800mm）、ドアの構造、開閉方式、ドアの寸法、安全基準に関する情報を含める
 
 ## 回答方針（最重要）
 - 【緊急復旧】のタイトルで回答
