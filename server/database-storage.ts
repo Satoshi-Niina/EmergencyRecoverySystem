@@ -126,7 +126,10 @@ export class DatabaseStorage implements IStorage {
       
       // メディアの削除（存在する場合）
       if (messageIds.length > 0) {
-        await db.delete(media).where(sql`${media.messageId} IN (${messageIds.join(',')})`);
+        // メッセージIDごとに個別に削除（SQLインジェクションを避けるため）
+        for (const messageId of messageIds) {
+          await db.delete(media).where(eq(media.messageId, messageId));
+        }
       }
       
       // メッセージの削除

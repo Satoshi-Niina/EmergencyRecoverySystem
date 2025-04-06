@@ -236,6 +236,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         (text: string) => {
           // 認識されたテキストをセット
           setRecordedText(text);
+          
+          // 音声認識の内容をリアルタイムでドラフトメッセージとして表示
+          if (text.trim()) {
+            setDraftMessage({
+              content: text,
+              media: []
+            });
+          }
         },
         (error: string) => {
           console.log('ブラウザ音声認識エラー:', error);
@@ -251,6 +259,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           startSpeechRecognition(
             (text: string) => {
               setRecordedText(text);
+              
+              // Azure音声認識の内容もリアルタイムでドラフトメッセージとして表示
+              if (text.trim()) {
+                setDraftMessage({
+                  content: text,
+                  media: []
+                });
+              }
             }, 
             (error: string) => {
               toast({
@@ -278,7 +294,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsRecording(false);
     stopSpeechRecognition();
     stopBrowserSpeechRecognition();
-  }, []);
+    
+    // 録音停止時にdraftMessageはクリアしない（送信ボタンを押すまでバブル表示を維持）
+    // 録音テキストがない場合は、ドラフトメッセージをクリア
+    if (!recordedText.trim()) {
+      setDraftMessage(null);
+    }
+  }, [recordedText]);
 
   const searchBySelectedText = async (text: string) => {
     try {
@@ -448,16 +470,23 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         await apiRequest('POST', `/api/chats/${chatId || 1}/clear`);
         console.log('サーバーサイドキャッシュクリア要求が成功しました');
+        // サーバーからクリア指示を受信したのでローカルも完全にクリア
+        console.log('サーバーからキャッシュクリア指示を受信');
       } catch (serverError) {
         console.error('サーバーサイドキャッシュクリアに失敗:', serverError);
       }
       
-      // クリアフラグ付きで空配列を返すようにAPIを呼び出す
-      try {
-        await apiRequest('GET', `${chatKey}?clear=true`);
-      } catch (apiError) {
-        console.error('クリアフラグ付きAPIの呼び出しに失敗:', apiError);
-      }
+      // React Queryのキャッシュを強制的に無効化する
+      queryClient.invalidateQueries({ queryKey: [chatKey] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chats/1/messages'] });
+      
+      // リアクトクエリのキャッシュを完全にリセット
+      queryClient.removeQueries({ queryKey: [chatKey] });
+      queryClient.removeQueries({ queryKey: ['/api/chats/1/messages'] });
+      
+      // 新しい空の配列をキャッシュに明示的に設定
+      queryClient.setQueryData([chatKey], []);
+      queryClient.setQueryData(['/api/chats/1/messages'], []);
       
       // LocalStorageのリアクトクエリキャッシュをクリア
       for (const key of Object.keys(localStorage)) {
@@ -466,45 +495,49 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
       
-      // リアクトクエリのキャッシュを完全にリセット
-      queryClient.removeQueries({ queryKey: [chatKey] });
-      queryClient.removeQueries({ queryKey: ['/api/chats/1/messages'] });
-      
-      // 新しい空の配列をキャッシュに設定
-      queryClient.setQueryData([chatKey], []);
-      
-      // クリアマーカーを設定
+      // クリアマーカーを設定 (10秒間有効なフラグ)
       localStorage.setItem('chat_cleared_timestamp', Date.now().toString());
       
-      // ブラウザキャッシュ無効化のため、urlにタイムスタンプを追加して再読み込み
-      const currentRoute = window.location.pathname;
-      if (currentRoute.includes('/chat')) {
-        const timestamp = Date.now();
-        const newUrl = `${currentRoute}?t=${timestamp}`;
-        window.history.replaceState(null, '', newUrl);
-      }
+      // メッセージを強制的に空にする
+      setMessages([]);
       
+      // 成功メッセージ表示
       toast({
         title: 'チャット履歴をクリアしました',
         description: '履歴を完全にクリアしました。新しいメッセージを送信できます。',
       });
       
+      // クリア後にページをリロードする代わりに、URL に timestamp パラメータを追加
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('t', Date.now().toString());
+      window.history.replaceState({}, '', currentUrl.toString());
+      
       // サーバーからの再取得をブロックする (長めの期間でブロック)
-      const blockRefetch = () => {
+      const checkAndBlockRefetch = () => {
         const shouldBlockRefetch = localStorage.getItem('chat_cleared_timestamp');
         if (shouldBlockRefetch) {
           // 10秒以内のクリアなら再取得をブロック
           const clearTime = parseInt(shouldBlockRefetch);
           const now = Date.now();
-          if (now - clearTime < 10000) {
-            console.log('キャッシュクリア直後のため再取得をブロック');
-            return [];
+          if (now - clearTime < 15000) {
+            console.log('クエリキャッシュクリア直後のためメッセージを空にします');
+            queryClient.setQueryData([chatKey], []);
+            queryClient.setQueryData(['/api/chats/1/messages'], []);
+            return true;
           } else {
             localStorage.removeItem('chat_cleared_timestamp');
           }
         }
-        return undefined; // ブロックしない場合はundefinedを返して通常の動作を許可
+        return false;
       };
+      
+      // 長時間にわたって複数回クエリキャッシュをクリアし続ける
+      const intervals = [500, 1000, 2000, 3000, 5000, 7000, 10000, 15000];
+      intervals.forEach(time => {
+        setTimeout(() => {
+          checkAndBlockRefetch();
+        }, time);
+      });
       
       // メッセージクエリのデフォルト値として空の配列を優先的に使用
       // queryClient.setDefaultQueryData([chatKey], blockRefetch); // この関数は利用不可

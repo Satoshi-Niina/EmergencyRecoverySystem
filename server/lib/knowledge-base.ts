@@ -33,7 +33,7 @@ interface KnowledgeBaseIndex {
 /**
  * 知識ベースディレクトリを初期化する
  */
-export async function initializeKnowledgeBase(): Promise<void> {
+export function initializeKnowledgeBase(): void {
   // ディレクトリが存在しない場合は作成
   if (!fs.existsSync(KNOWLEDGE_BASE_DIR)) {
     fs.mkdirSync(KNOWLEDGE_BASE_DIR, { recursive: true });
@@ -82,7 +82,7 @@ export function saveKnowledgeBaseIndex(index: KnowledgeBaseIndex): void {
 export async function addDocumentToKnowledgeBase(filePath: string): Promise<string> {
   try {
     // 知識ベースを初期化
-    await initializeKnowledgeBase();
+    initializeKnowledgeBase();
     
     // ドキュメントを処理
     const processedDoc = await processDocument(filePath);
@@ -158,7 +158,7 @@ async function storeProcessedDocument(docId: string, doc: ProcessedDocument): Pr
 export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[]> {
   try {
     // 知識ベースを初期化
-    await initializeKnowledgeBase();
+    initializeKnowledgeBase();
     
     // インデックスを読み込み
     const index = loadKnowledgeBaseIndex();
@@ -247,15 +247,80 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 
 /**
  * 知識ベース内のすべてのドキュメントを一覧表示
+ * ディレクトリをスキャンして実際に存在するファイルからインデックスを更新
  */
 export function listKnowledgeBaseDocuments(): { id: string, title: string, type: string, addedAt: string }[] {
-  const index = loadKnowledgeBaseIndex();
-  return index.documents.map(doc => ({
-    id: doc.id,
-    title: doc.title,
-    type: doc.type,
-    addedAt: doc.addedAt
-  }));
+  try {
+    // まず知識ベースを初期化
+    initializeKnowledgeBase();
+    
+    // インデックスを読み込み
+    const index = loadKnowledgeBaseIndex();
+    
+    // 実際にファイルシステムをスキャンして、ファイルが存在するかチェック
+    // ルートディレクトリにある保守用車ナレッジ.txtなどのファイルも検出
+    const rootFiles = fs.readdirSync(KNOWLEDGE_BASE_DIR)
+      .filter(item => !item.startsWith('.') && item !== 'index.json')
+      .filter(item => {
+        const itemPath = path.join(KNOWLEDGE_BASE_DIR, item);
+        // ファイルかどうかをチェック
+        return fs.statSync(itemPath).isFile() && 
+            (item.endsWith('.txt') || 
+             item.endsWith('.pdf') || 
+             item.endsWith('.docx') || 
+             item.endsWith('.xlsx') || 
+             item.endsWith('.pptx'));
+      });
+    
+    // インデックスに未追加のファイルを追加
+    for (const file of rootFiles) {
+      const filePath = path.join(KNOWLEDGE_BASE_DIR, file);
+      
+      // インデックスにファイルが存在するかチェック
+      const existingDoc = index.documents.find(doc => doc.path === filePath);
+      
+      if (!existingDoc) {
+        // ファイル拡張子を基にタイプを判定
+        let type = 'text';
+        if (file.endsWith('.pdf')) type = 'pdf';
+        else if (file.endsWith('.docx')) type = 'word';
+        else if (file.endsWith('.xlsx')) type = 'excel';
+        else if (file.endsWith('.pptx')) type = 'powerpoint';
+        
+        // 新しいID生成
+        const newId = `doc_${Date.now()}`;
+        
+        // インデックスに追加
+        index.documents.push({
+          id: newId,
+          title: file,
+          path: filePath,
+          type,
+          chunkCount: 1, // 仮の値
+          addedAt: new Date().toISOString()
+        });
+      }
+    }
+    
+    // サブディレクトリも検索
+    const directories = fs.readdirSync(KNOWLEDGE_BASE_DIR, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.'))
+      .map(dirent => dirent.name);
+    
+    // インデックスを更新
+    saveKnowledgeBaseIndex(index);
+    
+    // ドキュメント情報を返す
+    return index.documents.map(doc => ({
+      id: doc.id,
+      title: doc.title,
+      type: doc.type,
+      addedAt: doc.addedAt
+    }));
+  } catch (error) {
+    console.error('ナレッジベース一覧取得エラー:', error);
+    return [];
+  }
 }
 
 /**
