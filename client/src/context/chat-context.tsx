@@ -42,6 +42,8 @@ interface ChatContextValue {
   isExporting: boolean;
   hasUnexportedMessages: boolean;
   draftMessage: { content: string, media?: { type: string, url: string, thumbnail?: string }[] } | null;
+  clearChatHistory: () => void;
+  isClearing: boolean;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -67,6 +69,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hasUnexportedMessages, setHasUnexportedMessages] = useState(false);
   const [chatId, setChatId] = useState<number | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [tempMedia, setTempMedia] = useState<{ type: string, url: string, thumbnail?: string }[]>([]);
   // プレビュー用一時メッセージ（まだ送信していないがユーザー入力前に表示するためのメッセージ）
   const [draftMessage, setDraftMessage] = useState<{
@@ -385,6 +388,32 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setHasUnexportedMessages(true);
     }
   }, [messages, lastExportTimestamp]);
+  
+  // チャット履歴をクリアする関数
+  const clearChatHistory = async () => {
+    try {
+      setIsClearing(true);
+      
+      // UIからメッセージをクリア
+      setMessages([]);
+      setSearchResults([]);
+      setTempMedia([]);
+      setDraftMessage(null);
+      
+      toast({
+        title: 'チャット履歴をクリアしました',
+        description: '画面上のチャット履歴をクリアしました。データベースには履歴が保存されています。',
+      });
+    } catch (error) {
+      toast({
+        title: 'エラー',
+        description: 'チャット履歴のクリアに失敗しました。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   return (
     <ChatContext.Provider
@@ -408,6 +437,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isExporting,
         hasUnexportedMessages,
         draftMessage,
+        clearChatHistory,
+        isClearing,
       }}
     >
       {children}

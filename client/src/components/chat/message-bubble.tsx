@@ -76,7 +76,7 @@ export default function MessageBubble({ message, isDraft = false }: MessageBubbl
           }`}
         >
           <div className="relative">
-            <p className={`${!isUserMessage ? "text-indigo-700" : "text-blue-900"}`}>{message.content}</p>
+            <p className={`${!isUserMessage ? "text-blue-600" : "text-black"}`}>{message.content}</p>
             
             {/* テキスト選択時のコピーボタン */}
             {showCopyButton && (

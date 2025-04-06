@@ -8,7 +8,7 @@ import CameraModal from "@/components/chat/camera-modal";
 import ImagePreviewModal from "@/components/chat/image-preview-modal";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Send, AlertTriangle, Loader2 } from "lucide-react";
+import { Send, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function Chat() {
@@ -24,7 +24,9 @@ export default function Chat() {
     lastExportTimestamp,
     isExporting,
     hasUnexportedMessages,
-    draftMessage
+    draftMessage,
+    clearChatHistory,
+    isClearing
   } = useChat();
   
   const [isEndChatDialogOpen, setIsEndChatDialogOpen] = useState(false);
@@ -78,6 +80,27 @@ export default function Chat() {
       <div className="border-b border-blue-200 p-3 flex justify-between items-center bg-blue-100">
         <h1 className="text-xl font-bold text-blue-800">緊急復旧サポート</h1>
         <div className="flex items-center gap-3">
+          {/* チャット履歴クリアボタン */}
+          <Button 
+            variant="secondary"
+            size="sm"
+            onClick={clearChatHistory}
+            disabled={isClearing || (!messages || messages.length === 0)}
+            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
+          >
+            {isClearing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>クリア中...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4" />
+                <span>履歴クリア</span>
+              </>
+            )}
+          </Button>
+          
           {/* チャット履歴送信ボタン */}
           <Button 
             variant="outline"
