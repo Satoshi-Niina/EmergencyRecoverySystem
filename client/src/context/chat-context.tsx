@@ -231,6 +231,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setRecordedText(''); // 録音開始時にテキストをクリア
     
     try {
+      // 現在のメディア状態を保持
+      const currentMedia = draftMessage?.media || [];
+      
       // まずブラウザの標準音声認識を試す（マイク許可ダイアログが確実に表示される）
       startBrowserSpeechRecognition(
         (text: string) => {
@@ -238,10 +241,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setRecordedText(text);
           
           // 音声認識の内容をリアルタイムでドラフトメッセージとして表示
+          // 既存のメディアは保持する
           if (text.trim()) {
             setDraftMessage({
               content: text,
-              media: []
+              media: currentMedia
             });
           }
         },
@@ -261,10 +265,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setRecordedText(text);
               
               // Azure音声認識の内容もリアルタイムでドラフトメッセージとして表示
+              // 既存のメディアは保持する
               if (text.trim()) {
                 setDraftMessage({
                   content: text,
-                  media: []
+                  media: currentMedia
                 });
               }
             }, 
@@ -288,7 +293,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       setIsRecording(false);
     }
-  }, [toast]);
+  }, [toast, draftMessage]);
 
   const stopRecording = useCallback(() => {
     setIsRecording(false);

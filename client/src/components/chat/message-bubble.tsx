@@ -3,8 +3,9 @@ import { useAuth } from "@/context/auth-context";
 import { useChat } from "@/context/chat-context";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Copy } from "lucide-react";
+import { Copy, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { speakText, stopSpeaking } from "@/lib/text-to-speech";
 
 interface MessageBubbleProps {
   message: {
@@ -28,6 +29,7 @@ export default function MessageBubble({ message, isDraft = false }: MessageBubbl
   const { setSelectedText } = useChat();
   const [localSelectedText, setLocalSelectedText] = useState("");
   const [showCopyButton, setShowCopyButton] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { toast } = useToast();
   
   const isUserMessage = !message.isAiResponse;
@@ -61,6 +63,44 @@ export default function MessageBubble({ message, isDraft = false }: MessageBubbl
       setShowCopyButton(false);
     }
   };
+  
+  // テキストを音声で読み上げる
+  const handleTextToSpeech = async () => {
+    if (isSpeaking) {
+      // 読み上げ中なら停止
+      stopSpeaking();
+      setIsSpeaking(false);
+      toast({
+        title: "音声読み上げを停止しました",
+        duration: 2000,
+      });
+    } else {
+      // AIの回答のみ読み上げ可能
+      if (!isUserMessage && message.content) {
+        setIsSpeaking(true);
+        toast({
+          title: "音声読み上げを開始します",
+          duration: 2000,
+        });
+        
+        try {
+          await speakText(message.content, {
+            rate: 1.0,
+            pitch: 1.0,
+            lang: 'ja-JP'
+          });
+        } catch (error) {
+          toast({
+            title: "音声読み上げエラー",
+            description: error instanceof Error ? error.message : "音声の読み上げに失敗しました",
+            variant: "destructive",
+          });
+        } finally {
+          setIsSpeaking(false);
+        }
+      }
+    }
+  };
 
   return (
     <div 
@@ -68,6 +108,21 @@ export default function MessageBubble({ message, isDraft = false }: MessageBubbl
       onMouseUp={handleMouseUp}
     >
       <div className={`mx-2 flex flex-col ${isUserMessage ? "items-start" : "items-end"} max-w-[70%]`}>
+        <div className="flex items-center gap-2 mb-1">
+          {/* AIメッセージの場合に音声読み上げボタンを表示 */}
+          {!isUserMessage && (
+            <button
+              onClick={handleTextToSpeech}
+              className={`w-8 h-8 flex items-center justify-center rounded-full shadow-sm 
+                ${isSpeaking 
+                  ? "bg-indigo-600 text-white animate-pulse" 
+                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
+              title={isSpeaking ? "音声読み上げを停止" : "音声読み上げ"}
+            >
+              <Volume2 size={16} />
+            </button>
+          )}
+        </div>
         <div 
           className={`px-4 py-3 mb-1 shadow-sm w-full ${
             isUserMessage 

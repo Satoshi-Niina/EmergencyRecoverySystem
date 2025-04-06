@@ -1,3 +1,12 @@
 {
-  "documents": []
+  "documents": [
+    {
+      "id": "doc_1743917638030_498",
+      "title": "保守用車ナレッジ.txt",
+      "path": "/home/runner/workspace/knowledge-base/保守用車ナレッジ.txt",
+      "type": "text",
+      "chunkCount": 1,
+      "addedAt": "2025-04-06T05:33:58.030Z"
+    }
+  ]
 }
