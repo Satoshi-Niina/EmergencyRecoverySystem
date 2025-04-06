@@ -441,10 +441,27 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTempMedia([]);
       setDraftMessage(null);
       
+      // チャットIDが存在する場合は、サーバーキャッシュも更新
+      if (chatId) {
+        // キャッシュを無効化して強制リロード
+        queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
+        queryClient.setQueryData([`/api/chats/${chatId}/messages`], []);
+        queryClient.setQueryData(['/api/chats/1/messages'], []);
+      }
+      
       toast({
         title: 'チャット履歴をクリアしました',
         description: '画面上のチャット履歴をクリアしました。データベースには履歴が保存されています。',
       });
+      
+      // 直接クエリデータを空配列に設定して即時反映
+      setTimeout(() => {
+        if (chatId) {
+          queryClient.setQueryData([`/api/chats/${chatId}/messages`], []);
+          queryClient.setQueryData(['/api/chats/1/messages'], []);
+        }
+      }, 100);
+      
     } catch (error) {
       toast({
         title: 'エラー',
