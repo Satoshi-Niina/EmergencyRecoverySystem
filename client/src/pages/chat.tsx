@@ -23,7 +23,8 @@ export default function Chat() {
     exportChatHistory,
     lastExportTimestamp,
     isExporting,
-    hasUnexportedMessages
+    hasUnexportedMessages,
+    draftMessage
   } = useChat();
   
   const [isEndChatDialogOpen, setIsEndChatDialogOpen] = useState(false);
@@ -127,11 +128,35 @@ export default function Chat() {
                 </div>
               </div>
             ) : (
-              displayMessages.map((message: any, index: number) => (
-                <div key={index} className="w-full md:max-w-2xl mx-auto">
-                  <MessageBubble message={message} />
-                </div>
-              ))
+              <>
+                {/* 通常のメッセージリスト */}
+                {displayMessages.map((message: any, index: number) => (
+                  <div key={index} className="w-full md:max-w-2xl mx-auto">
+                    <MessageBubble message={message} />
+                  </div>
+                ))}
+              </>
+            )}
+            
+            {/* プレビュー用の一時メッセージ (撮影した画像のプレビュー) */}
+            {draftMessage && (
+              <div className="w-full md:max-w-2xl mx-auto">
+                <MessageBubble
+                  message={{
+                    id: -1, // 一時的なID
+                    content: draftMessage.content,
+                    senderId: 1, // 現在のユーザーID
+                    isAiResponse: false,
+                    timestamp: new Date(),
+                    media: draftMessage.media?.map((m, idx) => ({
+                      id: idx,
+                      messageId: -1,
+                      ...m
+                    }))
+                  }}
+                  isDraft={true}
+                />
+              </div>
             )}
           </div>
 

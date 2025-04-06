@@ -41,6 +41,7 @@ interface ChatContextValue {
   lastExportTimestamp: Date | null;
   isExporting: boolean;
   hasUnexportedMessages: boolean;
+  draftMessage: { content: string, media?: { type: string, url: string, thumbnail?: string }[] } | null;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -67,6 +68,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [chatId, setChatId] = useState<number | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [tempMedia, setTempMedia] = useState<{ type: string, url: string, thumbnail?: string }[]>([]);
+  // プレビュー用一時メッセージ（まだ送信していないがユーザー入力前に表示するためのメッセージ）
+  const [draftMessage, setDraftMessage] = useState<{
+    content: string,
+    media?: { type: string, url: string, thumbnail?: string }[]
+  } | null>(null);
   const { toast } = useToast();
   
   // チャットの初期化
@@ -152,6 +158,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       setIsLoading(true);
       
+      // ドラフトメッセージをクリア
+      setDraftMessage(null);
+      
       const currentChatId = chatId || 1;
       
       const response = await apiRequest('POST', `/api/chats/${currentChatId}/messages`, { content });
@@ -181,13 +190,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       ]);
       
-      // AI 応答を検索結果として表示する
-      setSearchResults([
+      // AI応答はメッセージとして処理し、検索結果には表示しない
+      // 検索結果は画像検索のみを表示する
+      setMessages(prev => [
+        ...prev,
         {
-          id: data.aiMessage.id,
-          title: "AIによる回答",
-          type: "ai-response",
-          content: data.aiMessage.content,
+          ...data.aiMessage,
           timestamp: new Date(data.aiMessage.timestamp)
         }
       ]);
@@ -259,6 +267,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       setTempMedia(prev => [...prev, newMedia]);
       
+      // プレビュー用のドラフトメッセージを作成（左側のチャットに表示）
+      setDraftMessage({
+        content: "",
+        media: [{
+          type,
+          url: imageData,
+          thumbnail: type === 'video' ? imageData : undefined
+        }]
+      });
+      
       // プレビュー用のイベントを発火
       window.dispatchEvent(new CustomEvent('preview-image', { 
         detail: { 
@@ -298,8 +316,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (result.success) {
         // 新しいエクスポートタイムスタンプを設定
-        setLastExportTimestamp(new Date(result.exportTimestamp));
+        const exportTime = new Date(result.exportTimestamp);
+        setLastExportTimestamp(exportTime);
         setHasUnexportedMessages(false);
+        
+        // エクスポート成功時に履歴を画面からクリア
+        // エクスポート時間より前のメッセージのみをクリア
+        const newMessages = messages.filter(msg => 
+          new Date(msg.timestamp) > exportTime
+        );
+        setMessages(newMessages);
         
         toast({
           title: 'チャット履歴を送信しました',
@@ -307,11 +333,21 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
       }
     } catch (error) {
-      toast({
-        title: '履歴送信エラー',
-        description: 'チャット履歴の送信に失敗しました。',
-        variant: 'destructive',
-      });
+      // エラーがエクスポートテーブル未作成の場合は、テーブルがないためのエラーとして処理
+      const errorMsg = error instanceof Error ? error.message : '';
+      if (errorMsg.includes('relation "chat_exports" does not exist')) {
+        toast({
+          title: '履歴送信機能が準備中',
+          description: 'エクスポート機能がまだ完全に設定されていません。チャット履歴は保存されています。',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: '履歴送信エラー',
+          description: 'チャット履歴の送信に失敗しました。',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsExporting(false);
     }
@@ -371,6 +407,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         lastExportTimestamp,
         isExporting,
         hasUnexportedMessages,
+        draftMessage,
       }}
     >
       {children}
