@@ -20,7 +20,7 @@ interface SearchResultsProps {
 
 export default function SearchResults({ results, onClear }: SearchResultsProps) {
   const orientation = useOrientation();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   if (results.length === 0) {
     return (
       <div className="p-4">
@@ -35,7 +35,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
 
   // モバイル&横向きの場合は全画面表示、それ以外は通常表示
   const containerClass = isMobile && orientation === 'landscape'
-    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto"
+    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto chat-controls-container"
     : "p-4 overflow-x-auto";
 
   return (
@@ -47,7 +47,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
         </Button>
       </div>
       
-      <div className={`space-y-4 ${isMobile ? 'w-full max-w-md mx-auto' : ''}`}>
+      <div className={`space-y-4 ${isMobile ? 'w-full max-w-md mx-auto' : ''} search-results-container`}>
         {results.map((result) => (
           <div key={result.id} className="rounded-lg border border-blue-200 overflow-hidden bg-white shadow-sm">
             {result.url ? (

@@ -11,6 +11,8 @@ import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Send, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useOrientation } from "@/hooks/use-orientation";
 
 export default function Chat() {
   const {
@@ -133,9 +135,12 @@ export default function Chat() {
     window.location.href = "/";
   };
 
+  const isMobile = useIsMobile();
+  const orientation = useOrientation();
+  
   return (
-    <div className="flex flex-col w-full h-full max-h-screen overflow-hidden bg-blue-50">
-      <div className="border-b border-blue-200 p-2 md:p-3 flex justify-between items-center bg-blue-100">
+    <div className="flex flex-col w-full h-full max-h-screen overflow-hidden bg-blue-50 chat-layout-container">
+      <div className="border-b border-blue-200 p-2 md:p-3 flex justify-between items-center bg-blue-100 mobile-landscape-header">
         <div className="flex items-center">
           {/* タイトルはヘッダーに移動 */}
         </div>
@@ -177,9 +182,9 @@ export default function Chat() {
       
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Chat Messages Area - Made wider for better visibility of images */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4 bg-white">
+        <div className="flex-1 flex flex-col h-full overflow-hidden md:w-3/4 bg-white chat-messages-container">
           {/* Chat Messages */}
-          <div id="chatMessages" className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 md:px-8 space-y-4">
+          <div id="chatMessages" className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 md:px-8 space-y-4 min-w-[300px]">
             {messagesLoading || isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <p className="text-blue-700">メッセージを読み込み中...</p>
