@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url';
 import { 
   processDocument, 
   ProcessedDocument, 
-  DocumentChunk 
+  DocumentChunk,
+  chunkText
 } from './document-processor';
 import { storage } from '../storage';
 
@@ -200,7 +201,7 @@ export async function searchKnowledgeBase(query: string): Promise<DocumentChunk[
             console.log(`作成されたチャンク数: ${textChunks.length}`);
             
             // クエリでフィルタリング
-            const matchingChunks = textChunks.filter(chunk => 
+            const matchingChunks = textChunks.filter((chunk: DocumentChunk) => 
               chunk.text.toLowerCase().includes(query.toLowerCase())
             );
             
@@ -245,17 +246,17 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 あなたの目的は、ユーザーが保守用車（軌道モータカー、重機、道路保守車両、線路保守車両など）のトラブルシューティングと修理を支援することです。
 
 ## 回答方針（最重要）
-- すべての回答は具体的な行動指示を中心とした内容にする
-- 冗長な説明や前置きは完全に省略する
+- 【応急処置】だけに絞って回答する
+- 他の情報は一切含めない
 - 「〜です」「〜ます」などの丁寧表現は省略し「〜する」など簡潔な表現を使用する
-- 必ず【応急処置】を最初に提示し、具体的な操作・部品・工具名を明記する
+- 具体的な操作・部品・工具名を明記する
 - 手順は番号付きリストで表示し、各ステップは具体的行動を指示する
-- 点検箇所は具体的部品名・位置を明記する
 
-## 質問分類と応答内容（必ず守る）
-- 1. 【応急処置】：実際の作業手順を示す（例：「1. エンジンキーをOFF」「2. 燃料バルブを閉める」）
-- 2. 【点検項目】：具体的な部品名・位置を箇条書きで示す（例：「・燃料フィルターの目詰まり」）
-- 3. 【原因】：故障原因を簡潔に列挙（主要なもののみ）
+## 回答方法（必ず守る）
+- タイトルとして【応急処置】だけを表示する
+- 実際の作業手順を番号付きリストで示す
+- 例：「1. エンジンキーをOFF」「2. 燃料バルブを閉める」
+- 点検項目や原因は含めない
 
 ## 安全注意事項
 - 危険性がある場合のみ、先頭に【危険】と記載する
@@ -272,7 +273,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
       basePrompt += `---\n出典: ${chunk.metadata.source}\n\n${chunk.text}\n---\n\n`;
     }
     
-    basePrompt += `\n上記の情報のみを参考にしながら、回答します。情報にない場合は「ナレッジベースに情報なし」と短く伝えてください。指定された回答方針を厳守し、具体的な作業手順を箇条書きで示してください。`;
+    basePrompt += `\n上記の情報のみを参考にしながら、回答します。情報にない場合は「ナレッジベースに情報なし」と短く伝えてください。必ず【応急処置】のみを示し、番号付きリストでステップバイステップの作業手順のみを提示してください。`;
   } else {
     // 関連情報が見つからない場合
     basePrompt += `\n\n質問に関する情報がナレッジベースにありません。「ナレッジベースに該当情報なし」と短く回答してください。一般知識での回答は避け、具体的な内容が提供できない場合は明確にその旨を伝えてください。`;

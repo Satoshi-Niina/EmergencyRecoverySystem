@@ -66,7 +66,6 @@ export default function Header() {
           <Settings />
         </Button>
         <div className="ml-3 flex items-center">
-          <span className="material-icons mr-1">account_circle</span>
           <span className="text-sm">{user?.displayName}</span>
           <span className="ml-2 bg-secondary text-white text-xs px-2 py-0.5 rounded-full">
             {user?.role === "admin" ? "管理者" : "一般"}
