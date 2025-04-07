@@ -187,7 +187,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ...(mediaUrls || [])
       ];
       
-      // Add user message to the messages state
+      // ユーザーメッセージとAI応答を同時に追加（ユーザーメッセージが重複しないよう1回のみ追加）
       setMessages(prev => [
         ...prev, 
         { 
@@ -198,13 +198,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             messageId: data.userMessage.id,
             ...media
           })) : []
-        }
-      ]);
-      
-      // AI応答はメッセージとして処理し、検索結果には表示しない
-      // 検索結果は画像検索のみを表示する
-      setMessages(prev => [
-        ...prev,
+        },
         {
           ...data.aiMessage,
           timestamp: new Date(data.aiMessage.timestamp)
