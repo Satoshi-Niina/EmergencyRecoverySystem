@@ -613,6 +613,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'ドキュメントの削除に失敗しました: ' + errorMessage });
     }
   });
+  
+  // ドキュメント再処理
+  app.post('/api/knowledge/:docId/process', requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const docId = req.params.docId;
+      
+      // ナレッジベースからドキュメント情報を取得
+      const documents = listKnowledgeBaseDocuments();
+      const document = documents.find(doc => doc.id === docId);
+      
+      if (!document) {
+        return res.status(404).json({ error: '指定されたドキュメントが見つかりません' });
+      }
+      
+      // ドキュメントのパスを取得
+      const docPath = path.join(process.cwd(), 'knowledge-base', document.title);
+      
+      if (!fs.existsSync(docPath)) {
+        return res.status(404).json({ error: 'ドキュメントファイルが見つかりません: ' + docPath });
+      }
+      
+      console.log(`ドキュメント再処理を開始: ${docPath}`);
+      
+      // 再処理を実行
+      const newDocId = await addDocumentToKnowledgeBase(docPath);
+      
+      res.json({ 
+        success: true, 
+        docId: newDocId, 
+        message: 'ドキュメントが正常に再処理されました' 
+      });
+    } catch (error) {
+      console.error('Error processing document:', error);
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      res.status(500).json({ error: 'ドキュメントの再処理に失敗しました: ' + errorMessage });
+    }
+  });
 
   // OpenAI API routes
   app.post("/api/chatgpt", requireAuth, async (req, res) => {

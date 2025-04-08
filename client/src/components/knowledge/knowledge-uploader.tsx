@@ -47,6 +47,38 @@ const KnowledgeUploader: React.FC = () => {
     }
   };
 
+  // 再処理ハンドラ
+  const handleProcessDocument = async (docId: string, title: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/knowledge/${docId}/process`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "処理に失敗しました");
+      }
+
+      toast({
+        title: "処理成功",
+        description: `${title} を再処理しました`,
+      });
+      
+      // ドキュメント一覧を再読み込み
+      await fetchDocuments();
+    } catch (error) {
+      console.error("Processing error:", error);
+      toast({
+        title: "処理エラー",
+        description: error instanceof Error ? error.message : "未知のエラーが発生しました",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // ファイルアップロードハンドラ
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -268,14 +300,26 @@ const KnowledgeUploader: React.FC = () => {
                     <TableCell className="text-cyan-700">{doc.type}</TableCell>
                     <TableCell className="text-cyan-700">{new Date(doc.addedAt).toLocaleString("ja-JP")}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteDocument(doc.id, doc.title)}
-                        className="hover:bg-red-100 text-red-500"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
+                      <div className="flex space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleProcessDocument(doc.id, doc.title)}
+                          className="hover:bg-blue-100 text-blue-500"
+                          title="ファイルを再処理"
+                        >
+                          <FileText className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                          className="hover:bg-red-100 text-red-500"
+                          title="ファイルを削除"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

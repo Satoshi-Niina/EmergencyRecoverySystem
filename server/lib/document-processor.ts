@@ -44,6 +44,9 @@ export interface DocumentChunk {
  */
 export async function extractPdfText(filePath: string): Promise<{ text: string, pageCount: number }> {
   try {
+    // PDF.js workerを設定
+    pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+    
     const data = new Uint8Array(fs.readFileSync(filePath));
     const loadingTask = pdfjs.getDocument({ data });
     const pdf = await loadingTask.promise;
@@ -202,17 +205,36 @@ export async function extractPptxText(filePath: string): Promise<string> {
           </text>
         </svg>`;
         
+        // アップロードディレクトリのパスを設定
+        const imagesDir = path.join(process.cwd(), 'uploads', 'images');
+        const publicImagesDir = path.join(process.cwd(), 'public', 'uploads', 'images');
+        
+        // ディレクトリが存在しない場合は作成
+        if (!fs.existsSync(imagesDir)) {
+          fs.mkdirSync(imagesDir, { recursive: true });
+          console.log(`作成したディレクトリ: ${imagesDir}`);
+        }
+        
+        if (!fs.existsSync(publicImagesDir)) {
+          fs.mkdirSync(publicImagesDir, { recursive: true });
+          console.log(`作成したディレクトリ: ${publicImagesDir}`);
+        }
+        
         // SVGファイルとPNGファイルを保存
-        const svgFilePath = path.join(imagesOutputDir, `${slideFileName}.svg`);
-        const pngFilePath = path.join(imagesOutputDir, `${slideFileName}.png`);
+        const svgFilePath = path.join(imagesDir, `${slideFileName}.svg`);
+        const pngFilePath = path.join(imagesDir, `${slideFileName}.png`);
         fs.writeFileSync(svgFilePath, svgContent);
         fs.writeFileSync(pngFilePath, svgContent); // 実際はSVG→PNGに変換すべき
+        console.log(`SVGファイルを保存: ${svgFilePath}`);
+        console.log(`PNGファイルを保存: ${pngFilePath}`);
         
         // 公開ディレクトリにもコピー
         const publicSvgPath = path.join(publicImagesDir, `${slideFileName}.svg`);
         const publicPngPath = path.join(publicImagesDir, `${slideFileName}.png`);
         fs.copyFileSync(svgFilePath, publicSvgPath);
         fs.copyFileSync(pngFilePath, publicPngPath);
+        console.log(`公開SVGをコピー: ${publicSvgPath}`);
+        console.log(`公開PNGをコピー: ${publicPngPath}`);
         
         console.log(`スライド画像を保存: ${slideFileName}`);
         
@@ -289,7 +311,7 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const vehicleData = extractedData[vehicleDataKey] as any[];
     
     // 新規データ - 実際のスライド情報からデータを構築
-    const slideInfoArray = slideInfoData?.slides || [];
+    const slideInfoArray = slideInfoData && slideInfoData.slides ? slideInfoData.slides : [];
     // 日本語形式のJSONフィールドからの画像パス取得
     const allSlidesUrls = slideInfoArray.map((slide: any) => {
       // 日本語形式のJSONの場合
