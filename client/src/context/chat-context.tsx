@@ -7,8 +7,9 @@ import {
   startBrowserSpeechRecognition,
   stopBrowserSpeechRecognition
 } from '@/lib/azure-speech';
-// import the searchByText function correctly
+// import the searchByText function and cancelSearch correctly
 import * as ImageSearch from '@/lib/image-search';
+import { searchByText, cancelSearch } from '@/lib/image-search';
 
 interface Media {
   id: number;
@@ -341,8 +342,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   hasFrameKeyword ? "車体関連あり" : "",
                   hasCabinKeyword ? "運転室関連あり" : "");
       
-      // 検索結果を取得する
-      const results = await ImageSearch.searchByText(text);
+      // 検索結果を取得する (検索結果が表示されたら自動的に検索を停止)
+      const results = await ImageSearch.searchByText(text, true);
+      
+      // 検索結果が見つかったら検索を停止（サムネイル点滅防止）
+      if (results.length > 0) {
+        ImageSearch.cancelSearch();
+        console.log("検索結果が見つかったため画像検索を停止します");
+      }
       
       console.log("検索結果数:", results.length);
       

@@ -258,11 +258,21 @@ let lastSearchResults: any[] = [];
 let isSearching = false;
 
 /**
+ * 検索処理を強制的にキャンセルする関数
+ * 検索結果が表示された後に呼び出して点滅を防止する
+ */
+export const cancelSearch = (): void => {
+  isSearching = false;
+  console.log('画像検索処理がキャンセルされました');
+};
+
+/**
  * テキストクエリに基づいて画像データを検索
  * @param text 検索クエリテキスト
+ * @param autoStopAfterResults 結果が見つかったら検索を自動停止するかどうか
  * @returns 検索結果の配列
  */
-export const searchByText = async (text: string): Promise<any[]> => {
+export const searchByText = async (text: string, autoStopAfterResults: boolean = true): Promise<any[]> => {
   try {
     // 検索テキストが空の場合は空配列を返す
     if (!text || text.trim() === '') {
@@ -275,6 +285,8 @@ export const searchByText = async (text: string): Promise<any[]> => {
     // 前回と同じ検索キーワードなら、キャッシュした結果を返す（点滅防止）
     if (text === lastSearchText && lastSearchResults.length > 0) {
       console.log('前回と同じ検索テキストのため、キャッシュされた結果を返します:', lastSearchResults.length);
+      // 検索を停止（キャッシュヒット時）
+      isSearching = false;
       return lastSearchResults;
     }
     
@@ -328,6 +340,12 @@ export const searchByText = async (text: string): Promise<any[]> => {
       
       console.log(`検索結果: ${searchResults.length}件見つかりました`);
       
+      // 検索結果がある場合、検索を自動停止するオプションが有効なら検索を停止
+      if (autoStopAfterResults && searchResults.length > 0) {
+        console.log('検索結果を表示するため検索処理を自動停止します');
+        // このタイミングではまだ検索フラグは維持し、フォーマット処理完了後に停止
+      }
+      
       // 検索結果を必要な形式にマッピング
       const formattedResults = searchResults.map(result => {
         const item = result.item;
@@ -374,8 +392,16 @@ export const searchByText = async (text: string): Promise<any[]> => {
         };
       });
       
-      // キャッシュに保存して返す
+      // キャッシュに保存
       lastSearchResults = formattedResults;
+      
+      // 結果が見つかったので、点滅防止のために検索フラグをリセット
+      if (autoStopAfterResults && formattedResults.length > 0) {
+        console.log(`検索停止: ${formattedResults.length}件の結果を表示します`);
+        // 検索完了後に表示される前に検索を停止（finally区間で実行）
+        // isSearching = false; // ここではなくfinally内で行う
+      }
+      
       return formattedResults;
     } finally {
       // 検索完了フラグを設定
