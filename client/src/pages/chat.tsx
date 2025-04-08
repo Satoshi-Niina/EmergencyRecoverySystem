@@ -398,12 +398,10 @@ export default function Chat() {
               ? 'h-full border-l border-blue-200' 
               : 'border-t border-blue-200 rounded-t-xl'
           }`} style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
-            <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
-              <h3 className="font-semibold text-blue-800">検索画像表示</h3>
-              <Button
-                size="sm" 
-                variant="ghost"
-                onClick={() => {
+            <div className="search-results-wrapper">
+              <SearchResults results={searchResults} onClear={() => {
+                clearSearchResults();
+                // 閉じるボタンをクリックした時の処理も実行
                 const slider = document.getElementById('mobile-search-slider');
                 if (slider) {
                   slider.classList.remove('search-panel-visible');
@@ -415,14 +413,7 @@ export default function Chat() {
                     slider.style.transform = 'translateY(100%)';
                   }
                 }
-              }}
-                className="text-blue-700"
-              >
-                閉じる
-              </Button>
-            </div>
-            <div className="p-2">
-              <SearchResults results={searchResults} onClear={clearSearchResults} />
+              }} />
             </div>
           </div>
         </div>
