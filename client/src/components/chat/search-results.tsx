@@ -28,7 +28,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   if (results.length === 0) {
     return (
       <div className="p-4">
-        <h2 className="font-semibold text-lg mb-3 text-blue-700">検索結果</h2>
+        <h2 className="font-semibold text-lg mb-3 text-blue-700">検索結果画像</h2>
         <p className="text-center text-blue-400 py-4">検索結果はありません</p>
         <p className="text-sm text-center text-blue-400">
           テキストを選択して検索するか、画像検索機能を使用してください。
@@ -51,7 +51,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   return (
     <div className={containerClass}>
       <div className="flex justify-between items-center mb-3">
-        <h2 className="font-semibold text-lg text-blue-700">検索結果</h2>
+        <h2 className="font-semibold text-lg text-blue-700">検索結果画像</h2>
         <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
           <X className="h-5 w-5" />
         </Button>

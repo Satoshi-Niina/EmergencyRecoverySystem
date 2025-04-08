@@ -9,6 +9,8 @@ let maintenanceVehicleData: {
   category: string;
   description: string;
   image_path?: string;
+  all_slides?: string[];  // スライド画像のパス配列
+  metadata_json?: string; // メタデータJSONへのパス
   keywords?: string[];
   details?: string;
   troubleshooting?: string[];
@@ -139,12 +141,40 @@ export const searchByText = async (text: string): Promise<any[]> => {
     // 検索結果を必要な形式にマッピング
     return searchResults.map(result => {
       const item = result.item;
-      // 画像パスの修正: 「uploads/」で始まる場合は先頭の「/」を追加
-      const fixedImagePath = item.image_path?.startsWith('uploads/') 
-        ? '/' + item.image_path 
-        : item.image_path;
-        
+      // 画像パスの修正: スラッシュの有無を適切に処理
+      let fixedImagePath = item.image_path || '';
+      
+      // スラッシュがない場合は追加、ダブルスラッシュになる場合は修正
+      if (fixedImagePath && !fixedImagePath.startsWith('/') && !fixedImagePath.startsWith('http')) {
+        fixedImagePath = '/' + fixedImagePath;
+      }
+      
+      // もし複数の画像（スライド）がある場合は、最初のものを使用
+      const allSlides = item.all_slides || [];
+      if (allSlides.length > 0) {
+        // スライド画像がある場合は最初のスライドを使用
+        let slideImagePath = allSlides[0];
+        if (slideImagePath && !slideImagePath.startsWith('/') && !slideImagePath.startsWith('http')) {
+          slideImagePath = '/' + slideImagePath;
+        }
+        fixedImagePath = slideImagePath;
+      }
+      
       console.log('画像パス変換:', item.image_path, '=>', fixedImagePath);
+      
+      // メタデータJSONのパスがある場合はそれも含める
+      let metadataJsonPath = item.metadata_json || null;
+      if (metadataJsonPath && !metadataJsonPath.startsWith('/') && !metadataJsonPath.startsWith('http')) {
+        metadataJsonPath = '/' + metadataJsonPath;
+      }
+      
+      // 全スライド情報を適切に処理
+      const processedSlides = (item.all_slides || []).map((slide: string) => {
+        if (slide && !slide.startsWith('/') && !slide.startsWith('http')) {
+          return '/' + slide;
+        }
+        return slide;
+      });
       
       return {
         id: item.id,
@@ -152,7 +182,10 @@ export const searchByText = async (text: string): Promise<any[]> => {
         type: 'image', // 画像検索結果
         url: fixedImagePath, // 修正された画像パス
         content: item.description, // 説明文を内容として表示
-        relevance: (1 - (result.score || 0)) * 100 // スコアをパーセンテージの関連度に変換
+        relevance: (1 - (result.score || 0)) * 100, // スコアをパーセンテージの関連度に変換
+        metadata_json: metadataJsonPath, // メタデータJSONへのパス
+        all_slides: processedSlides.length > 0 ? processedSlides : undefined, // 全スライド情報
+        details: item.details // 詳細情報
       };
     });
   } catch (error) {

@@ -280,17 +280,21 @@ export async function extractPptxText(filePath: string): Promise<string> {
     
     const vehicleData = extractedData[vehicleDataKey] as any[];
     
-    // 新規データ - すべてのスライドへの参照を含める
+    // 新規データ - 実際のスライド情報からデータを構築
+    const slideInfoArray = slideInfoData.slides || [];
+    const allSlidesUrls = slideInfoArray.map((slide: any) => slide.imageUrl) || [];
+    
     const newVehicleData = {
       id: slideImageBaseName,
       category: "PowerPoint",
       title: fileName,
       description: `保守用車緊急対応マニュアル: ${fileName}`,
       details: extractedText,
-      image_path: `uploads/images/${slideImageBaseName}_001.png`,
-      all_slides: Array.from({length: 4}, (_, i) => 
-        `uploads/images/${slideImageBaseName}_${(i+1).toString().padStart(3, '0')}.png`
-      ),
+      image_path: allSlidesUrls.length > 0 ? allSlidesUrls[0] : `uploads/images/${slideImageBaseName}_001.png`,
+      all_slides: allSlidesUrls.length > 0 ? allSlidesUrls : 
+        Array.from({length: 4}, (_, i) => 
+          `uploads/images/${slideImageBaseName}_${(i+1).toString().padStart(3, '0')}.png`
+        ),
       metadata_json: `uploads/images/${slideImageBaseName}_metadata.json`,
       keywords: ["PowerPoint", "保守用車", "緊急対応", "マニュアル", fileName]
     };
