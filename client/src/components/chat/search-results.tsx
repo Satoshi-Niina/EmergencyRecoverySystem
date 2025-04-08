@@ -49,12 +49,12 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
         </div>
       </div>
       
-      {/* サムネイルグリッド表示 */}
-      <div className="grid grid-cols-2 gap-4 p-2">
+      {/* サムネイル縦一列表示 */}
+      <div className="flex flex-col gap-4 p-2">
         {results.map((result) => (
           <div 
             key={result.id} 
-            className="thumbnail-item rounded-lg overflow-hidden bg-white shadow-sm"
+            className="thumbnail-item rounded-lg overflow-hidden bg-white shadow-sm w-full"
             onClick={() => {
               // イメージプレビューモーダルを表示
               window.dispatchEvent(new CustomEvent('preview-image', { 
@@ -70,45 +70,49 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
             }}
           >
             {result.url ? (
-              // 画像サムネイル (SVG画像もサポート)
-              <div className="relative aspect-square">
-                <img 
-                  src={result.url} 
-                  alt={result.title || "保守用車情報"} 
-                  className="w-full h-full object-cover"
-                  // SVG画像が読み込めない場合はPNG代替を使用
-                  onError={(e) => {
-                    const imgElement = e.currentTarget;
-                    if (result.pngFallbackUrl && result.url !== result.pngFallbackUrl) {
-                      console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
-                      imgElement.src = result.pngFallbackUrl;
-                    }
-                  }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-blue-700 bg-opacity-80 p-1 text-center">
-                  <p className="text-xs font-medium text-white truncate">{result.title || "保守用車情報"}</p>
+              // 画像サムネイル (横長スタイル)
+              <div className="flex h-24 w-full bg-gray-50 border-b border-gray-200">
+                <div className="relative w-32 h-24 flex-shrink-0">
+                  <img 
+                    src={result.url} 
+                    alt={result.title || "保守用車情報"} 
+                    className="w-full h-full object-contain bg-white p-1"
+                    // SVG画像が読み込めない場合はPNG代替を使用
+                    onError={(e) => {
+                      const imgElement = e.currentTarget;
+                      if (result.pngFallbackUrl && result.url !== result.pngFallbackUrl) {
+                        console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
+                        imgElement.src = result.pngFallbackUrl;
+                      }
+                    }}
+                  />
                 </div>
-              </div>
-            ) : result.type === 'ai-response' ? (
-              // AI応答サムネイル
-              <div className="h-full bg-blue-50 flex items-center justify-center p-2 aspect-square">
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mb-2">
-                    <span className="material-icons text-white text-sm">smart_toy</span>
-                  </div>
-                  <p className="text-xs text-blue-700 truncate text-center">{result.title || "AI応答"}</p>
+                <div className="flex-1 p-2 flex flex-col justify-center">
+                  <h3 className="text-sm font-medium text-blue-800">{result.title || "保守用車情報"}</h3>
+                  {result.content && (
+                    <p className="text-xs text-gray-600 line-clamp-2 mt-1">{result.content}</p>
+                  )}
                 </div>
               </div>
             ) : (
-              // その他のドキュメントサムネイル
-              <div className="h-full bg-blue-50 flex items-center justify-center p-2 aspect-square">
-                <div className="flex flex-col items-center">
-                  {result.type === 'text' ? (
-                    <MessageCircle className="h-10 w-10 text-blue-400 mb-2" />
+              // テキストコンテンツとドキュメント (横長スタイル)
+              <div className="flex h-24 w-full bg-gray-50 border-b border-gray-200">
+                <div className="relative w-24 h-24 flex-shrink-0 flex items-center justify-center bg-blue-50">
+                  {result.type === 'ai-response' ? (
+                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                      <span className="material-icons text-white">smart_toy</span>
+                    </div>
+                  ) : result.type === 'text' ? (
+                    <MessageCircle className="h-12 w-12 text-blue-500" />
                   ) : (
-                    <FileText className="h-10 w-10 text-blue-400 mb-2" />
+                    <FileText className="h-12 w-12 text-blue-500" />
                   )}
-                  <p className="text-xs text-blue-700 truncate text-center">{result.title || "ドキュメント"}</p>
+                </div>
+                <div className="flex-1 p-2 flex flex-col justify-center">
+                  <h3 className="text-sm font-medium text-blue-800">{result.title || (result.type === 'ai-response' ? "AI応答" : "ドキュメント")}</h3>
+                  {result.content && (
+                    <p className="text-xs text-gray-600 line-clamp-2 mt-1">{result.content}</p>
+                  )}
                 </div>
               </div>
             )}

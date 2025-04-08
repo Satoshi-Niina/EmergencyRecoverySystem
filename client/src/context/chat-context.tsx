@@ -316,6 +316,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [recordedText]);
 
   const searchBySelectedText = async (text: string) => {
+    // すでに検索中の場合は処理をスキップ
+    if (searching) {
+      console.log("すでに検索処理中のため、この検索リクエストはスキップします");
+      return;
+    }
+    
     try {
       setSearching(true);
       
