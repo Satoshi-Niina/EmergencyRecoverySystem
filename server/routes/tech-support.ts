@@ -66,6 +66,110 @@ const router = express.Router();
 /**
  * 技術サポート文書のアップロードと処理を行うエンドポイント
  */
+// 画像検索データの初期化用エンドポイント
+router.post('/init-image-search-data', async (req, res) => {
+  try {
+    console.log('画像検索データの初期化を実行します');
+    
+    // 画像検索データJSONファイルのパス
+    const imageSearchDataPath = path.join(process.cwd(), 'public', 'uploads', 'data', 'image_search_data.json');
+    const imagesDir = path.join(process.cwd(), 'public', 'uploads', 'images');
+    
+    // ディレクトリが存在するか確認し、なければ作成
+    ensureDirectoryExists(path.join(process.cwd(), 'public', 'uploads', 'data'));
+    ensureDirectoryExists(imagesDir);
+    
+    // 初期データを作成
+    const initialData = [
+      {
+        id: "engine_001",
+        file: "/uploads/images/engine_001.svg",
+        pngFallback: "/uploads/images/engine_001.png",
+        title: "エンジン基本構造図",
+        category: "エンジン",
+        keywords: ["エンジン", "モーター", "動力系", "駆動部"],
+        description: "保守用車のディーゼルエンジン基本構造図。主要部品とその配置を示す。"
+      },
+      {
+        id: "cooling_001",
+        file: "/uploads/images/cooling_001.svg",
+        pngFallback: "/uploads/images/cooling_001.png",
+        title: "冷却システム概略図",
+        category: "冷却系統",
+        keywords: ["冷却", "ラジエーター", "水漏れ", "オーバーヒート"],
+        description: "保守用車の冷却システム概略図。冷却水の流れと主要コンポーネントを表示。"
+      },
+      {
+        id: "frame_001",
+        file: "/uploads/images/frame_001.svg",
+        pngFallback: "/uploads/images/frame_001.png",
+        title: "車体フレーム構造",
+        category: "車体",
+        keywords: ["フレーム", "シャーシ", "車体", "構造", "強度部材"],
+        description: "保守用車の車体フレーム構造図。サイドメンバーとクロスメンバーの配置を表示。"
+      },
+      {
+        id: "cabin_001",
+        file: "/uploads/images/cabin_001.svg",
+        pngFallback: "/uploads/images/cabin_001.png",
+        title: "運転キャビン配置図",
+        category: "運転室",
+        keywords: ["キャビン", "運転室", "操作パネル", "計器盤"],
+        description: "保守用車の運転キャビン内部配置図。操作機器と計器類の位置を表示。"
+      }
+    ];
+    
+    // 既存のimagesディレクトリから検出されたSVGファイルを追加
+    try {
+      // imagesディレクトリ内のすべてのSVGファイルを取得
+      const svgFiles = fs.readdirSync(imagesDir)
+        .filter(file => file.toLowerCase().endsWith('.svg'));
+      
+      for (const svgFile of svgFiles) {
+        const svgId = svgFile.replace('.svg', '');
+        // 既に初期データとして含まれていない場合のみ追加
+        const exists = initialData.some(item => item.id === svgId);
+        
+        if (!exists) {
+          // PNGファイルの存在を確認
+          const pngFile = svgFile.replace('.svg', '.png');
+          const hasPng = fs.existsSync(path.join(imagesDir, pngFile));
+          
+          // 新しいアイテム作成
+          initialData.push({
+            id: svgId,
+            file: `/uploads/images/${svgFile}`,
+            pngFallback: hasPng ? `/uploads/images/${pngFile}` : undefined,
+            title: `${svgId.replace(/_/g, ' ')}`,
+            category: 'アップロード済みSVG',
+            keywords: [`${svgId}`, 'SVG', '図面'],
+            description: `ファイル ${svgFile}`,
+          });
+        }
+      }
+    } catch (dirErr) {
+      console.error('SVGファイル検出中にエラー:', dirErr);
+    }
+    
+    // JSONファイルに保存
+    fs.writeFileSync(imageSearchDataPath, JSON.stringify(initialData, null, 2));
+    console.log(`画像検索データを初期化しました: ${initialData.length}件`);
+    
+    return res.json({
+      success: true,
+      count: initialData.length,
+      message: '画像検索データを初期化しました'
+    });
+  } catch (error) {
+    console.error('画像検索データ初期化エラー:', error);
+    return res.status(500).json({
+      error: '画像検索データの初期化に失敗しました',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// 技術文書アップロードエンドポイント
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;

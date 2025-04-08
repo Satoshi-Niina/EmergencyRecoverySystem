@@ -38,9 +38,33 @@ async function loadImageSearchData() {
   } catch (error) {
     console.error("画像検索データの読み込みに失敗しました:", error);
     
-    // エラー時はフォールバックデータ
+    // エラーを報告し、サーバーに画像検索データの再生成をリクエスト
+    try {
+      const initResponse = await fetch('/api/tech-support/init-image-search-data', {
+        method: 'POST'
+      });
+      
+      if (initResponse.ok) {
+        const initData = await initResponse.json();
+        console.log("画像検索データを初期化しました:", initData);
+        
+        // 再度データを読み込み
+        const reloadResponse = await fetch(`/uploads/data/image_search_data.json?t=${Date.now()}`);
+        if (reloadResponse.ok) {
+          const reloadedData = await reloadResponse.json();
+          if (Array.isArray(reloadedData)) {
+            console.log(`再読み込みした画像検索データ: ${reloadedData.length}件`);
+            imageSearchData = reloadedData;
+            return;
+          }
+        }
+      }
+    } catch (initError) {
+      console.error("画像検索データの初期化に失敗:", initError);
+    }
+    
+    // それでも失敗した場合はフォールバックデータ
     console.log("フォールバック画像検索データを使用します");
-    // 従来のデータ構造を使ってフォールバック
     imageSearchData = [
       {
         id: "engine_001",

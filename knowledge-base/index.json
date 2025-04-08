@@ -1,28 +1,20 @@
 {
   "documents": [
     {
-      "id": "doc_1743917638030_498",
-      "title": "保守用車ナレッジ.txt",
-      "path": "/home/runner/workspace/knowledge-base/保守用車ナレッジ.txt",
-      "type": "text",
-      "chunkCount": 1,
-      "addedAt": "2025-04-06T05:33:58.030Z"
-    },
-    {
-      "id": "doc_1744099460661_387",
-      "title": "MCå¿æ¥å¦ç½®ãµã³ãã«_1744099446319.pptx",
-      "path": "/home/runner/workspace/knowledge-base/doc_1744099460661_387/MCå¿æ¥å¦ç½®ãµã³ãã«_1744099446319.pptx",
+      "id": "doc_1744101248745_873",
+      "title": "MCå¿æ¥å¦ç½®ãµã³ãã«_1744101234131.pptx",
+      "path": "/home/runner/workspace/knowledge-base/doc_1744101248745_873/MCå¿æ¥å¦ç½®ãµã³ãã«_1744101234131.pptx",
       "type": "powerpoint",
       "chunkCount": 1,
-      "addedAt": "2025-04-08T08:04:22.331Z"
+      "addedAt": "2025-04-08T08:34:10.568Z"
     },
     {
-      "id": "doc_1744100793879_459",
-      "title": "MCå¿æ¥å¦ç½®ãµã³ãã«_1744100757719.pptx",
-      "path": "/home/runner/workspace/knowledge-base/doc_1744100793879_459/MCå¿æ¥å¦ç½®ãµã³ãã«_1744100757719.pptx",
+      "id": "doc_1744101299232_970",
+      "title": "MCå¿æ¥å¦ç½®ãµã³ãã«_1744101269747.pptx",
+      "path": "/home/runner/workspace/knowledge-base/doc_1744101299232_970/MCå¿æ¥å¦ç½®ãµã³ãã«_1744101269747.pptx",
       "type": "powerpoint",
       "chunkCount": 1,
-      "addedAt": "2025-04-08T08:26:34.256Z"
+      "addedAt": "2025-04-08T08:34:59.655Z"
     }
   ]
 }
