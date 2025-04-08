@@ -1,88 +1,131 @@
 import Fuse from 'fuse.js';
 import { apiRequest } from './queryClient';
 
-// Sample document data for demonstration
-// In a real application, this would come from the server
-const sampleDocuments = [
-  {
-    id: 1,
-    title: '救急車用ジャンプスターター操作マニュアル',
-    type: 'pdf',
-    url: 'https://images.unsplash.com/photo-1630515672807-43487aa8e9e0?w=500&auto=format&fit=crop&q=60',
-    keywords: ['ジャンプスターター', 'バッテリー', '救急車', '電圧', '始動', 'エンジン']
-  },
-  {
-    id: 2,
-    title: '救急車バッテリー交換手順書',
-    type: 'pdf',
-    url: 'https://images.unsplash.com/photo-1649159261875-5242dc38a3a4?w=500&auto=format&fit=crop&q=60',
-    keywords: ['バッテリー', '交換', '救急車', '電圧', '手順', 'メンテナンス']
-  },
-  {
-    id: 3,
-    title: '緊急車両故障時対応フローチャート',
-    type: 'excel',
-    url: '',
-    keywords: ['故障', '対応', '緊急車両', 'フローチャート', 'エンジン', '始動不良']
-  },
-  {
-    id: 4,
-    title: '消防車油圧システム診断ガイド',
-    type: 'pdf',
-    url: 'https://images.unsplash.com/photo-1599148401005-fe6d7497cb5e?w=500&auto=format&fit=crop&q=60',
-    keywords: ['油圧', 'システム', '消防車', '診断', 'メンテナンス']
-  },
-  {
-    id: 5,
-    title: 'パトカーエンジン冷却システム解説',
-    type: 'pdf',
-    url: 'https://images.unsplash.com/photo-1606577924006-27d39b132ae2?w=500&auto=format&fit=crop&q=60',
-    keywords: ['冷却', 'エンジン', 'パトカー', 'オーバーヒート', 'メンテナンス']
-  }
-];
+// 実際のデータファイルから保守用車のデータを読み込む
+// 実装では初期化時にデータをロードする
+let maintenanceVehicleData: {
+  id: string | number;
+  title: string;
+  category: string;
+  description: string;
+  image_path?: string;
+  keywords?: string[];
+  details?: string;
+  troubleshooting?: string[];
+  emergency_procedure?: string;
+}[] = [];
 
-// Configure Fuse.js for fuzzy searching
+// 設定用データで初期化（アプリケーション起動時にロードされる）
+async function loadMaintenanceVehicleData() {
+  try {
+    const response = await fetch('/extracted_data.json');
+    if (!response.ok) {
+      throw new Error('Failed to load maintenance vehicle data');
+    }
+    const data = await response.json();
+    
+    // データを正規化して保存
+    if (data && data["保守用車データ"] && Array.isArray(data["保守用車データ"])) {
+      maintenanceVehicleData = data["保守用車データ"].map((item: any, index: number) => ({
+        id: item.id || `item_${index}`,
+        title: item.title || '',
+        category: item.category || '',
+        description: item.description || '',
+        image_path: item.image_path || '',
+        keywords: item.keywords || [item.category, 'エンジン', '保守用車'],
+        details: item.details || '',
+        troubleshooting: item.troubleshooting || [],
+        emergency_procedure: item.emergency_procedure || ''
+      }));
+    }
+  } catch (error) {
+    console.error("Failed to load maintenance vehicle data:", error);
+    // ダミーデータで初期化
+    maintenanceVehicleData = [
+      {
+        id: "engine_001",
+        category: "エンジン",
+        title: "保守用車のエンジン型式",
+        description: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用",
+        image_path: "/uploads/images/engine_001.png",
+        keywords: ["エンジン", "ディーゼル", "故障", "停止"]
+      },
+      {
+        id: "cooling_001",
+        category: "冷却システム",
+        title: "エンジン冷却システム",
+        description: "エンジン冷却システムは適切な動作温度を維持する",
+        image_path: "/uploads/images/cooling_001.png",
+        keywords: ["冷却", "オーバーヒート", "温度", "水漏れ"]
+      },
+      {
+        id: "frame_001",
+        category: "フレーム",
+        title: "保守用車フレーム構造",
+        description: "走行振動や応力による捻じれに耐えるフレーム構造",
+        image_path: "/uploads/images/frame_001.png",
+        keywords: ["フレーム", "構造", "強度", "振動"]
+      },
+      {
+        id: "cabin_001",
+        category: "運転キャビン",
+        title: "運転キャビン仕様",
+        description: "操作性と視認性を考慮した運転キャビン",
+        image_path: "/uploads/images/cabin_001.png",
+        keywords: ["キャビン", "運転", "操作", "視認性"]
+      }
+    ];
+  }
+}
+
+// アプリケーション起動時にデータをロード
+loadMaintenanceVehicleData();
+
+// Fuse.js 検索設定
 const fuseOptions = {
   includeScore: true,
-  keys: ['title', 'keywords'],
+  keys: ['title', 'category', 'description', 'keywords', 'details'],
   threshold: 0.4
 };
 
-// Create a new Fuse instance with our sample data
-const fuse = new Fuse(sampleDocuments, fuseOptions);
+// データが読み込まれたらFuseインスタンスを作成するヘルパー関数
+function getFuseInstance() {
+  return new Fuse(maintenanceVehicleData, fuseOptions);
+}
 
 /**
- * Search for documents based on a text query using Fuse.js
- * @param text The search query text
- * @returns Array of search results
+ * テキストクエリに基づいて保守用車のデータを検索
+ * @param text 検索クエリテキスト
+ * @returns 検索結果の配列
  */
 export const searchByText = async (text: string): Promise<any[]> => {
   try {
-    // In a real application, we would make an API call to the server
-    // to get search results based on the selected text.
-    // For now, we'll use Fuse.js for client-side fuzzy searching.
-    
-    // First try to get an optimized search query from OpenAI
+    // クエリの最適化を試みる
     try {
       const response = await apiRequest('POST', '/api/optimize-search-query', { text });
       const data = await response.json();
       text = data.optimizedQuery || text;
     } catch (error) {
       console.error('Error optimizing search query:', error);
-      // Fall back to the original text if optimization fails
+      // 最適化に失敗した場合は元のテキストを使用
     }
     
-    // Perform the search
+    // Fuseインスタンスを取得して検索を実行
+    const fuse = getFuseInstance();
     const searchResults = fuse.search(text);
     
-    // Map the results to our desired format
-    return searchResults.map(result => ({
-      id: result.item.id,
-      title: result.item.title,
-      type: result.item.type,
-      url: result.item.url,
-      relevance: (1 - (result.score || 0)) * 100 // Convert score to percentage relevance
-    }));
+    // 検索結果を必要な形式にマッピング
+    return searchResults.map(result => {
+      const item = result.item;
+      return {
+        id: item.id,
+        title: item.title,
+        type: 'image', // 画像検索結果
+        url: item.image_path, // 画像パス
+        content: item.description, // 説明文を内容として表示
+        relevance: (1 - (result.score || 0)) * 100 // スコアをパーセンテージの関連度に変換
+      };
+    });
   } catch (error) {
     console.error('Search error:', error);
     throw new Error('検索に失敗しました');

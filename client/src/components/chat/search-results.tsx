@@ -21,6 +21,10 @@ interface SearchResultsProps {
 export default function SearchResults({ results, onClear }: SearchResultsProps) {
   const orientation = useOrientation();
   const { isMobile } = useIsMobile();
+  
+  // シンプルなアニメーションクラスを追加
+  const animationClass = "search-results-animation";
+  
   if (results.length === 0) {
     return (
       <div className="p-4">
@@ -33,10 +37,16 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
     );
   }
 
-  // モバイル&横向きの場合は全画面表示、それ以外は通常表示
+  // デバイスに応じたレイアウトクラス
+  // iPhoneの場合は特別なスタイルを適用
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  
+  // モバイル&横向きの場合は全画面表示、iOS縦向きは特殊スタイル、それ以外は通常表示
   const containerClass = isMobile && orientation === 'landscape'
     ? "fixed inset-0 z-50 bg-white p-4 overflow-auto chat-controls-container"
-    : "p-4 overflow-x-auto";
+    : isIOS && orientation === 'portrait'
+      ? "p-4 overflow-x-auto ios-portrait-search-results"
+      : "p-4 overflow-x-auto";
 
   return (
     <div className={containerClass}>
