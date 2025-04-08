@@ -393,7 +393,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 - 「ドア」「扉」「幅」の場合：運転室のドア幅（600mm～800mm）、ドアの構造、開閉方式、ドアの寸法、安全基準に関する情報を含める
 
 ## 回答方針（厳守）
-- 【緊急復旧】のタイトルで回答開始
+- 【応急復旧】のタイトルで回答開始
 - 「〜です」「〜ます」などの丁寧表現は省略し「〜する」など簡潔な表現を使用
 - 命令形で指示を明確に伝える
 - 具体的な操作・部品・工具名を明記
@@ -409,7 +409,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 
 ## 回答フォーマット（厳守）
 初回回答：
-【緊急復旧】
+【応急復旧】
 1. [最初の手順のみを簡潔に記述]
 
 以降の回答（ユーザーの返答に基づく）：
@@ -441,7 +441,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
 
 ユーザー: 鉄トロをけん引して走行中に、ブレーキが利かなくなった。どこを確認したらいい？
 
-アシスタント: 【緊急復旧】
+アシスタント: 【応急復旧】
 1. 車両を安全な場所に停止させる
 
 ユーザー: 停止したが次は
@@ -464,7 +464,7 @@ export async function generateSystemPromptWithKnowledge(query: string): Promise<
     // 関連情報が見つからない場合
     basePrompt += `\n\n質問に関する情報がナレッジベースにありません。以下のように回答してください：
 
-【緊急復旧】
+【応急復旧】
 
 ナレッジベースに該当情報がありません。
 

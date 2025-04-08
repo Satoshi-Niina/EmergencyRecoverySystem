@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { X, ExternalLink, FileText, MessageCircle } from "lucide-react";
+import { FileText, MessageCircle } from "lucide-react";
 import { useOrientation } from "@/hooks/use-orientation";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -38,12 +37,12 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   
   // モバイル&横向きの場合は全画面表示、それ以外は通常表示
   const containerClass = isMobile && isLandscape
-    ? "fixed inset-0 z-50 bg-white p-4 overflow-auto chat-controls-container"
+    ? "fixed inset-0 z-50 bg-transparent p-4 overflow-auto chat-controls-container"
     : "p-4";
 
   return (
     <div className={containerClass}>
-      <div className="sticky top-0 bg-transparent p-3 shadow-sm z-10 border-b border-blue-200 mb-3">
+      <div className="sticky top-0 bg-transparent p-3 z-10 mb-3">
         <div className="flex justify-center items-center">
           <h2 className="font-bold text-lg text-blue-700">検索画像表示</h2>
         </div>
@@ -54,7 +53,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
         {results.map((result) => (
           <div 
             key={result.id} 
-            className="thumbnail-item rounded-lg overflow-hidden bg-white shadow-sm w-full"
+            className="thumbnail-item rounded-lg overflow-hidden bg-transparent shadow-sm w-full hover:bg-blue-50 transition-colors"
             onClick={() => {
               // イメージプレビューモーダルを表示
               window.dispatchEvent(new CustomEvent('preview-image', { 
@@ -71,11 +70,11 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
           >
             {result.url ? (
               // 画像サムネイル (横長スタイル)
-              <div className="flex h-24 w-full bg-gray-50 border-b border-gray-200">
+              <div className="flex h-24 w-full bg-transparent border border-blue-200 rounded-lg">
                 <div className="relative w-32 h-24 flex-shrink-0">
                   <img 
                     src={result.url} 
-                    alt={result.title || "保守用車情報"} 
+                    alt={result.title || "応急復旧サポート"} 
                     className="w-full h-full object-contain bg-white p-1"
                     // SVG画像が読み込めない場合はPNG代替を使用
                     onError={(e) => {
@@ -88,27 +87,25 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                   />
                 </div>
                 <div className="flex-1 p-2 flex flex-col justify-center">
-                  <h3 className="text-sm font-medium text-blue-800">{result.title || "保守用車情報"}</h3>
-                  {/* テキスト表示部分を非表示にしました */}
+                  <h3 className="text-sm font-bold text-blue-700">{result.title || "応急復旧サポート"}</h3>
                 </div>
               </div>
             ) : (
               // テキストコンテンツとドキュメント (横長スタイル)
-              <div className="flex h-24 w-full bg-gray-50 border-b border-gray-200">
+              <div className="flex h-24 w-full bg-transparent border border-blue-200 rounded-lg">
                 <div className="relative w-24 h-24 flex-shrink-0 flex items-center justify-center bg-blue-50">
                   {result.type === 'ai-response' ? (
                     <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
                       <span className="material-icons text-white">smart_toy</span>
                     </div>
                   ) : result.type === 'text' ? (
-                    <MessageCircle className="h-12 w-12 text-blue-500" />
+                    <MessageCircle className="h-12 w-12 text-blue-600" />
                   ) : (
-                    <FileText className="h-12 w-12 text-blue-500" />
+                    <FileText className="h-12 w-12 text-blue-600" />
                   )}
                 </div>
                 <div className="flex-1 p-2 flex flex-col justify-center">
-                  <h3 className="text-sm font-medium text-blue-800">{result.title || (result.type === 'ai-response' ? "AI応答" : "ドキュメント")}</h3>
-                  {/* テキスト表示部分を非表示にしました */}
+                  <h3 className="text-sm font-bold text-blue-700">{result.title || (result.type === 'ai-response' ? "AI応答" : "ドキュメント")}</h3>
                 </div>
               </div>
             )}

@@ -64,6 +64,41 @@ const upload = multer({
 const router = express.Router();
 
 /**
+ * JSON ファイル一覧を取得するエンドポイント
+ * 最新のJSONファイルを優先的に取得
+ */
+router.get('/list-json-files', (req, res) => {
+  try {
+    const jsonDir = path.join(process.cwd(), 'public', 'uploads', 'json');
+    
+    // ディレクトリが存在しない場合は作成
+    if (!fs.existsSync(jsonDir)) {
+      fs.mkdirSync(jsonDir, { recursive: true });
+      return res.json([]);
+    }
+    
+    // メタデータJSONファイルのみをフィルタリング
+    const jsonFiles = fs.readdirSync(jsonDir)
+      .filter(file => file.endsWith('_metadata.json'))
+      .sort((a, b) => {
+        // タイムスタンプでソート（新しい順）
+        // ファイル名からタイムスタンプを抽出: mc_1744105287121_metadata.json -> 1744105287121
+        const timestampA = a.split('_')[1] || '0';
+        const timestampB = b.split('_')[1] || '0';
+        return parseInt(timestampB) - parseInt(timestampA);
+      });
+    
+    return res.json(jsonFiles);
+  } catch (error) {
+    console.error('JSONファイル一覧取得エラー:', error);
+    return res.status(500).json({
+      error: 'JSONファイル一覧の取得に失敗しました',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+/**
  * 技術サポート文書のアップロードと処理を行うエンドポイント
  */
 // 画像検索データの初期化用エンドポイント
