@@ -175,13 +175,15 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const currentChatId = chatId || 1;
       
-      // ユーザー設定からGPTモードを取得
+      // ユーザー設定からAIモードを取得
       const useOnlyKnowledgeBase = localStorage.getItem('useOnlyKnowledgeBase') !== 'false';
-      console.log('送信時設定: ナレッジベースのみを使用=', useOnlyKnowledgeBase);
+      const usePerplexity = localStorage.getItem('usePerplexity') === 'true';
+      console.log('送信時設定: ナレッジベースのみを使用=', useOnlyKnowledgeBase, ', Perplexity使用=', usePerplexity);
       
       const response = await apiRequest('POST', `/api/chats/${currentChatId}/messages`, { 
         content,
-        useOnlyKnowledgeBase
+        useOnlyKnowledgeBase,
+        usePerplexity
       });
       if (!response.ok) {
         throw new Error('メッセージの送信に失敗しました');

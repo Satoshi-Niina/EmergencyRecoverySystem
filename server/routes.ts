@@ -6,6 +6,7 @@ import { z } from "zod";
 import session from "express-session";
 import { WebSocket, WebSocketServer } from "ws";
 import { processOpenAIRequest, generateSearchQuery, analyzeVehicleImage } from "./lib/openai";
+import { processPerplexityRequest } from "./lib/perplexity";
 import fs from "fs";
 import path from "path";
 import { db } from "./db";
@@ -36,7 +37,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      openaiKeyExists: !!process.env.OPENAI_API_KEY
+      openaiKeyExists: !!process.env.OPENAI_API_KEY,
+      perplexityKeyExists: !!process.env.PERPLEXITY_API_KEY
     });
   });
   
@@ -54,6 +56,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in /api/chatgpt-test:", error);
       return res.status(500).json({ message: "Error processing request", error: String(error) });
+    }
+  });
+  
+  // Perplexity API endpoint
+  app.post('/api/perplexity', async (req, res) => {
+    try {
+      const { query, systemPrompt, useKnowledgeBaseOnly = true } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ message: "Query is required" });
+      }
+      
+      console.log(`Perplexity API request: query=${query}, useKnowledgeBaseOnly=${useKnowledgeBaseOnly}`);
+      const { content, citations } = await processPerplexityRequest(query, systemPrompt, useKnowledgeBaseOnly);
+      
+      return res.json({ content, citations });
+    } catch (error) {
+      console.error("Error in /api/perplexity:", error);
+      return res.status(500).json({ 
+        message: "Error processing Perplexity request", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
@@ -465,8 +489,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const message = await storage.createMessage(messageData);
       
-      // Process with OpenAI to get AI response
-      const aiResponse = await processOpenAIRequest(message.content, useOnlyKnowledgeBase);
+      // AI モデル切り替えフラグ (将来的に設定ページから変更可能に)
+      const usePerplexity = req.body.usePerplexity || false;
+      
+      let aiResponse = '';
+      let citations: any[] = [];
+      
+      // AIモデルを選択
+      if (usePerplexity) {
+        // Perplexity API を使用
+        console.log(`Perplexityモデルを使用`);
+        const perplexityResponse = await processPerplexityRequest(message.content, '', useOnlyKnowledgeBase);
+        aiResponse = perplexityResponse.content;
+        citations = perplexityResponse.citations;
+      } else {
+        // OpenAI API を使用 (デフォルト)
+        console.log(`OpenAIモデルを使用`);
+        aiResponse = await processOpenAIRequest(message.content, useOnlyKnowledgeBase);
+      }
+      
+      // 引用情報がある場合は末尾に追加
+      if (citations && citations.length > 0) {
+        aiResponse += '\n\n参考情報：';
+        citations.forEach((citation, index) => {
+          aiResponse += `\n[${index + 1}] ${citation.url}`;
+        });
+      }
       
       // Create AI response message
       const aiMessage = await storage.createMessage({

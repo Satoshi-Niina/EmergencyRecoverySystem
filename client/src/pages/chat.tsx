@@ -399,7 +399,7 @@ export default function Chat() {
               : 'border-t border-blue-200 rounded-t-xl'
           }`} style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
             <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
-              <h3 className="font-semibold text-blue-800">検索結果</h3>
+              <h3 className="font-semibold text-blue-800">検索画像表示</h3>
               <Button
                 size="sm" 
                 variant="ghost"

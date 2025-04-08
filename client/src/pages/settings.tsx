@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [autoSave, setAutoSave] = useState(true);
   const [useOnlyKnowledgeBase, setUseOnlyKnowledgeBase] = useState(true);
+  const [usePerplexity, setUsePerplexity] = useState(false);
 
   // LocalStorageからの設定読み込み
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function SettingsPage() {
           if (settings.darkMode !== undefined) setDarkMode(settings.darkMode);
           if (settings.autoSave !== undefined) setAutoSave(settings.autoSave);
           if (settings.useOnlyKnowledgeBase !== undefined) setUseOnlyKnowledgeBase(settings.useOnlyKnowledgeBase);
+          if (settings.usePerplexity !== undefined) setUsePerplexity(settings.usePerplexity);
         }
       } catch (error) {
         console.error('設定の読み込みに失敗しました:', error);
@@ -55,20 +57,22 @@ export default function SettingsPage() {
           speechVolume,
           darkMode,
           autoSave,
-          useOnlyKnowledgeBase
+          useOnlyKnowledgeBase,
+          usePerplexity
         };
         
         localStorage.setItem('emergencyRecoverySettings', JSON.stringify(settings));
         
         // ナレッジベース使用設定を別途保存 (チャットコンテキストで参照するため)
         localStorage.setItem('useOnlyKnowledgeBase', useOnlyKnowledgeBase.toString());
+        localStorage.setItem('usePerplexity', usePerplexity.toString());
       } catch (error) {
         console.error('設定の保存に失敗しました:', error);
       }
     };
     
     saveSettings();
-  }, [notifications, textToSpeech, speechVolume, darkMode, autoSave, useOnlyKnowledgeBase]);
+  }, [notifications, textToSpeech, speechVolume, darkMode, autoSave, useOnlyKnowledgeBase, usePerplexity]);
 
   // 設定の保存
   const saveSettings = () => {
@@ -79,13 +83,15 @@ export default function SettingsPage() {
         speechVolume,
         darkMode,
         autoSave,
-        useOnlyKnowledgeBase
+        useOnlyKnowledgeBase,
+        usePerplexity
       };
       
       localStorage.setItem('emergencyRecoverySettings', JSON.stringify(settings));
       
-      // ナレッジベース使用設定を別途保存 (チャットコンテキストで参照するため)
+      // 設定を別途保存 (チャットコンテキストで参照するため)
       localStorage.setItem('useOnlyKnowledgeBase', useOnlyKnowledgeBase.toString());
+      localStorage.setItem('usePerplexity', usePerplexity.toString());
       
       toast({
         title: "設定を保存しました",
@@ -243,13 +249,25 @@ export default function SettingsPage() {
               
               <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
                 <div>
-                  <p className="font-medium text-indigo-700">ナレッジベースのみを使用</p>
+                  <p className="font-medium text-indigo-700">独自の技術資料のみを使用</p>
                   <p className="text-sm text-indigo-400">AI応答に登録済みナレッジのみを使用する</p>
                 </div>
                 <Switch 
                   checked={useOnlyKnowledgeBase} 
                   onCheckedChange={setUseOnlyKnowledgeBase}
                   className="data-[state=checked]:bg-indigo-500"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
+                <div>
+                  <p className="font-medium text-indigo-700">Perplexity AIを使用</p>
+                  <p className="text-sm text-indigo-400">代替AIエンジンを使用する（実験的機能）</p>
+                </div>
+                <Switch 
+                  checked={usePerplexity} 
+                  onCheckedChange={setUsePerplexity}
+                  className="data-[state=checked]:bg-purple-500"
                 />
               </div>
               
