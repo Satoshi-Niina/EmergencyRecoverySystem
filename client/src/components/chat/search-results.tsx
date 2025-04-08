@@ -45,11 +45,14 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
 
   return (
     <div className={containerClass}>
-      <div className="flex justify-between items-center mb-3 sticky top-0 bg-white p-1 shadow-sm z-10">
-        <h2 className="font-semibold text-lg text-blue-700">検索画像表示</h2>
-        <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
-          <X className="h-5 w-5" />
-        </Button>
+      <div className="sticky top-0 bg-white p-1 shadow-sm z-10">
+        <div className="flex justify-between items-center mb-1">
+          <h2 className="font-semibold text-lg text-blue-700">検索画像表示</h2>
+          <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        <p className="text-xs text-blue-500 mb-2">プレビューをタップすると拡大画像と説明が表示されます！</p>
       </div>
       
       {/* 縦画面時はスクロール可能なコンテナ、横画面時はフレックスレイアウト */}
