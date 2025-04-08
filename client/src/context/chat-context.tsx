@@ -7,7 +7,8 @@ import {
   startBrowserSpeechRecognition,
   stopBrowserSpeechRecognition
 } from '@/lib/azure-speech';
-import { searchByText } from '@/lib/image-search';
+// import the searchByText function correctly
+import * as ImageSearch from '@/lib/image-search';
 
 interface Media {
   id: number;
@@ -312,7 +313,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log("検索キーワード:", text);
       
       // 検索結果を取得する
-      const results = await searchByText(text);
+      const results = await ImageSearch.searchByText(text);
       
       console.log("検索結果数:", results.length);
       

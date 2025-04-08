@@ -18,7 +18,9 @@ let maintenanceVehicleData: {
 // 設定用データで初期化（アプリケーション起動時にロードされる）
 async function loadMaintenanceVehicleData() {
   try {
-    const response = await fetch('/extracted_data.json');
+    // キャッシュを回避するためにタイムスタンプを追加
+    const timestamp = new Date().getTime();
+    const response = await fetch(`/extracted_data.json?t=${timestamp}`);
     if (!response.ok) {
       throw new Error('Failed to load maintenance vehicle data');
     }
@@ -26,21 +28,41 @@ async function loadMaintenanceVehicleData() {
     
     // データを正規化して保存
     if (data && data["保守用車データ"] && Array.isArray(data["保守用車データ"])) {
-      maintenanceVehicleData = data["保守用車データ"].map((item: any, index: number) => ({
-        id: item.id || `item_${index}`,
-        title: item.title || '',
-        category: item.category || '',
-        description: item.description || '',
-        image_path: item.image_path || '',
-        keywords: item.keywords || [item.category, 'エンジン', '保守用車'],
-        details: item.details || '',
-        troubleshooting: item.troubleshooting || [],
-        emergency_procedure: item.emergency_procedure || ''
-      }));
+      console.log(`保守用車データを読み込みました: ${data["保守用車データ"].length}件`);
+      
+      maintenanceVehicleData = data["保守用車データ"].map((item: any, index: number) => {
+        // 画像パスのプレフィックスチェック（最初の/を除去して相対パスに統一）
+        let imagePath = item.image_path || '';
+        if (imagePath.startsWith('/')) {
+          imagePath = imagePath.substring(1);
+        }
+
+        // 複数のスライド画像がある場合はそれも処理
+        let allSlides: string[] = [];
+        if (item.all_slides && Array.isArray(item.all_slides)) {
+          allSlides = item.all_slides.map((slide: string) => {
+            return slide.startsWith('/') ? slide.substring(1) : slide;
+          });
+        }
+        
+        return {
+          id: item.id || `item_${index}`,
+          title: item.title || '',
+          category: item.category || '',
+          description: item.description || '',
+          image_path: imagePath,
+          all_slides: allSlides.length > 0 ? allSlides : undefined,
+          metadata_json: item.metadata_json || '',
+          keywords: item.keywords || [item.category, 'エンジン', '保守用車'],
+          details: item.details || '',
+          troubleshooting: item.troubleshooting || [],
+          emergency_procedure: item.emergency_procedure || ''
+        };
+      });
     }
   } catch (error) {
     console.error("Failed to load maintenance vehicle data:", error);
-    // ダミーデータで初期化
+    // 基本データで初期化
     maintenanceVehicleData = [
       {
         id: "engine_001",
