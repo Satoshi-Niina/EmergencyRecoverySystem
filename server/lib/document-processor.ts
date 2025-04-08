@@ -173,10 +173,14 @@ export async function extractPptxText(filePath: string): Promise<string> {
       }
     });
     
-    // ファイル名にタイムスタンプを追加して一意性を確保
+    // ファイル名にタイムスタンプを追加して一意性を確保し、簡略化
     const timestamp = Date.now();
-    const safeFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const slideImageBaseName = `${safeFileName}_${timestamp}`;
+    // 元のファイル名から最初の2文字を取得（最低でも2文字、または全体）
+    const prefix = fileNameWithoutExt.substring(0, 2).toLowerCase();
+    // アルファベットと数字のみを許可、それ以外は削除（アンダースコア置換ではなく除去）
+    const cleanPrefix = prefix.replace(/[^a-zA-Z0-9]/g, '');
+    // シンプルなファイル名ベース: 接頭辞_タイムスタンプ
+    const slideImageBaseName = `${cleanPrefix}_${timestamp}`;
     console.log(`\n生成するファイル名のベース: ${slideImageBaseName}`);
     
     // 実際のPowerPointファイルをバイナリとして読み込み、内容を抽出

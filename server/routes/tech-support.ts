@@ -378,11 +378,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         details: extractedText.substring(0, 200) + "...", // 概要のみ格納
         image_path: metadata.type === 'pptx' ? metadata.slideImages[0] : null,
         all_slides: metadata.type === 'pptx' ? metadata.slideImages : null,
-        metadata_json: `${filesDir}/${fileBaseName}_metadata.json`,
+        metadata_json: `/uploads/json/${metadataFileName}`,
         keywords: [fileExt.substring(1).toUpperCase(), "技術文書", "サポート", file.originalname]
       };
       
-      // JSONメタデータファイルの保存
+      // JSONメタデータファイルを公開ディレクトリのjsonフォルダに集約して保存
       const metadataContent = {
         filename: file.originalname,
         filePath: filePath,
@@ -393,6 +393,24 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         ...metadata
       };
       
+      // 公開ディレクトリ内のjsonフォルダにメタデータを保存
+      const jsonDir = path.join(process.cwd(), 'public', 'uploads', 'json');
+      
+      // ディレクトリが存在しない場合は作成
+      if (!fs.existsSync(jsonDir)) {
+        fs.mkdirSync(jsonDir, { recursive: true });
+      }
+      
+      // ファイル名を簡略化: 先頭2文字_タイムスタンプ_metadata.json
+      const timestamp = Date.now();
+      const prefix = path.basename(filePath, path.extname(filePath)).substring(0, 2).toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+      const metadataFileName = `${prefix}_${timestamp}_metadata.json`;
+      const metadataFilePath = path.join(jsonDir, metadataFileName);
+      
+      fs.writeFileSync(metadataFilePath, JSON.stringify(metadataContent, null, 2));
+      console.log(`メタデータJSONを保存: ${metadataFilePath}`);
+      
+      // 後方互換性のために元の場所にも保存
       fs.writeFileSync(`${filePath}_metadata.json`, JSON.stringify(metadataContent, null, 2));
       
       // 車両データに追加
