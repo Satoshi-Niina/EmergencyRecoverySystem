@@ -148,10 +148,15 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const fileBuffer = fs.readFileSync(filePath);
     
     try {
-      // メタデータを生成
+      // メタデータを生成 (ユーザー提供の例に合わせた形式)
       const slideInfoData = {
-        title: fileName,
-        processedAt: new Date().toISOString(),
+        metadata: {
+          タイトル: fileName,
+          作成者: "保守用車システム",
+          作成日: new Date().toISOString(),
+          修正日: new Date().toISOString(),
+          説明: "保守用車マニュアル情報"
+        },
         slides: [] as any[],
         textContent: '' as string
       };
@@ -211,13 +216,16 @@ export async function extractPptxText(filePath: string): Promise<string> {
         
         console.log(`スライド画像を保存: ${slideFileName}`);
         
-        // メタデータに追加
+        // メタデータに追加 (ユーザー提供の例に合わせた形式)
         slideInfoData.slides.push({
-          number: slideNum,
-          title: slideTexts[i].title,
-          content: slideTexts[i].content,
-          imageUrl: `uploads/images/${slideFileName}.png`,
-          svgUrl: `uploads/images/${slideFileName}.svg`
+          スライド番号: slideNum,
+          タイトル: slideTexts[i].title,
+          本文: [slideTexts[i].content],
+          ノート: `スライド ${slideNum}のノート: ${slideTexts[i].title}\n${slideTexts[i].content}`,
+          画像テキスト: [{
+            画像パス: `uploads/images/${slideFileName}.png`,
+            テキスト: slideTexts[i].content
+          }]
         });
         
         // テキスト内容を累積
@@ -281,8 +289,19 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const vehicleData = extractedData[vehicleDataKey] as any[];
     
     // 新規データ - 実際のスライド情報からデータを構築
-    const slideInfoArray = slideInfoData.slides || [];
-    const allSlidesUrls = slideInfoArray.map((slide: any) => slide.imageUrl) || [];
+    const slideInfoArray = slideInfoData?.slides || [];
+    // 日本語形式のJSONフィールドからの画像パス取得
+    const allSlidesUrls = slideInfoArray.map((slide: any) => {
+      // 日本語形式のJSONの場合
+      if (slide.画像テキスト && Array.isArray(slide.画像テキスト) && slide.画像テキスト.length > 0) {
+        return slide.画像テキスト[0].画像パス;
+      }
+      // 英語形式のJSONの場合（互換性のため）
+      else if (slide.imageUrl) {
+        return slide.imageUrl;
+      }
+      return null;
+    }).filter(Boolean);
     
     const newVehicleData = {
       id: slideImageBaseName,

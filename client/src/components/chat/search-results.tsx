@@ -11,6 +11,9 @@ interface SearchResult {
   content?: string;
   relevance?: number;
   timestamp?: Date;
+  metadata_json?: string;
+  all_slides?: string[];
+  details?: string;
 }
 
 interface SearchResultsProps {
@@ -68,7 +71,13 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                 className="w-full h-40 object-cover border-b border-blue-100" 
                 onClick={() => {
                   // Open image preview modal
-                  window.dispatchEvent(new CustomEvent('preview-image', { detail: { url: result.url } }));
+                  window.dispatchEvent(new CustomEvent('preview-image', { 
+                    detail: { 
+                      url: result.url,
+                      metadata_json: result.metadata_json,
+                      all_slides: result.all_slides
+                    } 
+                  }));
                 }}
               />
             ) : result.type === 'ai-response' ? (
