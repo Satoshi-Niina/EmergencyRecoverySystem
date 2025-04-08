@@ -117,11 +117,18 @@ export const searchByText = async (text: string): Promise<any[]> => {
     // 検索結果を必要な形式にマッピング
     return searchResults.map(result => {
       const item = result.item;
+      // 画像パスの修正: 「uploads/」で始まる場合は先頭の「/」を追加
+      const fixedImagePath = item.image_path?.startsWith('uploads/') 
+        ? '/' + item.image_path 
+        : item.image_path;
+        
+      console.log('画像パス変換:', item.image_path, '=>', fixedImagePath);
+      
       return {
         id: item.id,
         title: item.title,
         type: 'image', // 画像検索結果
-        url: item.image_path, // 画像パス
+        url: fixedImagePath, // 修正された画像パス
         content: item.description, // 説明文を内容として表示
         relevance: (1 - (result.score || 0)) * 100 // スコアをパーセンテージの関連度に変換
       };

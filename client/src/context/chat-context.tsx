@@ -309,30 +309,54 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const engineRelatedWords = ['エンジン', 'engine', '故障', '停止', '冷却', '出力'];
       const hasEngineKeyword = engineRelatedWords.some(word => text.toLowerCase().includes(word.toLowerCase()));
       
+      console.log("検索キーワード:", text);
+      
       // 検索結果を取得する
       const results = await searchByText(text);
+      
+      console.log("検索結果数:", results.length);
       
       // 検索結果がないが「エンジン」に関するキーワードが含まれる場合、
       // 関連する画像を検索結果に追加する
       if (results.length === 0 && hasEngineKeyword) {
         console.log("エンジン関連キーワードを検出しました。関連画像を表示します。");
         
-        // デフォルトでエンジン関連の画像を表示
+        // デフォルトでエンジン関連の画像を表示（パスを修正）
         results.push({
           id: "engine_related",
           title: "保守用車のエンジン",
           type: "image",
-          url: "/uploads/images/engine_001.png",
+          url: "/uploads/images/engine_001.png", // 絶対パスに修正
           content: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用しています。エンジン故障時は点検が必要です。",
           relevance: 80
         });
+      } else if (results.length === 0) {
+        // どのキーワードにもマッチしない場合のデフォルト画像
+        console.log("デフォルト画像を表示します");
+        results.push({
+          id: "default_help",
+          title: "保守用車サポート",
+          type: "image",
+          url: "/uploads/images/cabin_001.png", // 絶対パスに修正
+          content: "保守用車のサポート情報です。より具体的なキーワードで検索してください。",
+          relevance: 60
+        });
       }
       
-      setSearchResults(results);
+      // URL形式が正しいことを確認
+      const processedResults = results.map(result => {
+        if (result.url && !result.url.startsWith('http') && !result.url.startsWith('/')) {
+          result.url = '/' + result.url;
+          console.log('画像パス修正:', result.url);
+        }
+        return result;
+      });
+      
+      setSearchResults(processedResults);
       
       // 検索結果がある場合、コンソールに表示
-      if (results.length > 0) {
-        console.log("検索結果:", results);
+      if (processedResults.length > 0) {
+        console.log("検索結果:", processedResults);
       } else {
         console.log("「" + text + "」に関する検索結果はありませんでした");
       }
