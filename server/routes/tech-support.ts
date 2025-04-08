@@ -177,6 +177,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     console.log(`ファイルアップロード処理開始: ${file.originalname}`);
     
+    // 元ファイルを保存するかどうかのフラグを取得
+    const keepOriginalFile = req.body.keepOriginalFile === 'true';
+    console.log(`元ファイル保存: ${keepOriginalFile ? '有効' : '無効'}`);
+    
+    // 一時的にバッファを保存（元ファイル保存オプションがオフの場合、後で削除）
     const filePath = file.path;
     const fileExt = path.extname(file.originalname).toLowerCase();
     const fileBaseName = path.basename(file.path);
@@ -287,6 +292,19 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         // 更新したデータを書き込み
         fs.writeFileSync(imageSearchDataPath, JSON.stringify(imageSearchData, null, 2));
         console.log(`画像検索データを更新しました: ${imageSearchData.length}件`);
+        
+        // 元ファイルを保存するオプションがオフの場合、元ファイルを削除
+        if (!keepOriginalFile) {
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log(`元ファイルを削除しました: ${filePath}`);
+            }
+          } catch (deleteErr) {
+            console.error(`元ファイル削除エラー: ${deleteErr}`);
+            // ファイル削除に失敗しても処理は続行
+          }
+        }
         
         // 結果を返す
         return res.json({
@@ -432,6 +450,19 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       } catch (kbError) {
         console.error("ナレッジベースへの追加エラー:", kbError);
         // ナレッジベースへの追加に失敗しても処理は続行
+      }
+      
+      // 元ファイルを保存するオプションがオフの場合、元ファイルを削除
+      if (!keepOriginalFile) {
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`元ファイルを削除しました: ${filePath}`);
+          }
+        } catch (deleteErr) {
+          console.error(`元ファイル削除エラー: ${deleteErr}`);
+          // ファイル削除に失敗しても処理は続行
+        }
       }
       
       return res.json({

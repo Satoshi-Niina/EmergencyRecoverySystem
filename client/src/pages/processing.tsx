@@ -15,6 +15,7 @@ export default function Processing() {
   const [convertToJson, setConvertToJson] = useState(true);
   const [extractImages, setExtractImages] = useState(true);
   const [createThumbnails, setCreateThumbnails] = useState(false);
+  const [keepOriginalFile, setKeepOriginalFile] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -70,6 +71,7 @@ export default function Processing() {
       formData.append("convertToJson", convertToJson.toString());
       formData.append("extractImages", extractImages.toString());
       formData.append("createThumbnails", createThumbnails.toString());
+      formData.append("keepOriginalFile", keepOriginalFile.toString()); // 元ファイルを保存するかどうか
       formData.append("processingType", "image_search"); // 画像検索用データとして処理
       
       // サーバーにファイルをアップロードして処理
@@ -197,6 +199,16 @@ export default function Processing() {
                   className="mr-2 text-indigo-600"
                 />
                 <label htmlFor="createThumbnails" className="text-indigo-900">サムネイルを作成</label>
+              </div>
+              <div className="flex items-center">
+                <Checkbox 
+                  id="keepOriginalFile" 
+                  checked={keepOriginalFile} 
+                  onCheckedChange={(checked) => setKeepOriginalFile(checked as boolean)} 
+                  className="mr-2 text-indigo-600"
+                />
+                <label htmlFor="keepOriginalFile" className="text-indigo-900">元ファイルを保存</label>
+                <span className="ml-2 text-xs text-indigo-400">(オフにすると処理済みデータのみ保存)</span>
               </div>
             </div>
           </div>

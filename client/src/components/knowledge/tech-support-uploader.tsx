@@ -40,6 +40,7 @@ const TechSupportUploader: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<TechDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [keepOriginalFile, setKeepOriginalFile] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,6 +156,8 @@ const TechSupportUploader: React.FC = () => {
       formData.append("file", selectedFile);
       // 処理タイプをフォームデータに追加
       formData.append("processingType", processingType);
+      // 元ファイル保存設定を追加
+      formData.append("keepOriginalFile", keepOriginalFile.toString());
 
       console.log(`ファイルをアップロード: ${selectedFile.name}, 処理タイプ: ${processingType}`);
 
@@ -311,6 +314,20 @@ const TechSupportUploader: React.FC = () => {
                 選択中: {selectedFile.name} ({formatFileSize(selectedFile.size)})
               </p>
             )}
+            
+            {/* ストレージ最適化オプション */}
+            <div className="flex items-center space-x-2 mt-2">
+              <input
+                type="checkbox"
+                id="keep-original-file"
+                checked={keepOriginalFile}
+                onChange={(e) => setKeepOriginalFile(e.target.checked)}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              <label htmlFor="keep-original-file" className="text-sm">
+                元ファイルを保存する（チェックを外すとストレージ容量を節約できます）
+              </label>
+            </div>
           </div>
 
           <div className="mt-8">
