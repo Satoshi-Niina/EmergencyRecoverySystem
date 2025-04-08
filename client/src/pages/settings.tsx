@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Info, User, Bell, Shield, Database, Volume2, UserPlus, FileType, Book, LogOut } from "lucide-react";
+import { Settings, Info, User, Bell, Shield, Database, Volume2, UserPlus, FileType, Book, LogOut, Save } from "lucide-react";
 import { WarningDialog } from "@/components/shared/warning-dialog";
 import { Link } from "wouter";
 
@@ -20,7 +20,86 @@ export default function SettingsPage() {
   const [speechVolume, setSpeechVolume] = useState([80]);
   const [darkMode, setDarkMode] = useState(false);
   const [autoSave, setAutoSave] = useState(true);
+  const [useOnlyKnowledgeBase, setUseOnlyKnowledgeBase] = useState(true);
 
+  // LocalStorageからの設定読み込み
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const savedSettings = localStorage.getItem('emergencyRecoverySettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          
+          if (settings.notifications !== undefined) setNotifications(settings.notifications);
+          if (settings.textToSpeech !== undefined) setTextToSpeech(settings.textToSpeech);
+          if (settings.speechVolume !== undefined) setSpeechVolume(settings.speechVolume);
+          if (settings.darkMode !== undefined) setDarkMode(settings.darkMode);
+          if (settings.autoSave !== undefined) setAutoSave(settings.autoSave);
+          if (settings.useOnlyKnowledgeBase !== undefined) setUseOnlyKnowledgeBase(settings.useOnlyKnowledgeBase);
+        }
+      } catch (error) {
+        console.error('設定の読み込みに失敗しました:', error);
+      }
+    };
+    
+    loadSettings();
+  }, []);
+  
+  // 設定変更時の保存
+  useEffect(() => {
+    const saveSettings = () => {
+      try {
+        const settings = {
+          notifications,
+          textToSpeech,
+          speechVolume,
+          darkMode,
+          autoSave,
+          useOnlyKnowledgeBase
+        };
+        
+        localStorage.setItem('emergencyRecoverySettings', JSON.stringify(settings));
+        
+        // ナレッジベース使用設定を別途保存 (チャットコンテキストで参照するため)
+        localStorage.setItem('useOnlyKnowledgeBase', useOnlyKnowledgeBase.toString());
+      } catch (error) {
+        console.error('設定の保存に失敗しました:', error);
+      }
+    };
+    
+    saveSettings();
+  }, [notifications, textToSpeech, speechVolume, darkMode, autoSave, useOnlyKnowledgeBase]);
+
+  // 設定の保存
+  const saveSettings = () => {
+    try {
+      const settings = {
+        notifications,
+        textToSpeech,
+        speechVolume,
+        darkMode,
+        autoSave,
+        useOnlyKnowledgeBase
+      };
+      
+      localStorage.setItem('emergencyRecoverySettings', JSON.stringify(settings));
+      
+      // ナレッジベース使用設定を別途保存 (チャットコンテキストで参照するため)
+      localStorage.setItem('useOnlyKnowledgeBase', useOnlyKnowledgeBase.toString());
+      
+      toast({
+        title: "設定を保存しました",
+        description: "アプリケーション設定が正常に保存されました。",
+      });
+    } catch (error) {
+      toast({
+        title: "設定の保存に失敗しました",
+        description: "設定の保存中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  };
+  
   const handleLogout = async () => {
     setShowWarningDialog(true);
   };
@@ -160,6 +239,28 @@ export default function SettingsPage() {
                   onCheckedChange={setAutoSave}
                   className="data-[state=checked]:bg-indigo-500"
                 />
+              </div>
+              
+              <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
+                <div>
+                  <p className="font-medium text-indigo-700">ナレッジベースのみを使用</p>
+                  <p className="text-sm text-indigo-400">AI応答に登録済みナレッジのみを使用する</p>
+                </div>
+                <Switch 
+                  checked={useOnlyKnowledgeBase} 
+                  onCheckedChange={setUseOnlyKnowledgeBase}
+                  className="data-[state=checked]:bg-indigo-500"
+                />
+              </div>
+              
+              <div className="py-2 border-t border-blue-100 pt-3 flex justify-end">
+                <Button
+                  onClick={saveSettings}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  設定を保存
+                </Button>
               </div>
             </div>
           </CardContent>

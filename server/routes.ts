@@ -443,6 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chats/:id/messages", requireAuth, async (req, res) => {
     try {
       const chat = await storage.getChat(parseInt(req.params.id));
+      const { content, useOnlyKnowledgeBase = true } = req.body;
       
       if (!chat) {
         return res.status(404).json({ message: "Chat not found" });
@@ -450,6 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // チャットアクセス制限を一時的に緩和 (すべてのログインユーザーが全チャットにアクセス可能)
       console.log(`チャットアクセス: chatId=${chat.id}, chatUserId=${chat.userId}, sessionUserId=${req.session.userId}`);
+      console.log(`設定: ナレッジベースのみを使用=${useOnlyKnowledgeBase}`);
       // if (chat.userId !== req.session.userId) {
       //   return res.status(403).json({ message: "Forbidden" });
       // }
@@ -464,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createMessage(messageData);
       
       // Process with OpenAI to get AI response
-      const aiResponse = await processOpenAIRequest(message.content);
+      const aiResponse = await processOpenAIRequest(message.content, useOnlyKnowledgeBase);
       
       // Create AI response message
       const aiMessage = await storage.createMessage({
@@ -658,13 +660,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // OpenAI API routes
   app.post("/api/chatgpt", requireAuth, async (req, res) => {
     try {
-      const { text } = req.body;
+      const { text, useOnlyKnowledgeBase = true } = req.body;
       
       if (!text) {
         return res.status(400).json({ message: "Text is required" });
       }
       
-      const response = await processOpenAIRequest(text);
+      console.log(`ChatGPT API呼び出し: ナレッジベースのみを使用=${useOnlyKnowledgeBase}`);
+      const response = await processOpenAIRequest(text, useOnlyKnowledgeBase);
       
       // Check for specific error messages returned from OpenAI
       if (response.includes("OpenAI APIキーが無効")) {

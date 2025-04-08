@@ -28,7 +28,7 @@ function validateApiKey(): boolean {
 }
 
 // Process a text request and get an AI response
-export async function processOpenAIRequest(prompt: string): Promise<string> {
+export async function processOpenAIRequest(prompt: string, useOnlyKnowledgeBase: boolean = true): Promise<string> {
   try {
     // Check if API key is available
     if (!validateApiKey()) {
@@ -38,15 +38,24 @@ export async function processOpenAIRequest(prompt: string): Promise<string> {
     // ナレッジベースから関連情報を取得してシステムプロンプトを生成
     const systemPrompt = await generateSystemPromptWithKnowledge(prompt);
 
-    console.log("OpenAI APIに送信するシステムプロンプト:", systemPrompt.substring(0, 200) + "...");
+    // ユーザー設定に応じて制約を追加
+    const finalSystemPrompt = useOnlyKnowledgeBase 
+      ? systemPrompt 
+      : systemPrompt.replace(
+          '- 提供された知識ベースの情報のみを使用し、それ以外の一般知識での回答は禁止',
+          '- 提供された知識ベースの情報を優先して使用し、必要に応じて一般知識も使用可能'
+        );
+
+    console.log("OpenAI APIに送信するシステムプロンプト:", finalSystemPrompt.substring(0, 200) + "...");
     console.log("ユーザープロンプト:", prompt);
+    console.log("ナレッジベースのみを使用:", useOnlyKnowledgeBase);
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: systemPrompt,
+          content: finalSystemPrompt,
         },
         {
           role: "user",
