@@ -65,6 +65,9 @@ export default function ImagePreviewModal() {
     setImageUrl(allSlides[newIndex]);
   };
 
+  // PNG代替URL用の状態変数
+  const [pngFallbackUrl, setPngFallbackUrl] = useState<string | null>(null);
+
   useEffect(() => {
     // Listen for preview-image event
     const handlePreviewImage = (e: Event) => {
@@ -73,6 +76,14 @@ export default function ImagePreviewModal() {
         // URLを設定
         if (customEvent.detail.url) {
           setImageUrl(customEvent.detail.url);
+        }
+        
+        // PNG代替URLがある場合は設定
+        if (customEvent.detail.pngFallbackUrl) {
+          setPngFallbackUrl(customEvent.detail.pngFallbackUrl);
+          console.log('PNG代替URL設定:', customEvent.detail.pngFallbackUrl);
+        } else {
+          setPngFallbackUrl(null);
         }
         
         // メタデータJSONへのパスを設定
@@ -161,11 +172,18 @@ export default function ImagePreviewModal() {
             </Button>
           )}
           
-          {/* メイン画像 */}
+          {/* メイン画像 - SVG画像が表示できない場合はPNG代替へフォールバック */}
           <img 
             src={imageUrl} 
             alt={currentSlideInfo?.タイトル || "拡大画像"} 
             className="max-w-full max-h-[70vh] object-contain rounded-lg border border-blue-500" 
+            onError={(e) => {
+              if (pngFallbackUrl && imageUrl !== pngFallbackUrl) {
+                console.log('プレビューでSVG画像の読み込みエラー、PNG代替に切り替え:', imageUrl, '->', pngFallbackUrl);
+                const imgElement = e.currentTarget;
+                imgElement.src = pngFallbackUrl;
+              }
+            }}
           />
           
           {/* 次へボタン */}
@@ -272,7 +290,16 @@ export default function ImagePreviewModal() {
                 <img 
                   src={slide} 
                   alt={`スライド ${index + 1}`}
-                  className="h-16 w-24 object-cover" 
+                  className="h-16 w-24 object-cover"
+                  onError={(e) => {
+                    if (pngFallbackUrl && slide.toLowerCase().endsWith('.svg')) {
+                      // SVGをPNGに置き換え
+                      const pngSlide = slide.replace(/\.svg$/i, '.png');
+                      console.log('サムネイルでSVG画像の読み込みエラー、PNG代替に切り替え:', slide, '->', pngSlide);
+                      const imgElement = e.currentTarget;
+                      imgElement.src = pngSlide;
+                    }
+                  }}
                 />
               </div>
             ))}

@@ -1,0 +1,59 @@
+[
+  {
+    "id": "engine_001",
+    "file": "uploads/images/engine_001.svg",
+    "pngFallback": "uploads/images/engine_001.png",
+    "title": "エンジン基本構造図",
+    "category": "エンジン",
+    "keywords": ["エンジン", "モーター", "動力系", "駆動部", "エンジンルーム"],
+    "description": "保守用車のディーゼルエンジン基本構造図。主要部品とその配置を示す。",
+    "metadata": {
+      "engine_type": "ディーゼル",
+      "manufacturer": "日本除雪",
+      "model": "400R",
+      "details": "電子噴射式エンジン、定格出力95kW/2000rpm"
+    }
+  },
+  {
+    "id": "cooling_001",
+    "file": "uploads/images/cooling_001.svg",
+    "pngFallback": "uploads/images/cooling_001.png",
+    "title": "冷却システム概略図",
+    "category": "冷却系統",
+    "keywords": ["冷却", "ラジエーター", "水漏れ", "オーバーヒート", "熱交換器"],
+    "description": "保守用車の冷却システム概略図。冷却水の流れと主要コンポーネントを表示。",
+    "metadata": {
+      "system_type": "強制水冷式",
+      "capacity": "18L",
+      "components": "ラジエーター、ウォーターポンプ、サーモスタット"
+    }
+  },
+  {
+    "id": "frame_001",
+    "file": "uploads/images/frame_001.svg",
+    "pngFallback": "uploads/images/frame_001.png",
+    "title": "車体フレーム構造",
+    "category": "車体",
+    "keywords": ["フレーム", "シャーシ", "車体", "構造", "強度部材"],
+    "description": "保守用車の車体フレーム構造図。サイドメンバーとクロスメンバーの配置を表示。",
+    "metadata": {
+      "material": "高張力鋼",
+      "construction": "溶接構造",
+      "strength": "走行振動や応力による捻じれに対応"
+    }
+  },
+  {
+    "id": "cabin_001",
+    "file": "uploads/images/cabin_001.svg",
+    "pngFallback": "uploads/images/cabin_001.png",
+    "title": "運転キャビン配置図",
+    "category": "運転室",
+    "keywords": ["キャビン", "運転室", "操作パネル", "計器盤", "コントロール"],
+    "description": "保守用車の運転キャビン内部配置図。操作機器と計器類の位置を表示。",
+    "metadata": {
+      "seating": "運転手1名、作業員2名",
+      "controls": "レバー式操作系統、デジタル計器盤",
+      "features": "エアコン、防振マウント"
+    }
+  }
+]
