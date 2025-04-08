@@ -1,0 +1,289 @@
+import React, { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { FileText, Upload, Trash2, FileType, File, Presentation, FileBox } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+interface TechDocument {
+  id: string;
+  name: string;
+  path: string;
+  type: string;
+  size: number;
+  uploadDate?: string;
+  extractedTextPreview?: string;
+}
+
+const TechSupportUploader: React.FC = () => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedDocuments, setUploadedDocuments] = useState<TechDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // コンポーネントがマウントされたときにアップロード済みドキュメントを読み込む
+    loadVehicleData();
+  }, []);
+
+  // ファイル選択ハンドラ
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setSelectedFile(event.target.files[0]);
+      
+      // ファイル選択後にinput要素をリセットして、同じファイルを再選択できるようにする
+      event.target.value = '';
+    }
+  };
+
+  // extracted_data.jsonから車両データを読み込む
+  const loadVehicleData = async () => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('/extracted_data.json');
+      if (!response.ok) {
+        throw new Error('vehicle data loading failed');
+      }
+      
+      const data = await response.json();
+      
+      // 車両データからドキュメント形式（PDF, Excel, PowerPoint）のみを抽出
+      const documents: TechDocument[] = [];
+      
+      if (data.vehicleData && Array.isArray(data.vehicleData)) {
+        for (const item of data.vehicleData) {
+          if (['PDF', 'XLSX', 'PPTX', 'DOCX'].includes(item.category)) {
+            documents.push({
+              id: item.id,
+              name: item.title,
+              path: item.image_path || '',
+              type: item.category,
+              size: 0, // サイズ情報がないので0を設定
+              extractedTextPreview: item.details
+            });
+          }
+        }
+      }
+      
+      setUploadedDocuments(documents);
+    } catch (error) {
+      console.error('Failed to load vehicle data:', error);
+      toast({
+        title: '技術文書の読み込みに失敗しました',
+        description: 'データの取得中にエラーが発生しました。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ファイルアップロードハンドラ
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "ファイルが選択されていません",
+        description: "アップロードするファイルを選択してください",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 対応しているファイル形式をチェック
+    const validExtensions = [".pdf", ".docx", ".xlsx", ".pptx"];
+    const fileExt = selectedFile.name.substring(selectedFile.name.lastIndexOf(".")).toLowerCase();
+    if (!validExtensions.includes(fileExt)) {
+      toast({
+        title: "未対応のファイル形式",
+        description: "PDF, Word, Excel, PowerPoint ファイルのみアップロード可能です",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch("/api/tech-support/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "アップロードに失敗しました");
+      }
+
+      const result = await response.json();
+
+      toast({
+        title: "アップロード成功",
+        description: `${selectedFile.name} が正常に処理されました`,
+      });
+
+      // ドキュメントリストを更新
+      loadVehicleData();
+      setSelectedFile(null);
+      
+      // ファイル入力をリセット
+      const fileInput = document.getElementById("tech-file-upload") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        title: "アップロードエラー",
+        description: error instanceof Error ? error.message : "未知のエラーが発生しました",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // ファイルタイプに応じたアイコンを返す関数
+  const getFileIcon = (type: string) => {
+    switch (type.toUpperCase()) {
+      case 'PDF':
+        return <FileBox className="h-5 w-5 text-red-500" />;
+      case 'XLSX':
+        return <File className="h-5 w-5 text-green-500" />;
+      case 'PPTX':
+        return <Presentation className="h-5 w-5 text-orange-500" />;
+      case 'DOCX':
+        return <FileText className="h-5 w-5 text-blue-500" />;
+      default:
+        return <FileType className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  // ファイルサイズを人間が読みやすい形式で表示する関数
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return 'サイズ不明';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>技術文書アップロード</CardTitle>
+        <CardDescription>
+          保守マニュアルやデータシートをアップロードして検索可能にします
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <Label htmlFor="tech-file-upload">ファイルを選択（PDF, Excel, PowerPointなど）</Label>
+            <div className="flex space-x-2">
+              <Input
+                id="tech-file-upload"
+                type="file"
+                accept=".pdf,.docx,.xlsx,.pptx"
+                className="flex-1"
+                onChange={handleFileChange}
+              />
+              <Button 
+                onClick={handleUpload} 
+                disabled={!selectedFile || isUploading}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isUploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                アップロード
+              </Button>
+            </div>
+            {selectedFile && (
+              <p className="text-sm text-blue-600">
+                選択中: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+              </p>
+            )}
+          </div>
+
+          <div className="mt-8">
+            <h3 className="text-lg font-medium mb-2">アップロード済み技術文書</h3>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <span className="ml-2 text-blue-600">読み込み中...</span>
+              </div>
+            ) : uploadedDocuments.length > 0 ? (
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>タイプ</TableHead>
+                      <TableHead>ファイル名</TableHead>
+                      <TableHead>詳細</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {uploadedDocuments.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell>
+                          <div className="flex items-center">
+                            {getFileIcon(doc.type)}
+                            <Badge className="ml-2" variant="outline">
+                              {doc.type}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>{doc.name}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {doc.extractedTextPreview || "詳細なし"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="py-4 text-center text-gray-500 border rounded-md">
+                <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <p>アップロードされた技術文書はありません</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between border-t pt-4">
+        <p className="text-xs text-gray-500">
+          アップロードされたファイルは自動的に処理され、検索可能になります。
+        </p>
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default TechSupportUploader;

@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { UploadIcon, FileIcon, ImageIcon, Download, Database } from "lucide-react";
+import { UploadIcon, FileIcon, ImageIcon, Download, Database, FileText } from "lucide-react";
 import KnowledgeUploader from "@/components/knowledge/knowledge-uploader";
+import TechSupportUploader from "@/components/knowledge/tech-support-uploader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Processing() {
   const { user } = useAuth();
@@ -216,7 +218,18 @@ export default function Processing() {
             <h3 className="font-semibold text-cyan-700">ナレッジベース管理</h3>
           </div>
           
-          <KnowledgeUploader />
+          <Tabs defaultValue="knowledge" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="knowledge">テキストナレッジ</TabsTrigger>
+              <TabsTrigger value="tech-docs">技術文書</TabsTrigger>
+            </TabsList>
+            <TabsContent value="knowledge">
+              <KnowledgeUploader />
+            </TabsContent>
+            <TabsContent value="tech-docs">
+              <TechSupportUploader />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

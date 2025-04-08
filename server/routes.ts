@@ -15,6 +15,7 @@ import {
   listKnowledgeBaseDocuments, 
   removeDocumentFromKnowledgeBase 
 } from './lib/knowledge-base';
+import techSupportRouter from './routes/tech-support';
 
 // Extend the express-session types
 declare module 'express-session' {
@@ -27,6 +28,9 @@ declare module 'express-session' {
 // Session will now use Postgres via storage.sessionStore
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register tech support router
+  app.use('/api/tech-support', techSupportRouter);
+  
   // Add a health check endpoint for testing
   app.get('/api/health', (req, res) => {
     res.json({ 
