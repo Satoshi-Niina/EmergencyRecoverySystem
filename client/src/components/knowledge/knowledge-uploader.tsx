@@ -41,6 +41,9 @@ const KnowledgeUploader: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
+      
+      // ファイル選択後にinput要素をリセットして、同じファイルを再選択できるようにする
+      event.target.value = '';
     }
   };
 
