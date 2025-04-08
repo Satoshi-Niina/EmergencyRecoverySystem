@@ -195,6 +195,17 @@ export const searchByText = async (text: string): Promise<any[]> => {
         fixedImagePath = '/' + fixedImagePath;
       }
       
+      // SVG画像の場合はそのまま使用するが、ブラウザ互換性のためにPNG代替も用意
+      let imageType = 'image';
+      if (fixedImagePath.toLowerCase().endsWith('.svg')) {
+        // SVG画像として明示
+        imageType = 'svg-image';
+        
+        // SVG画像が表示されない場合の代替としてPNGパスも用意
+        const pngPath = fixedImagePath.replace(/\.svg$/i, '.png');
+        console.log('SVG画像検出、代替PNGパス用意:', fixedImagePath, '=>', pngPath);
+      }
+      
       // もし複数の画像（スライド）がある場合は、最初のものを使用
       const allSlides = item.all_slides || [];
       if (allSlides.length > 0) {
@@ -204,9 +215,14 @@ export const searchByText = async (text: string): Promise<any[]> => {
           slideImagePath = '/' + slideImagePath;
         }
         fixedImagePath = slideImagePath;
+        
+        // SVG判定
+        if (slideImagePath.toLowerCase().endsWith('.svg')) {
+          imageType = 'svg-image';
+        }
       }
       
-      console.log('画像パス変換:', item.image_path, '=>', fixedImagePath);
+      console.log('画像パス変換:', item.image_path, '=>', fixedImagePath, `(${imageType})`);
       
       // メタデータJSONのパスがある場合はそれも含める
       let metadataJsonPath = item.metadata_json || null;
@@ -225,8 +241,9 @@ export const searchByText = async (text: string): Promise<any[]> => {
       return {
         id: item.id,
         title: item.title,
-        type: 'image', // 画像検索結果
+        type: imageType, // SVG画像の場合は 'svg-image'
         url: fixedImagePath, // 修正された画像パス
+        pngFallbackUrl: fixedImagePath.toLowerCase().endsWith('.svg') ? fixedImagePath.replace(/\.svg$/i, '.png') : undefined, // SVG画像用のPNG代替パス
         content: item.description, // 説明文を内容として表示
         relevance: (1 - (result.score || 0)) * 100, // スコアをパーセンテージの関連度に変換
         metadata_json: metadataJsonPath, // メタデータJSONへのパス

@@ -4,10 +4,11 @@ import { useOrientation } from "@/hooks/use-orientation";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SearchResult {
-  id: number;
+  id: number | string;
   title: string;
-  type: string;
+  type: string; // 'image' | 'svg-image' | 'text' | 'ai-response' | string
   url?: string;
+  pngFallbackUrl?: string; // SVG画像の代替PNG URL
   content?: string;
   relevance?: number;
   timestamp?: Date;
@@ -61,16 +62,25 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
             <div className={`fuse-wrapper ${isLandscape ? 'fuse-landscape' : ''}`}>
               <div className={`fuse-image-container ${isLandscape ? 'fuse-image-landscape' : ''}`}>
                 {result.url ? (
-                  // 画像結果
+                  // 画像結果 (SVG画像もサポート)
                   <img 
                     src={result.url} 
-                    alt={result.title} 
+                    alt={result.title || "保守用車情報"} 
                     className={`w-full ${isLandscape ? 'h-52' : 'h-40'} object-cover border-b border-blue-100`}
+                    // SVG画像が読み込めない場合はPNG代替を使用
+                    onError={(e) => {
+                      const imgElement = e.currentTarget;
+                      if (result.pngFallbackUrl && result.url !== result.pngFallbackUrl) {
+                        console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
+                        imgElement.src = result.pngFallbackUrl;
+                      }
+                    }}
                     onClick={() => {
                       // Open image preview modal
                       window.dispatchEvent(new CustomEvent('preview-image', { 
                         detail: { 
                           url: result.url,
+                          pngFallbackUrl: result.pngFallbackUrl, // PNG代替URLも渡す
                           metadata_json: result.metadata_json,
                           all_slides: result.all_slides
                         } 
