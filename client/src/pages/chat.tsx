@@ -358,10 +358,22 @@ export default function Chat() {
                 if (slider) {
                   if (orientation === 'landscape') {
                     // 横向きの場合、右側に表示
-                    slider.style.transform = slider.style.transform === 'none' ? 'translateX(100%)' : 'none';
+                    if (slider.classList.contains('search-panel-visible')) {
+                      slider.classList.remove('search-panel-visible');
+                      slider.style.transform = 'translateX(100%)';
+                    } else {
+                      slider.classList.add('search-panel-visible');
+                      slider.style.transform = 'none';
+                    }
                   } else {
                     // 縦向きの場合、下から表示
-                    slider.style.transform = slider.style.transform === 'translateY(100%)' ? 'translateY(0)' : 'translateY(100%)';
+                    if (slider.classList.contains('search-panel-visible')) {
+                      slider.classList.remove('search-panel-visible');
+                      slider.style.transform = 'translateY(100%)';
+                    } else {
+                      slider.classList.add('search-panel-visible');
+                      slider.style.transform = 'none';
+                    }
                   }
                 }
               }}
@@ -376,8 +388,8 @@ export default function Chat() {
           id="mobile-search-slider" 
           className={`fixed transition-transform duration-300 ease-in-out md:hidden z-50 ${
             orientation === 'landscape' 
-              ? 'inset-y-0 right-0 w-2/5 transform translate-x-full' 
-              : 'inset-x-0 bottom-0 transform translate-y-full'
+              ? 'landscape-search-panel inset-y-0 right-0 w-2/5' 
+              : 'portrait-search-panel inset-x-0 bottom-0'
           }`}
           style={{ display: searchResults && searchResults.length > 0 ? 'block' : 'none' }}
         >
@@ -394,6 +406,7 @@ export default function Chat() {
                 onClick={() => {
                 const slider = document.getElementById('mobile-search-slider');
                 if (slider) {
+                  slider.classList.remove('search-panel-visible');
                   if (orientation === 'landscape') {
                     // 横向きの場合、右側から外す
                     slider.style.transform = 'translateX(100%)';

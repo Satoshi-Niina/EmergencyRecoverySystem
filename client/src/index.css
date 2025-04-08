@@ -10,7 +10,9 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
 
+@layer components {
   /* High contrast elements for nighttime use */
   .night-form {
     @apply bg-blue-50 border-2 border-primary shadow-md;
@@ -40,6 +42,12 @@
   .camera-controls {
     @apply bg-black/80 text-white p-4 rounded-lg shadow-lg;
   }
+  
+  /* スライダーのための特別なスタイル */
+  .search-panel-visible {
+    transform: none !important;
+  }
+}
 
   /* すべての画面サイズに対する基本設定 */
   html, body, #root {
@@ -56,6 +64,7 @@
     -webkit-overflow-scrolling: touch;
     overflow-x: auto !important;
     overflow-y: auto !important;
+    touch-action: manipulation; /* タッチ操作の改善 */
   }
   
   /* 横スクロール可能なコンテナの共通設定 */
@@ -64,6 +73,64 @@
     overflow-y: auto !important;
     min-width: 320px;
     width: 100%;
+  }
+  
+  /* 検索結果関連のスタイル */
+  .search-results-container {
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 検索結果のスライダー */
+  #mobile-search-slider {
+    display: block !important;
+    z-index: 100 !important;
+  }
+  
+  /* iOS Safari対応のスタイル */
+  @supports (-webkit-touch-callout: none) {
+    /* iOSデバイス向けの追加スタイル */
+    .chat-messages-container {
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 縦向き時の検索結果パネル - 下から上へのスライド */
+    .portrait-search-panel {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      height: 70vh !important;
+      transform: translateY(100%) !important;
+      transition: transform 0.3s ease-in-out !important;
+      z-index: 100 !important;
+      background-color: #eff6ff !important;
+      border-top-left-radius: 16px !important;
+      border-top-right-radius: 16px !important;
+    }
+    
+    /* 横向き時の検索結果パネル - 右から左へのスライド */
+    .landscape-search-panel {
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 40% !important;
+      transform: translateX(100%) !important;
+      transition: transform 0.3s ease-in-out !important;
+      z-index: 100 !important;
+      background-color: #eff6ff !important;
+      border-left: 1px solid #bfdbfe !important;
+    }
+    
+    /* 検索結果が表示されている状態 */
+    .search-panel-visible {
+      transform: translateY(0) !important;
+      transform: translateX(0) !important;
+    }
   }
   
   /* すべての画面サイズで適用される横スクロール対応 */
@@ -77,6 +144,12 @@
       min-width: 320px;
       max-width: none;
       overflow-x: visible !important;
+    }
+    
+    /* モバイル向け検索ボタン */
+    .mobile-search-button {
+      position: fixed !important;
+      z-index: 101 !important;
     }
   }
   
@@ -226,4 +299,8 @@
       width: 100%;
     }
   }
-}
+  
+  /* スライダーのための特別なスタイル */
+  .search-panel-visible {
+    transform: none !important;
+  }
