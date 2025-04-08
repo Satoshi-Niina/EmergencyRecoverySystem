@@ -45,8 +45,8 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
 
   return (
     <div className={containerClass}>
-      <div className="sticky top-0 bg-white p-1 shadow-sm z-10">
-        <div className="flex justify-between items-center mb-1">
+      <div className="sticky top-0 bg-white p-3 shadow-sm z-10 border-b border-blue-100 mb-3">
+        <div className="flex justify-between items-center">
           <h2 className="font-semibold text-lg text-blue-700">検索画像表示</h2>
           <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
             <X className="h-5 w-5" />
@@ -76,6 +76,17 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                         console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
                         imgElement.src = result.pngFallbackUrl;
                       }
+                    }}
+                    onClick={() => {
+                      // イメージプレビューモーダルを表示
+                      window.dispatchEvent(new CustomEvent('preview-image', { 
+                        detail: { 
+                          url: result.url,
+                          pngFallbackUrl: result.pngFallbackUrl,
+                          metadata_json: result.metadata_json,
+                          all_slides: result.all_slides
+                        } 
+                      }));
                     }}
                   />
                 ) : result.type === 'ai-response' ? (

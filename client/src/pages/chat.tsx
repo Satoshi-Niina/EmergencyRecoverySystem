@@ -345,8 +345,8 @@ export default function Chat() {
         </div>
 
         {/* Information Panel - モバイルとデスクトップで別々の表示方法 */}
-        <div className="hidden md:block md:w-1/4 border-l border-blue-200 bg-blue-50 overflow-y-auto search-results-panel">
-          <SearchResults results={searchResults} onClear={clearSearchResults} />
+        <div className="block md:w-1/4 border-l border-blue-200 bg-blue-50 overflow-y-auto search-results-panel">
+          <SearchResults results={searchResults || []} onClear={clearSearchResults} />
         </div>
         
         {/* モバイル用検索結果スライダー - すべてのモバイル向け表示 (向きに関係なく表示) */}
@@ -399,7 +399,7 @@ export default function Chat() {
               : 'border-t border-blue-200 rounded-t-xl'
           }`} style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
             <div className="search-results-wrapper">
-              <SearchResults results={searchResults} onClear={() => {
+              <SearchResults results={searchResults || []} onClear={() => {
                 clearSearchResults();
                 // 閉じるボタンをクリックした時の処理も実行
                 const slider = document.getElementById('mobile-search-slider');
