@@ -363,7 +363,7 @@ export default function SettingsPage() {
               <p className="text-sm text-cyan-500">© 2024 All Rights Reserved</p>
               <div className="pt-2 mt-2 border-t border-blue-100">
                 <p className="text-xs text-blue-400">
-                  緊急復旧サポートのための対話型アシスタントシステム
+                  応急復旧サポートのための対話型アシスタントシステム
                 </p>
               </div>
             </div>

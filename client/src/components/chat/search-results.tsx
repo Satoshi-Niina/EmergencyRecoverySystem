@@ -52,7 +52,6 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
             <X className="h-5 w-5" />
           </Button>
         </div>
-        <p className="text-xs text-blue-500 mb-2">プレビューをタップすると拡大画像と説明が表示されます！</p>
       </div>
       
       {/* 縦画面時はスクロール可能なコンテナ、横画面時はフレックスレイアウト */}
@@ -77,17 +76,6 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                         console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
                         imgElement.src = result.pngFallbackUrl;
                       }
-                    }}
-                    onClick={() => {
-                      // Open image preview modal
-                      window.dispatchEvent(new CustomEvent('preview-image', { 
-                        detail: { 
-                          url: result.url,
-                          pngFallbackUrl: result.pngFallbackUrl, // PNG代替URLも渡す
-                          metadata_json: result.metadata_json,
-                          all_slides: result.all_slides
-                        } 
-                      }));
                     }}
                   />
                 ) : result.type === 'ai-response' ? (
