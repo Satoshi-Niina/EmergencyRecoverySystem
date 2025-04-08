@@ -157,7 +157,7 @@ export const searchByText = async (text: string): Promise<any[]> => {
     
     // キーワードを分割して検索
     const keywords = text.split(/\s+/).filter(k => k.length > 0);
-    let searchResults: Fuse.FuseResult<any>[] = [];
+    let searchResults: any[] = [];
     
     if (keywords.length > 1) {
       console.log(`複数キーワード検索: ${keywords.join(', ')}`);
@@ -168,7 +168,7 @@ export const searchByText = async (text: string): Promise<any[]> => {
       }
       
       // 重複を除去（IDをキーとして使用）
-      const uniqueResults = new Map<string | number, Fuse.FuseResult<any>>();
+      const uniqueResults = new Map<string | number, any>();
       searchResults.forEach(result => {
         const existingResult = uniqueResults.get(result.item.id);
         if (!existingResult || (existingResult.score && result.score && result.score < existingResult.score)) {

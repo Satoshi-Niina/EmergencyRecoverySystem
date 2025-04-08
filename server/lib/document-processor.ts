@@ -130,27 +130,45 @@ export async function extractPptxText(filePath: string): Promise<string> {
     // アップロードディレクトリを確保（絶対パスを使用）
     const rootDir = process.cwd();
     
-    // より明確なパス構造で作成
+    // ======= パス構造の修正 =======
+    // public/uploads ディレクトリを明確に定義（最終的な公開パス）
     const publicDir = path.join(rootDir, 'public');
-    const uploadsDir = path.join(publicDir, 'uploads');
+    const publicUploadsDir = path.join(publicDir, 'uploads');
+    const publicImagesDir = path.join(publicUploadsDir, 'images');
+    const publicJsonDir = path.join(publicUploadsDir, 'json');
+    
+    // 通常のアップロードディレクトリも定義（サーバー内部用）
+    const uploadsDir = path.join(rootDir, 'uploads');
     const imagesDir = path.join(uploadsDir, 'images');
     const jsonDir = path.join(uploadsDir, 'json');
     
-    // 実際に存在確認
-    console.log('ディレクトリ構造と存在確認:');
-    console.log(`- ルートディレクトリ: ${rootDir}, 存在:`, fs.existsSync(rootDir));
-    console.log(`- 公開ディレクトリ: ${publicDir}, 存在:`, fs.existsSync(publicDir));
-    console.log(`- アップロードディレクトリ: ${uploadsDir}, 存在:`, fs.existsSync(uploadsDir));
-    console.log(`- 画像ディレクトリ: ${imagesDir}, 存在:`, fs.existsSync(imagesDir));
-    console.log(`- JSONディレクトリ: ${jsonDir}, 存在:`, fs.existsSync(jsonDir));
+    // ディレクトリ構造のログ
+    console.log('=== ディレクトリ構造と対応するURLパス ===');
+    console.log(`- ルートディレクトリ: ${rootDir}`);
+    console.log(`- 公開ディレクトリ: ${publicDir} (URL: /)`);
+    console.log(`- 公開アップロードディレクトリ: ${publicUploadsDir} (URL: /uploads)`);
+    console.log(`- 公開画像ディレクトリ: ${publicImagesDir} (URL: /uploads/images)`);
+    console.log(`- 公開JSONディレクトリ: ${publicJsonDir} (URL: /uploads/json)`);
+    
+    // ディレクトリの存在確認
+    console.log('\n=== 存在確認 ===');
+    console.log(`- ルートディレクトリ: ${fs.existsSync(rootDir)}`);
+    console.log(`- 公開ディレクトリ: ${fs.existsSync(publicDir)}`);
+    console.log(`- 公開アップロードディレクトリ: ${fs.existsSync(publicUploadsDir)}`);
+    console.log(`- 公開画像ディレクトリ: ${fs.existsSync(publicImagesDir)}`);
+    console.log(`- 公開JSONディレクトリ: ${fs.existsSync(publicJsonDir)}`);
     
     // 必要なディレクトリをすべて作成
-    [publicDir, uploadsDir, imagesDir, jsonDir].forEach(dir => {
+    console.log('\n=== ディレクトリ作成 ===');
+    [
+      publicDir, publicUploadsDir, publicImagesDir, publicJsonDir,
+      uploadsDir, imagesDir, jsonDir
+    ].forEach(dir => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
-        console.log(`ディレクトリを作成しました: ${dir}`);
+        console.log(`作成: ${dir}`);
       } else {
-        console.log(`ディレクトリは既に存在します: ${dir}`);
+        console.log(`確認済み: ${dir}`);
       }
     });
     
@@ -158,7 +176,7 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const timestamp = Date.now();
     const safeFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const slideImageBaseName = `${safeFileName}_${timestamp}`;
-    console.log(`生成するファイル名のベース: ${slideImageBaseName}`);
+    console.log(`\n生成するファイル名のベース: ${slideImageBaseName}`);
     
     console.log(`生成するファイル名のベース: ${slideImageBaseName}`);
     
@@ -233,21 +251,6 @@ export async function extractPptxText(filePath: string): Promise<string> {
             ${fileName} - ${new Date().toLocaleDateString('ja-JP')}
           </text>
         </svg>`;
-        
-        // アップロードディレクトリのパスを設定
-        const imagesDir = path.join(process.cwd(), 'uploads', 'images');
-        const publicImagesDir = path.join(process.cwd(), 'public', 'uploads', 'images');
-        
-        // ディレクトリが存在しない場合は作成
-        if (!fs.existsSync(imagesDir)) {
-          fs.mkdirSync(imagesDir, { recursive: true });
-          console.log(`作成したディレクトリ: ${imagesDir}`);
-        }
-        
-        if (!fs.existsSync(publicImagesDir)) {
-          fs.mkdirSync(publicImagesDir, { recursive: true });
-          console.log(`作成したディレクトリ: ${publicImagesDir}`);
-        }
         
         // SVGファイルとPNGファイルを保存
         const svgFilePath = path.join(imagesDir, `${slideFileName}.svg`);
