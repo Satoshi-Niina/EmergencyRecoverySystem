@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import { processDocument, extractPdfText, extractWordText, extractExcelText, extractPptxText } from '../lib/document-processor';
 import { addDocumentToKnowledgeBase } from '../lib/knowledge-base';
 
@@ -17,23 +18,37 @@ const uploadDir = path.join(process.cwd(), 'uploads');
 const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads');
 const imagesDir = path.join(uploadDir, 'images');
 const publicImagesDir = path.join(publicUploadsDir, 'images');
+const dataDir = path.join(uploadDir, 'data');
+const publicDataDir = path.join(publicUploadsDir, 'data');
 
 // ディレクトリが存在することを確認
 ensureDirectoryExists(uploadDir);
 ensureDirectoryExists(publicUploadsDir);
 ensureDirectoryExists(imagesDir);
 ensureDirectoryExists(publicImagesDir);
+ensureDirectoryExists(dataDir);
+ensureDirectoryExists(publicDataDir);
 
 // Multerストレージ設定
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    // 処理タイプによって保存先を変更
+    const processingType = req.body.processingType;
+    
+    if (processingType === 'image_search' && 
+        (file.mimetype.includes('svg') || file.mimetype.includes('image'))) {
+      // 画像検索用の画像ファイルはimagesディレクトリに直接保存
+      cb(null, imagesDir);
+    } else {
+      // その他のファイルはuploadsディレクトリに保存
+      cb(null, uploadDir);
+    }
   },
   filename: function (req, file, cb) {
     // 一意のファイル名を生成
     const uniqueId = Date.now().toString();
     const extname = path.extname(file.originalname);
-    cb(null, `${uniqueId}${extname}`);
+    cb(null, `${file.originalname.split('.')[0].replace(/\s+/g, '_')}_${uniqueId}${extname}`);
   }
 });
 
@@ -41,7 +56,7 @@ const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     // 許可する拡張子
-    const allowedExtensions = ['.pdf', '.docx', '.xlsx', '.pptx'];
+    const allowedExtensions = ['.pdf', '.docx', '.xlsx', '.pptx', '.svg', '.png', '.jpg', '.jpeg', '.gif'];
     const ext = path.extname(file.originalname).toLowerCase();
     
     if (allowedExtensions.includes(ext)) {
@@ -68,8 +83,145 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const fileExt = path.extname(file.originalname).toLowerCase();
     const fileBaseName = path.basename(file.path);
     const filesDir = path.dirname(file.path);
+    const processingType = req.body.processingType || 'document';
     
-    // ファイル処理と情報抽出
+    console.log(`処理タイプ: ${processingType}`);
+    console.log(`ファイルパス: ${filePath}`);
+    console.log(`ファイル拡張子: ${fileExt}`);
+    
+    // 画像検索用データ処理の場合
+    if (processingType === 'image_search' && ['.svg', '.png', '.jpg', '.jpeg', '.gif'].includes(fileExt)) {
+      try {
+        console.log("画像検索用データ処理を開始します");
+        
+        // ファイル名から一意のIDを生成
+        const fileId = path.basename(filePath, fileExt).toLowerCase().replace(/\s+/g, '_');
+        
+        // SVGファイルの場合はPNGフォールバックを生成
+        let pngFallbackPath = '';
+        if (fileExt === '.svg') {
+          try {
+            pngFallbackPath = path.join(imagesDir, `${path.basename(filePath, '.svg')}.png`);
+            console.log(`SVGからPNGフォールバックを生成: ${pngFallbackPath}`);
+            
+            // SVGをPNGに変換
+            const svgContent = fs.readFileSync(filePath, 'utf8');
+            const svgBuffer = Buffer.from(svgContent);
+            
+            await sharp(svgBuffer)
+              .png()
+              .toFile(pngFallbackPath);
+            
+            // 公開ディレクトリにもコピー
+            const publicPngPath = path.join(publicImagesDir, path.basename(pngFallbackPath));
+            fs.copyFileSync(pngFallbackPath, publicPngPath);
+            console.log(`PNGフォールバックを公開ディレクトリにコピー: ${publicPngPath}`);
+          } catch (convErr) {
+            console.error("SVGからPNGへの変換エラー:", convErr);
+            // 変換に失敗してもそのまま続行
+          }
+        }
+        
+        // オリジナルファイルを公開ディレクトリにコピー
+        const publicFilePath = path.join(publicImagesDir, path.basename(filePath));
+        fs.copyFileSync(filePath, publicFilePath);
+        console.log(`オリジナルファイルを公開ディレクトリにコピー: ${publicFilePath}`);
+        
+        // 画像検索データJSONを読み込むか新規作成
+        const imageSearchDataPath = path.join(publicDataDir, 'image_search_data.json');
+        let imageSearchData = [];
+        
+        if (fs.existsSync(imageSearchDataPath)) {
+          try {
+            const jsonContent = fs.readFileSync(imageSearchDataPath, 'utf8');
+            imageSearchData = JSON.parse(jsonContent);
+            console.log(`既存の画像検索データを読み込みました: ${imageSearchData.length}件`);
+          } catch (jsonErr) {
+            console.error("JSON読み込みエラー:", jsonErr);
+            // 読み込みエラーの場合は新規作成
+            imageSearchData = [];
+          }
+        }
+        
+        // タイトルと説明を生成（ファイル名から推測）
+        const fileName = path.basename(file.originalname, fileExt);
+        const title = fileName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        // カテゴリの推測
+        let category = '';
+        let keywords = [];
+        
+        if (fileName.includes('engine') || fileName.includes('motor')) {
+          category = 'エンジン';
+          keywords = ["エンジン", "モーター", "動力系"];
+        } else if (fileName.includes('cooling') || fileName.includes('radiator')) {
+          category = '冷却系統';
+          keywords = ["冷却", "ラジエーター", "水漏れ"];
+        } else if (fileName.includes('frame') || fileName.includes('chassis')) {
+          category = '車体';
+          keywords = ["フレーム", "シャーシ", "車体"];
+        } else if (fileName.includes('cabin') || fileName.includes('cockpit')) {
+          category = '運転室';
+          keywords = ["キャビン", "運転室", "操作パネル"];
+        } else {
+          category = '保守用車パーツ';
+          keywords = ["保守", "部品", "修理"];
+        }
+        
+        // 新しい画像検索アイテムを作成
+        const newImageItem = {
+          id: fileId,
+          file: `/uploads/images/${path.basename(filePath)}`,
+          pngFallback: fileExt === '.svg' ? `/uploads/images/${path.basename(pngFallbackPath)}` : undefined,
+          title: title,
+          category: category,
+          keywords: keywords,
+          description: `保守用車の${category}に関する図面または写真です。`,
+          metadata: {
+            uploadDate: new Date().toISOString(),
+            fileSize: file.size,
+            fileType: fileExt.substring(1).toUpperCase()
+          }
+        };
+        
+        // 既存のデータに新しいアイテムを追加または更新
+        const existingIndex = imageSearchData.findIndex((item: any) => item.id === fileId);
+        if (existingIndex >= 0) {
+          imageSearchData[existingIndex] = newImageItem;
+        } else {
+          imageSearchData.push(newImageItem);
+        }
+        
+        // 更新したデータを書き込み
+        fs.writeFileSync(imageSearchDataPath, JSON.stringify(imageSearchData, null, 2));
+        console.log(`画像検索データを更新しました: ${imageSearchData.length}件`);
+        
+        // 結果を返す
+        return res.json({
+          success: true,
+          message: "画像検索用データが正常に処理されました",
+          file: {
+            id: fileId,
+            name: file.originalname,
+            path: `/uploads/images/${path.basename(filePath)}`,
+            pngFallbackPath: fileExt === '.svg' ? `/uploads/images/${path.basename(pngFallbackPath)}` : undefined,
+            size: file.size,
+          },
+          imageSearchData: {
+            totalItems: imageSearchData.length,
+            newItem: newImageItem
+          }
+        });
+      } catch (imgError) {
+        console.error("画像検索データ処理エラー:", imgError);
+        return res.status(500).json({
+          error: "画像検索データの処理中にエラーが発生しました",
+          details: imgError instanceof Error ? imgError.message : String(imgError)
+        });
+      }
+    }
+    
+    // 通常の文書処理（従来のコード）
     let extractedText = "";
     let pageCount = 0;
     let metadata: any = {};

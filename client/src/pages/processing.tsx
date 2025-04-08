@@ -52,10 +52,10 @@ export default function Processing() {
 
     // Check if file type is supported
     const fileType = fileToUpload.name.split('.').pop()?.toLowerCase();
-    if (!['pdf', 'pptx', 'xlsx', 'docx'].includes(fileType || '')) {
+    if (!['svg', 'png', 'pdf', 'pptx', 'xlsx', 'docx'].includes(fileType || '')) {
       toast({
         title: "処理エラー",
-        description: "対応していないファイル形式です。PowerPoint, Excel, PDFファイルをアップロードしてください。",
+        description: "対応していないファイル形式です。SVG, PNG, PowerPoint, Excel, PDFファイルをアップロードしてください。",
         variant: "destructive",
       });
       return;
@@ -64,20 +64,46 @@ export default function Processing() {
     setIsProcessing(true);
 
     try {
-      // In a real application, we would upload and process the file here
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 実際にファイルをアップロードしてサーバーで処理
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+      formData.append("convertToJson", convertToJson.toString());
+      formData.append("extractImages", extractImages.toString());
+      formData.append("createThumbnails", createThumbnails.toString());
+      formData.append("processingType", "image_search"); // 画像検索用データとして処理
+      
+      // サーバーにファイルをアップロードして処理
+      const response = await fetch("/api/tech-support/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "アップロードに失敗しました");
+      }
+
+      const result = await response.json();
+      console.log("画像処理結果:", result);
 
       toast({
         title: "処理完了",
-        description: `${fileToUpload.name}の処理が完了しました。`,
+        description: `${fileToUpload.name}の処理が完了しました。関連ファイルが保存されました。`,
       });
 
+      // 処理が成功したらファイル選択をリセット
       setFileToUpload(null);
+      
+      // キャッシュを更新するために少し待ってからページをリロード
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
     } catch (error) {
+      console.error("ファイル処理エラー:", error);
       toast({
         title: "処理エラー",
-        description: "ファイルの処理中にエラーが発生しました。",
+        description: error instanceof Error ? error.message : "ファイルの処理中にエラーが発生しました。",
         variant: "destructive",
       });
     } finally {
@@ -112,13 +138,13 @@ export default function Processing() {
                 ? `選択されたファイル: ${fileToUpload.name}` 
                 : "ファイルをドラッグ&ドロップするか、クリックして選択"}
             </p>
-            <p className="text-xs text-indigo-400 text-center mb-4">対応形式: PowerPoint, Excel, PDF</p>
+            <p className="text-xs text-indigo-400 text-center mb-4">対応形式: SVG, PNG, PowerPoint, Excel, PDF</p>
             <div className="flex gap-2">
               <input 
                 type="file" 
                 id="fileUpload" 
                 className="hidden" 
-                accept=".pdf,.pptx,.xlsx,.docx" 
+                accept=".svg,.png,.jpg,.jpeg,.gif,.pdf,.pptx,.xlsx,.docx" 
                 onChange={handleFileChange}
               />
               <Button 
