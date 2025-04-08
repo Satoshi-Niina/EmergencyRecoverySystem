@@ -45,7 +45,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
 
   return (
     <div className={containerClass}>
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-3 sticky top-0 bg-white p-1 shadow-sm z-10">
         <h2 className="font-semibold text-lg text-blue-700">検索画像表示</h2>
         <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
           <X className="h-5 w-5" />

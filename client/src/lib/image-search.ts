@@ -23,7 +23,7 @@ async function loadImageSearchData() {
   try {
     // キャッシュを回避するためにタイムスタンプを追加
     const timestamp = new Date().getTime();
-    const response = await fetch(`/image_search_data.json?t=${timestamp}`);
+    const response = await fetch(`/uploads/data/image_search_data.json?t=${timestamp}`);
     if (!response.ok) {
       throw new Error('Failed to load image search data');
     }

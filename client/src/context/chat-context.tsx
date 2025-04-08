@@ -332,12 +332,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (results.length === 0 && hasEngineKeyword) {
         console.log("エンジン関連キーワードを検出しました。関連画像を表示します。");
         
-        // デフォルトでエンジン関連の画像を表示（パスを修正）
+        // デフォルトでエンジン関連の画像を表示（SVG形式で、PNG代替も設定）
         results.push({
           id: "engine_related",
           title: "保守用車のエンジン",
-          type: "image",
-          url: "/uploads/images/engine_001.png", // 絶対パスに修正
+          type: "svg-image",
+          url: "/uploads/images/engine_001.svg",
+          pngFallbackUrl: "/uploads/images/engine_001.png", // PNG代替を追加
           content: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用しています。エンジン故障時は点検が必要です。",
           relevance: 80
         });
@@ -347,8 +348,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         results.push({
           id: "default_help",
           title: "保守用車サポート",
-          type: "image",
-          url: "/uploads/images/cabin_001.png", // 絶対パスに修正
+          type: "svg-image",
+          url: "/uploads/images/cabin_001.svg",
+          pngFallbackUrl: "/uploads/images/cabin_001.png", // PNG代替を追加
           content: "保守用車のサポート情報です。より具体的なキーワードで検索してください。",
           relevance: 60
         });
@@ -356,10 +358,18 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // URL形式が正しいことを確認
       const processedResults = results.map(result => {
+        // メインURLの処理
         if (result.url && !result.url.startsWith('http') && !result.url.startsWith('/')) {
           result.url = '/' + result.url;
           console.log('画像パス修正:', result.url);
         }
+        
+        // PNG代替URLの処理
+        if (result.pngFallbackUrl && !result.pngFallbackUrl.startsWith('http') && !result.pngFallbackUrl.startsWith('/')) {
+          result.pngFallbackUrl = '/' + result.pngFallbackUrl;
+          console.log('PNG代替パス修正:', result.pngFallbackUrl);
+        }
+        
         return result;
       });
       
@@ -367,12 +377,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // 検索結果がある場合、コンソールに表示
       if (processedResults.length > 0) {
-        console.log("検索結果:", processedResults);
+        console.log("処理済み検索結果:", processedResults.length, "件");
+        console.log("最初の結果:", processedResults[0]);
       } else {
         console.log("「" + text + "」に関する検索結果はありませんでした");
       }
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('検索エラー:', error);
       toast({
         title: '検索エラー',
         description: '検索に失敗しました。',
