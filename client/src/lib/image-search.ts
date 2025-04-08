@@ -179,17 +179,8 @@ export const searchByText = async (text: string): Promise<any[]> => {
       await loadImageSearchData();
     }
     
-    // クエリの最適化を試みる
-    try {
-      const response = await apiRequest('POST', '/api/optimize-search-query', { text });
-      const data = await response.json();
-      const optimizedQuery = data.optimizedQuery || text;
-      console.log('検索クエリを最適化:', text, '->', optimizedQuery);
-      text = optimizedQuery;
-    } catch (error) {
-      console.error('検索クエリ最適化エラー:', error);
-      // 最適化に失敗した場合は元のテキストを使用
-    }
+    // 直接Fuse.jsによる検索を行うのでクエリ最適化は不要
+    console.log('検索クエリ:', text);
     
     // Fuseインスタンスを取得して検索を実行
     const fuse = getFuseInstance();

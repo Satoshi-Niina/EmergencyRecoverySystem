@@ -43,9 +43,9 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
 
   return (
     <div className={containerClass}>
-      <div className="sticky top-0 bg-blue-600 p-3 shadow-sm z-10 border-b border-blue-700 mb-3">
+      <div className="sticky top-0 bg-transparent p-3 shadow-sm z-10 border-b border-blue-200 mb-3">
         <div className="flex justify-center items-center">
-          <h2 className="font-bold text-lg text-white">検索画像表示</h2>
+          <h2 className="font-bold text-lg text-blue-700">検索画像表示</h2>
         </div>
       </div>
       
