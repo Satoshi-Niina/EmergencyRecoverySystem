@@ -89,9 +89,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                 </div>
                 <div className="flex-1 p-2 flex flex-col justify-center">
                   <h3 className="text-sm font-medium text-blue-800">{result.title || "保守用車情報"}</h3>
-                  {result.content && (
-                    <p className="text-xs text-gray-600 line-clamp-2 mt-1">{result.content}</p>
-                  )}
+                  {/* テキスト表示部分を非表示にしました */}
                 </div>
               </div>
             ) : (
@@ -110,9 +108,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
                 </div>
                 <div className="flex-1 p-2 flex flex-col justify-center">
                   <h3 className="text-sm font-medium text-blue-800">{result.title || (result.type === 'ai-response' ? "AI応答" : "ドキュメント")}</h3>
-                  {result.content && (
-                    <p className="text-xs text-gray-600 line-clamp-2 mt-1">{result.content}</p>
-                  )}
+                  {/* テキスト表示部分を非表示にしました */}
                 </div>
               </div>
             )}

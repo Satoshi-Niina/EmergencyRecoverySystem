@@ -21,19 +21,46 @@ let imageSearchData: ImageSearchItem[] = [];
 // 画像検索専用JSONデータを読み込む
 async function loadImageSearchData() {
   try {
-    // キャッシュを回避するためにタイムスタンプを追加
+    // metadataJSONを使用して検索データを生成
     const timestamp = new Date().getTime();
-    const response = await fetch(`/uploads/data/image_search_data.json?t=${timestamp}`);
+    const response = await fetch(`/uploads/json/mc_1744105287121_metadata.json?t=${timestamp}`);
     if (!response.ok) {
-      throw new Error('Failed to load image search data');
+      throw new Error('Failed to load metadata json');
     }
-    const data = await response.json();
+    const metadata = await response.json();
     
-    if (Array.isArray(data)) {
-      console.log(`画像検索データを読み込みました: ${data.length}件`);
-      imageSearchData = data;
+    if (metadata && metadata.slides && Array.isArray(metadata.slides)) {
+      console.log(`メタデータJSONを読み込みました: ${metadata.slides.length}件のスライド`);
+      
+      // スライドからImageSearchItem形式に変換
+      imageSearchData = metadata.slides.map((slide: any, index: number) => {
+        return {
+          id: `slide_${slide['スライド番号']}`,
+          file: slide['画像テキスト'] && slide['画像テキスト'][0] ? slide['画像テキスト'][0]['画像パス'] : "",
+          title: slide['タイトル'] || `スライド ${slide['スライド番号']}`,
+          category: "保守用車マニュアル",
+          keywords: [...(slide['本文'] || []), slide['タイトル'] || ""].filter(Boolean),
+          description: slide['本文'] ? slide['本文'].join("\n") : "",
+          details: slide['ノート'] || ""
+        };
+      });
+      
+      // 埋め込み画像もデータに追加
+      if (metadata.embeddedImages && Array.isArray(metadata.embeddedImages)) {
+        console.log(`${metadata.embeddedImages.length}件の埋め込み画像も追加`);
+        metadata.embeddedImages.forEach((img: any, index: number) => {
+          imageSearchData.push({
+            id: `img_${index+1}`,
+            file: img['抽出パス'],
+            title: img['元のファイル名'] ? img['元のファイル名'].split('/').pop() || `埋め込み画像 ${index+1}` : `埋め込み画像 ${index+1}`,
+            category: "埋め込み画像",
+            keywords: ["画像", "写真", "部品図"],
+            description: `保守用車の部品写真 ${index+1}`
+          });
+        });
+      }
     } else {
-      throw new Error('Invalid image search data format');
+      throw new Error('Invalid metadata format');
     }
   } catch (error) {
     console.error("画像検索データの読み込みに失敗しました:", error);
