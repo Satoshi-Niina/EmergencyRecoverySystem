@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
 import { promisify } from 'util';
+import sharp from 'sharp';
 
 // We'll handle PDF worker in the extractPdfText function instead of at the module level
 
@@ -184,7 +185,7 @@ export async function extractPptxText(filePath: string): Promise<string> {
     let extractedText = '';
     const fileBuffer = fs.readFileSync(filePath);
     
-    // スライド情報データ変数を関数スコープで定義
+    // スライド情報データ変数を関数スコープで定義し、初期化
     let slideInfoData: {
       metadata: {
         タイトル: string;
@@ -195,6 +196,16 @@ export async function extractPptxText(filePath: string): Promise<string> {
       };
       slides: any[];
       textContent: string;
+    } = {
+      metadata: {
+        タイトル: fileName,
+        作成者: "保守用車システム",
+        作成日: new Date().toISOString(),
+        修正日: new Date().toISOString(),
+        説明: "保守用車マニュアル情報"
+      },
+      slides: [],
+      textContent: ''
     };
     
     try {
@@ -256,9 +267,25 @@ export async function extractPptxText(filePath: string): Promise<string> {
         const svgFilePath = path.join(imagesDir, `${slideFileName}.svg`);
         const pngFilePath = path.join(imagesDir, `${slideFileName}.png`);
         fs.writeFileSync(svgFilePath, svgContent);
-        fs.writeFileSync(pngFilePath, svgContent); // 実際はSVG→PNGに変換すべき
-        console.log(`SVGファイルを保存: ${svgFilePath}`);
-        console.log(`PNGファイルを保存: ${pngFilePath}`);
+        
+        // SVGからPNGへの変換を行う
+        try {
+          // SVGバッファを生成
+          const svgBuffer = Buffer.from(svgContent);
+          
+          // sharpを使ってSVGをPNGに変換
+          await sharp(svgBuffer)
+            .png()
+            .toFile(pngFilePath);
+          
+          console.log(`SVGファイルを保存: ${svgFilePath}`);
+          console.log(`PNGファイルを保存: ${pngFilePath} (SVGから変換)`);
+        } catch (convErr) {
+          console.error(`SVG→PNG変換エラー:`, convErr);
+          // 変換に失敗した場合は、元のSVGをそのまま保存（一時的な対応）
+          fs.writeFileSync(pngFilePath, svgContent);
+          console.log(`変換に失敗したため、SVGコンテンツをPNGとして保存: ${pngFilePath}`);
+        }
         
         // 公開ディレクトリにもコピー
         const publicSvgPath = path.join(publicImagesDir, `${slideFileName}.svg`);
@@ -343,15 +370,8 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const vehicleData = extractedData[vehicleDataKey] as any[];
     
     // スライド情報を取得
-    let slides: any[] = [];
-    try {
-      // スライド情報があれば使用
-      if (typeof slideInfoData !== 'undefined' && slideInfoData && Array.isArray(slideInfoData.slides)) {
-        slides = slideInfoData.slides;
-      }
-    } catch (err) {
-      console.error('スライド情報取得エラー:', err);
-    }
+    // 安全に値を取得するため、空の配列でデフォルト初期化
+    let slides: any[] = slideInfoData?.slides || [];
     
     console.log(`スライド数: ${slides.length}`);
     
