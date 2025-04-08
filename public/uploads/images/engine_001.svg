@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+  <rect width="400" height="300" fill="#f0f0f0" />
+  <rect x="50" y="50" width="300" height="200" fill="#ffffff" stroke="#0066cc" stroke-width="2" />
+  <text x="200" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#0066cc">エンジン</text>
+  <text x="200" y="150" font-family="Arial" font-size="16" text-anchor="middle" fill="#333333">保守用車のエンジン型式</text>
+  <rect x="100" y="180" width="200" height="50" fill="#e6f0ff" stroke="#0066cc" stroke-width="1" />
+  <text x="200" y="210" font-family="Arial" font-size="14" text-anchor="middle" fill="#333333">軌道モータカーエンジン</text>
+</svg>

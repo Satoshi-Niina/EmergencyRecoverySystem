@@ -110,7 +110,7 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
               {/* 画像やAI応答以外のコンテンツの場合のみ表示 */}
               {result.type !== 'ai-response' && (
                 <div className={`p-3 fuse-content-container ${isLandscape ? 'fuse-content-landscape' : ''}`}>
-                  <h3 className="font-medium text-sm text-blue-800">{result.title}</h3>
+                  <h3 className="font-medium text-md text-blue-800">{result.title || "保守用車情報"}</h3>
                   <p className="text-xs text-blue-400 mt-1">
                     {result.type?.toUpperCase()}
                     {result.relevance && ` • 関連度 ${result.relevance.toFixed(0)}%`}

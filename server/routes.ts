@@ -490,12 +490,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createMessage(messageData);
       
       // AI モデル切り替えフラグ (将来的に設定ページから変更可能に)
-      const usePerplexity = req.body.usePerplexity || false;
+      // 一時的にPerplexity機能を無効化
+      const usePerplexity = false; // req.body.usePerplexity || false;
       
       let aiResponse = '';
       let citations: any[] = [];
       
-      // AIモデルを選択
+      // 現時点ではPerplexity API未対応のため、OpenAIのみ使用
+      // OpenAI API を使用 (デフォルト)
+      console.log(`OpenAIモデルを使用`);
+      aiResponse = await processOpenAIRequest(message.content, useOnlyKnowledgeBase);
+      
+      // Perplexity API は一時的に無効化
+      /*
       if (usePerplexity) {
         // Perplexity API を使用
         console.log(`Perplexityモデルを使用`);
@@ -507,6 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`OpenAIモデルを使用`);
         aiResponse = await processOpenAIRequest(message.content, useOnlyKnowledgeBase);
       }
+      */
       
       // 引用情報がある場合は末尾に追加
       if (citations && citations.length > 0) {

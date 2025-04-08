@@ -18,7 +18,7 @@
         "冷却水の量と品質を定期的に確認してください"
       ],
       "emergency_procedure": "エンジン室で火災が発生した場合は、直ちにエンジンを停止し、消火器で初期消火を行ってください。消火できない場合は安全な場所に避難し、消防に通報してください。",
-      "image_path": "uploads/images/engine_001.png"
+      "image_path": "uploads/images/engine_001.svg"
     },
     {
       "id": "cooling_001",
@@ -37,7 +37,7 @@
         "ラジエーターのフィンの清掃を定期的に行ってください"
       ],
       "emergency_procedure": "オーバーヒートが発生した場合は、エンジンを停止し、十分に冷めるまで待機してください。無理に運転を続けるとエンジン焼き付きの原因となります。",
-      "image_path": "uploads/images/cooling_001.png"
+      "image_path": "uploads/images/cooling_001.svg"
     },
     {
       "id": "frame_001",
@@ -56,7 +56,7 @@
         "フレームの塗装状態を確認し、必要に応じて補修してください"
       ],
       "emergency_procedure": "フレームに重大な損傷が見つかった場合は、直ちに使用を中止し、専門技術者による修理が完了するまで使用しないでください。",
-      "image_path": "uploads/images/frame_001.png"
+      "image_path": "uploads/images/frame_001.svg"
     },
     {
       "id": "cabin_001",
@@ -77,7 +77,7 @@
         "ドアの開閉機構を定期的に点検してください"
       ],
       "emergency_procedure": "走行中にキャビンガラスが破損した場合は、安全な場所に停車し、破片に注意して応急処置を行ってください。ドアが開かなくなった場合は、非常脱出窓から避難してください。",
-      "image_path": "uploads/images/cabin_001.png",
+      "image_path": "uploads/images/cabin_001.svg",
       "door_specs": {
         "width": "600mm～800mm",
         "height": "1600mm～1800mm",

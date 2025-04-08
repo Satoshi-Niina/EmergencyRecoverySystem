@@ -71,7 +71,7 @@ async function loadMaintenanceVehicleData() {
         category: "エンジン",
         title: "保守用車のエンジン型式",
         description: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用",
-        image_path: "/uploads/images/engine_001.png",
+        image_path: "https://placehold.co/400x300/EEE/31343C?text=エンジン",
         keywords: ["エンジン", "ディーゼル", "故障", "停止"]
       },
       {
@@ -79,7 +79,7 @@ async function loadMaintenanceVehicleData() {
         category: "冷却システム",
         title: "エンジン冷却システム",
         description: "エンジン冷却システムは適切な動作温度を維持する",
-        image_path: "/uploads/images/cooling_001.png",
+        image_path: "https://placehold.co/400x300/EEE/31343C?text=冷却システム",
         keywords: ["冷却", "オーバーヒート", "温度", "水漏れ"]
       },
       {
@@ -87,7 +87,7 @@ async function loadMaintenanceVehicleData() {
         category: "フレーム",
         title: "保守用車フレーム構造",
         description: "走行振動や応力による捻じれに耐えるフレーム構造",
-        image_path: "/uploads/images/frame_001.png",
+        image_path: "https://placehold.co/400x300/EEE/31343C?text=フレーム",
         keywords: ["フレーム", "構造", "強度", "振動"]
       },
       {
@@ -95,7 +95,7 @@ async function loadMaintenanceVehicleData() {
         category: "運転キャビン",
         title: "運転キャビン仕様",
         description: "操作性と視認性を考慮した運転キャビン",
-        image_path: "/uploads/images/cabin_001.png",
+        image_path: "https://placehold.co/400x300/EEE/31343C?text=運転キャビン",
         keywords: ["キャビン", "運転", "操作", "視認性"]
       }
     ];

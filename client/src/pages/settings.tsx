@@ -262,12 +262,19 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between py-2 border-t border-blue-100 pt-3">
                 <div>
                   <p className="font-medium text-indigo-700">Perplexity AIを使用</p>
-                  <p className="text-sm text-indigo-400">代替AIエンジンを使用する（実験的機能）</p>
+                  <p className="text-sm text-indigo-400">代替AIエンジンを使用する（APIキー設定後に有効化）</p>
                 </div>
                 <Switch 
-                  checked={usePerplexity} 
-                  onCheckedChange={setUsePerplexity}
-                  className="data-[state=checked]:bg-purple-500"
+                  checked={false}
+                  onCheckedChange={() => {
+                    toast({
+                      title: "準備中",
+                      description: "Perplexity APIキーの設定が必要です。この機能は現在利用できません。",
+                      variant: "default"
+                    });
+                  }}
+                  disabled={true}
+                  className="data-[state=checked]:bg-purple-500 opacity-60"
                 />
               </div>
               

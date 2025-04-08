@@ -177,13 +177,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // ユーザー設定からAIモードを取得
       const useOnlyKnowledgeBase = localStorage.getItem('useOnlyKnowledgeBase') !== 'false';
-      const usePerplexity = localStorage.getItem('usePerplexity') === 'true';
+      // Perplexity APIキーが設定されるまでは無効化
+      const usePerplexity = false; // localStorage.getItem('usePerplexity') === 'true';
       console.log('送信時設定: ナレッジベースのみを使用=', useOnlyKnowledgeBase, ', Perplexity使用=', usePerplexity);
       
       const response = await apiRequest('POST', `/api/chats/${currentChatId}/messages`, { 
         content,
         useOnlyKnowledgeBase,
-        usePerplexity
+        usePerplexity: false // Perplexity APIを一時的に無効化
       });
       if (!response.ok) {
         throw new Error('メッセージの送信に失敗しました');
