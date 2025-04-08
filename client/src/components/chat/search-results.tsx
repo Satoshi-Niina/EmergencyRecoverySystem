@@ -25,19 +25,9 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   const orientation = useOrientation();
   const { isMobile } = useIsMobile();
   
-  // シンプルなアニメーションクラスを追加
-  const animationClass = "search-results-animation";
-  
+  // 検索結果がない場合は何も表示しない
   if (results.length === 0) {
-    return (
-      <div className="p-4">
-        <h2 className="font-semibold text-lg mb-3 text-blue-700">検索結果画像</h2>
-        <p className="text-center text-blue-400 py-4">検索結果はありません</p>
-        <p className="text-sm text-center text-blue-400">
-          テキストを選択して検索するか、画像検索機能を使用してください。
-        </p>
-      </div>
-    );
+    return null;
   }
 
   // デバイスに応じたレイアウトクラス
