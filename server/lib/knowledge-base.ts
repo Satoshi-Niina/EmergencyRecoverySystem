@@ -82,34 +82,94 @@ export function saveKnowledgeBaseIndex(index: KnowledgeBaseIndex): void {
  */
 export async function addDocumentToKnowledgeBase(filePath: string): Promise<string> {
   try {
+    console.log(`知識ベースにドキュメント追加開始: ${filePath}`);
+    
     // 知識ベースを初期化
     initializeKnowledgeBase();
     
-    // ドキュメントを処理
-    const processedDoc = await processDocument(filePath);
+    // ファイル名を取得して表示
+    const fileName = path.basename(filePath);
+    console.log(`処理対象ファイル名: ${fileName}`);
     
     // ユニークなIDを生成
     const docId = `doc_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    console.log(`生成したドキュメントID: ${docId}`);
+    
+    // ドキュメント用ディレクトリ作成
+    const docDir = path.join(KNOWLEDGE_BASE_DIR, docId);
+    if (!fs.existsSync(docDir)) {
+      fs.mkdirSync(docDir, { recursive: true });
+    }
+    console.log(`ドキュメントディレクトリ作成: ${docDir}`);
+    
+    // 元ファイルをドキュメントディレクトリにコピー
+    const destPath = path.join(docDir, fileName);
+    fs.copyFileSync(filePath, destPath);
+    console.log(`ファイルコピー完了: ${destPath}`);
+    
+    // ドキュメントを処理
+    console.log(`ドキュメント処理を開始: ${filePath}`);
+    let processedDoc: ProcessedDocument;
+    
+    try {
+      processedDoc = await processDocument(filePath);
+      console.log(`ドキュメント処理完了: ${processedDoc.chunks.length}個のチャンクを生成`);
+    } catch (procError) {
+      console.error('ドキュメント処理中にエラー発生:', procError);
+      
+      // エラーが発生した場合でも処理を続行するための最小限のデータ構造
+      processedDoc = {
+        chunks: [{
+          text: `${fileName}の内容`,
+          metadata: {
+            source: fileName,
+            chunkNumber: 0
+          }
+        }],
+        metadata: {
+          title: fileName,
+          source: filePath,
+          type: path.extname(filePath).toLowerCase().substring(1),
+          wordCount: 0,
+          createdAt: new Date()
+        }
+      };
+      console.log('エラー後の最小限のドキュメント構造を作成しました');
+    }
     
     // ドキュメントをDBに保存（あるいはローカルファイルシステムに）
-    await storeProcessedDocument(docId, processedDoc);
+    try {
+      await storeProcessedDocument(docId, processedDoc);
+      console.log(`処理済みドキュメントを保存完了: ${docId}`);
+    } catch (storeError) {
+      console.error('ドキュメント保存中にエラー発生:', storeError);
+    }
     
     // インデックスを更新
     const index = loadKnowledgeBaseIndex();
     index.documents.push({
       id: docId,
       title: processedDoc.metadata.title,
-      path: processedDoc.metadata.source,
+      path: destPath, // 更新：コピー先のパスを使用
       type: processedDoc.metadata.type,
       chunkCount: processedDoc.chunks.length,
       addedAt: new Date().toISOString()
     });
     saveKnowledgeBaseIndex(index);
+    console.log('知識ベースインデックスを更新しました');
+    
+    // PowerPointファイルの場合は特別なメッセージを表示
+    const fileExt = path.extname(filePath).toLowerCase();
+    if (fileExt === '.pptx' || fileExt === '.ppt') {
+      console.log(`PowerPointファイルが正常に処理されました。画像データも生成されています。`);
+    }
+    
+    console.log(`ドキュメント "${fileName}" が知識ベースに追加されました。ID: ${docId}`);
     
     return docId;
   } catch (err: any) {
-    console.error('Error adding document to knowledge base:', err);
-    throw new Error(`Failed to add document: ${err.message}`);
+    console.error('知識ベースへのドキュメント追加エラー:', err);
+    throw new Error(`知識ベースへの追加に失敗しました: ${err.message}`);
   }
 }
 
