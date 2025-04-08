@@ -85,6 +85,12 @@ async function loadImageSearchData() {
 // アプリケーション起動時にデータをロード
 loadImageSearchData();
 
+// 画像検索データが更新されたときにリロードするイベントリスナー
+window.addEventListener('image-search-data-updated', () => {
+  console.log('画像検索データの更新を検知しました。再読み込みします。');
+  loadImageSearchData();
+});
+
 // Fuse.js 画像検索用の設定
 const fuseOptions = {
   includeScore: true,

@@ -99,6 +99,25 @@ const TechSupportUploader: React.FC = () => {
     }
   };
 
+  // 処理タイプの選択肢
+  const [processingType, setProcessingType] = useState<'document' | 'image_search'>('document');
+
+  // ファイル形式バリデーション
+  const isValidFileFormat = (file: File, type: 'document' | 'image_search'): boolean => {
+    const fileName = file.name;
+    const fileExt = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
+    
+    if (type === 'document') {
+      // ドキュメント処理の対応形式
+      const validDocumentExts = [".pdf", ".docx", ".xlsx", ".pptx"];
+      return validDocumentExts.includes(fileExt);
+    } else {
+      // 画像検索データ処理の対応形式
+      const validImageExts = [".svg", ".png", ".jpg", ".jpeg", ".gif"];
+      return validImageExts.includes(fileExt);
+    }
+  };
+
   // ファイルアップロードハンドラ
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -110,15 +129,21 @@ const TechSupportUploader: React.FC = () => {
       return;
     }
 
-    // 対応しているファイル形式をチェック
-    const validExtensions = [".pdf", ".docx", ".xlsx", ".pptx"];
-    const fileExt = selectedFile.name.substring(selectedFile.name.lastIndexOf(".")).toLowerCase();
-    if (!validExtensions.includes(fileExt)) {
-      toast({
-        title: "未対応のファイル形式",
-        description: "PDF, Word, Excel, PowerPoint ファイルのみアップロード可能です",
-        variant: "destructive",
-      });
+    // ファイル形式チェック
+    if (!isValidFileFormat(selectedFile, processingType)) {
+      if (processingType === 'document') {
+        toast({
+          title: "未対応のファイル形式",
+          description: "PDF, Word, Excel, PowerPoint ファイルのみアップロード可能です",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "未対応の画像形式",
+          description: "SVG, PNG, JPG, GIF 画像ファイルのみアップロード可能です",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -127,6 +152,10 @@ const TechSupportUploader: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      // 処理タイプをフォームデータに追加
+      formData.append("processingType", processingType);
+
+      console.log(`ファイルをアップロード: ${selectedFile.name}, 処理タイプ: ${processingType}`);
 
       const response = await fetch("/api/tech-support/upload", {
         method: "POST",
@@ -139,14 +168,25 @@ const TechSupportUploader: React.FC = () => {
       }
 
       const result = await response.json();
+      console.log("アップロード結果:", result);
+
+      const successMessage = processingType === 'document' 
+        ? `${selectedFile.name} がナレッジベースに追加されました`
+        : `${selectedFile.name} が画像検索データに追加されました`;
 
       toast({
         title: "アップロード成功",
-        description: `${selectedFile.name} が正常に処理されました`,
+        description: successMessage,
       });
 
-      // ドキュメントリストを更新
-      loadVehicleData();
+      // 必要に応じてデータを更新
+      if (processingType === 'document') {
+        loadVehicleData();
+      } else {
+        // 画像検索データが更新されたことを通知するイベント
+        window.dispatchEvent(new Event('image-search-data-updated'));
+      }
+      
       setSelectedFile(null);
       
       // ファイル入力をリセット
@@ -201,13 +241,52 @@ const TechSupportUploader: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* 処理タイプの選択 */}
           <div className="flex flex-col space-y-2">
-            <Label htmlFor="tech-file-upload">ファイルを選択（PDF, Excel, PowerPointなど）</Label>
+            <Label>処理タイプを選択</Label>
+            <div className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="document-processing"
+                  name="processing-type"
+                  value="document"
+                  checked={processingType === 'document'}
+                  onChange={() => setProcessingType('document')}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <label htmlFor="document-processing" className="text-sm">
+                  ナレッジベース文書（PDF, Excel, PowerPoint）
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="image-search-processing"
+                  name="processing-type"
+                  value="image_search"
+                  checked={processingType === 'image_search'}
+                  onChange={() => setProcessingType('image_search')}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <label htmlFor="image-search-processing" className="text-sm">
+                  画像検索データ（SVG, PNG, JPG）
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col space-y-2">
+            <Label htmlFor="tech-file-upload">
+              {processingType === 'document' 
+                ? 'ファイルを選択（PDF, Excel, PowerPointなど）' 
+                : '画像ファイルを選択（SVG, PNG, JPG）'}
+            </Label>
             <div className="flex space-x-2">
               <Input
                 id="tech-file-upload"
                 type="file"
-                accept=".pdf,.docx,.xlsx,.pptx"
+                accept={processingType === 'document' ? ".pdf,.docx,.xlsx,.pptx" : ".svg,.png,.jpg,.jpeg,.gif"}
                 className="flex-1"
                 onChange={handleFileChange}
               />
