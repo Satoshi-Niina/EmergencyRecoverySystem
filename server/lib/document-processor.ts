@@ -7,6 +7,10 @@ import path from 'path';
 import { pipeline } from 'stream/promises';
 import { promisify } from 'util';
 import sharp from 'sharp';
+import AdmZip from 'adm-zip';
+
+// adm-zipモジュールの型定義
+declare module 'adm-zip';
 
 // We'll handle PDF worker in the extractPdfText function instead of at the module level
 
@@ -114,6 +118,7 @@ export async function extractExcelText(filePath: string): Promise<string> {
 /**
  * Extract text content from a PowerPoint file
  * This function extracts text and saves slide images for better knowledge retrieval
+ * Also extracts embedded images from the PowerPoint file
  * @param filePath Path to the PowerPoint file
  * @returns Extracted text
  */
@@ -174,11 +179,8 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const slideImageBaseName = `${safeFileName}_${timestamp}`;
     console.log(`\n生成するファイル名のベース: ${slideImageBaseName}`);
     
-    console.log(`生成するファイル名のベース: ${slideImageBaseName}`);
-    
     // 実際のPowerPointファイルをバイナリとして読み込み、内容を抽出
     let extractedText = '';
-    const fileBuffer = fs.readFileSync(filePath);
     
     // スライド情報データ変数を関数スコープで定義し、初期化
     let slideInfoData: {
@@ -190,6 +192,7 @@ export async function extractPptxText(filePath: string): Promise<string> {
         説明: string;
       };
       slides: any[];
+      embeddedImages: any[];
       textContent: string;
     } = {
       metadata: {
@@ -200,25 +203,67 @@ export async function extractPptxText(filePath: string): Promise<string> {
         説明: "保守用車マニュアル情報"
       },
       slides: [],
+      embeddedImages: [],
       textContent: ''
     };
     
     try {
+      // PPTX ファイルは実際にはZIPファイル - AdmZipを使って中身を展開
+      console.log(`PPTXファイルをZIPとして開く: ${filePath}`);
+      const zip = new AdmZip(filePath);
+      const zipEntries = zip.getEntries();
+      
+      // 埋め込み画像を探す（メディアフォルダ内）
+      const mediaEntries = zipEntries.filter(entry => 
+        entry.entryName.startsWith('ppt/media/') && 
+        /\.(png|jpg|jpeg|gif|svg)$/i.test(entry.entryName)
+      );
+      
+      console.log(`PowerPoint内の埋め込み画像を検出: ${mediaEntries.length}個`);
+      
+      // 抽出した画像を保存
+      const extractedImagePaths: string[] = [];
+      
+      for (let i = 0; i < mediaEntries.length; i++) {
+        const entry = mediaEntries[i];
+        const imgExt = path.extname(entry.entryName);
+        const imgBaseFileName = `${slideImageBaseName}_img_${(i+1).toString().padStart(3, '0')}`;
+        const imgFileName = `${imgBaseFileName}${imgExt}`;
+        const imgFilePath = path.join(publicImagesDir, imgFileName);
+        
+        console.log(`埋め込み画像を抽出: ${entry.entryName} -> ${imgFilePath}`);
+        
+        // 画像データを抽出して保存
+        const imgData = entry.getData();
+        fs.writeFileSync(imgFilePath, imgData);
+        
+        // 画像のURLパス
+        const imgUrl = `/uploads/images/${imgFileName}`;
+        extractedImagePaths.push(imgUrl);
+        
+        // メタデータに追加
+        slideInfoData.embeddedImages.push({
+          元のファイル名: entry.entryName,
+          抽出パス: imgUrl,
+          保存日時: new Date().toISOString(),
+          サイズ: imgData.length,
+          形式: imgExt.substring(1).toUpperCase()
+        });
+      }
+      
       // メタデータを生成 (ユーザー提供の例に合わせた形式)
       slideInfoData = {
+        ...slideInfoData,
         metadata: {
           タイトル: fileName,
           作成者: "保守用車システム",
           作成日: new Date().toISOString(),
           修正日: new Date().toISOString(),
           説明: "保守用車マニュアル情報"
-        },
-        slides: [],
-        textContent: ''
+        }
       };
       
       // 実際のスライド画像生成（実際の製品環境では実際のスライド内容を使用）
-      // このサンプルでは複数のスライドを生成してデモ表示
       const slideTexts = [
         {
           title: "保守用車緊急対応マニュアル",
@@ -294,13 +339,21 @@ export async function extractPptxText(filePath: string): Promise<string> {
           本文: [slideTexts[i].content],
           ノート: `スライド ${slideNum}のノート: ${slideTexts[i].title}\n${slideTexts[i].content}`,
           画像テキスト: [{
-            画像パス: `uploads/images/${slideFileName}.png`,
+            画像パス: `/uploads/images/${slideFileName}.png`,
             テキスト: slideTexts[i].content
           }]
         });
         
         // テキスト内容を累積
         extractedText += `\nスライド ${slideNum}: ${slideInfo.title}\n${slideInfo.content}\n\n`;
+      }
+      
+      // 埋め込み画像に関する追加テキスト
+      if (extractedImagePaths.length > 0) {
+        extractedText += `\n抽出された埋め込み画像 (${extractedImagePaths.length}個):\n`;
+        extractedImagePaths.forEach((imgPath, idx) => {
+          extractedText += `画像 ${idx + 1}: ${imgPath}\n`;
+        });
       }
       
       // テキスト内容を設定
@@ -310,6 +363,12 @@ export async function extractPptxText(filePath: string): Promise<string> {
       const publicMetadataPath = path.join(publicJsonDir, `${slideImageBaseName}_metadata.json`);
       fs.writeFileSync(publicMetadataPath, JSON.stringify(slideInfoData, null, 2));
       console.log(`メタデータJSONを公開ディレクトリに保存: ${publicMetadataPath}`);
+      
+      // 画像検索データに埋め込み画像を追加
+      if (extractedImagePaths.length > 0) {
+        console.log('埋め込み画像を画像検索データに追加します');
+        await addEmbeddedImagesToSearchData(extractedImagePaths, slideImageBaseName, fileName);
+      }
       
     } catch (pptxErr) {
       console.error('PowerPointパース中にエラー:', pptxErr);
@@ -377,18 +436,32 @@ export async function extractPptxText(filePath: string): Promise<string> {
     console.log(`取得したスライド画像URL: ${allSlidesUrls.length}件`);
     console.log(`スライド画像URL一覧:`, allSlidesUrls);
     
+    // 埋め込み画像のパスも追加（あれば）
+    const embeddedImageUrls = slideInfoData.embeddedImages 
+      ? slideInfoData.embeddedImages.map(img => img.抽出パス) 
+      : [];
+    
+    if (embeddedImageUrls.length > 0) {
+      console.log(`埋め込み画像URL: ${embeddedImageUrls.length}件`);
+      console.log(`埋め込み画像URL一覧:`, embeddedImageUrls);
+    }
+    
+    // スライドとその他の画像をすべて含む配列
+    const allImageUrls = [...allSlidesUrls, ...embeddedImageUrls];
+    
     const newVehicleData = {
       id: slideImageBaseName,
       category: "PowerPoint",
       title: fileName,
       description: `保守用車緊急対応マニュアル: ${fileName}`,
       details: extractedText,
-      image_path: allSlidesUrls.length > 0 ? allSlidesUrls[0] : `uploads/images/${slideImageBaseName}_001.png`,
+      image_path: allImageUrls.length > 0 ? allImageUrls[0] : `/uploads/images/${slideImageBaseName}_001.png`,
       all_slides: allSlidesUrls.length > 0 ? allSlidesUrls : 
         Array.from({length: 4}, (_, i) => 
-          `uploads/images/${slideImageBaseName}_${(i+1).toString().padStart(3, '0')}.png`
+          `/uploads/images/${slideImageBaseName}_${(i+1).toString().padStart(3, '0')}.png`
         ),
-      metadata_json: `uploads/images/${slideImageBaseName}_metadata.json`,
+      all_images: embeddedImageUrls.length > 0 ? embeddedImageUrls : undefined,
+      metadata_json: `/uploads/json/${slideImageBaseName}_metadata.json`,
       keywords: ["PowerPoint", "保守用車", "緊急対応", "マニュアル", fileName]
     };
     
@@ -415,6 +488,79 @@ export async function extractPptxText(filePath: string): Promise<string> {
   } catch (error) {
     console.error('PowerPointテキスト抽出エラー:', error);
     throw new Error('PowerPoint処理に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
+  }
+}
+
+/**
+ * 埋め込み画像を画像検索データに追加する補助関数
+ */
+async function addEmbeddedImagesToSearchData(
+  imagePaths: string[], 
+  baseFileName: string, 
+  originalFileName: string
+): Promise<void> {
+  try {
+    const rootDir = process.cwd();
+    const imageSearchDataPath = path.join(rootDir, 'public', 'uploads', 'data', 'image_search_data.json');
+    
+    // ディレクトリがない場合は作成
+    if (!fs.existsSync(path.dirname(imageSearchDataPath))) {
+      fs.mkdirSync(path.dirname(imageSearchDataPath), { recursive: true });
+    }
+    
+    // 画像検索データを読み込む
+    let imageSearchData: any[] = [];
+    
+    if (fs.existsSync(imageSearchDataPath)) {
+      try {
+        const jsonContent = fs.readFileSync(imageSearchDataPath, 'utf8');
+        imageSearchData = JSON.parse(jsonContent);
+        console.log(`既存の画像検索データを読み込みました: ${imageSearchData.length}件`);
+      } catch (jsonErr) {
+        console.error("JSON読み込みエラー:", jsonErr);
+        imageSearchData = [];
+      }
+    }
+    
+    // 各画像を画像検索データに追加
+    for (let i = 0; i < imagePaths.length; i++) {
+      const imagePath = imagePaths[i];
+      const imageId = `${baseFileName}_img_${(i+1).toString().padStart(3, '0')}`;
+      const imageExt = path.extname(imagePath);
+      
+      // 画像検索アイテムを作成
+      const newImageItem = {
+        id: imageId,
+        file: imagePath,
+        pngFallback: undefined, // 既にPNGなのでフォールバック不要
+        title: `${originalFileName}内の画像 ${i+1}`,
+        category: '保守用車マニュアル画像',
+        keywords: ["保守用車", "マニュアル", "図面", "画像"],
+        description: `PowerPointファイル「${originalFileName}」から抽出された画像です。`,
+        metadata: {
+          uploadDate: new Date().toISOString(),
+          fileSize: -1, // ファイルサイズは不明
+          fileType: imageExt.substring(1).toUpperCase(),
+          sourceFile: originalFileName,
+          extractedFrom: 'PowerPoint'
+        }
+      };
+      
+      // 既存のデータに追加または更新
+      const existingIndex = imageSearchData.findIndex((item: any) => item.id === imageId);
+      if (existingIndex >= 0) {
+        imageSearchData[existingIndex] = newImageItem;
+      } else {
+        imageSearchData.push(newImageItem);
+      }
+    }
+    
+    // 更新したデータを書き込み
+    fs.writeFileSync(imageSearchDataPath, JSON.stringify(imageSearchData, null, 2));
+    console.log(`埋め込み画像を画像検索データに追加しました: ${imagePaths.length}件`);
+    
+  } catch (error) {
+    console.error('埋め込み画像の画像検索データ追加エラー:', error);
   }
 }
 

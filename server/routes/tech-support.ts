@@ -139,7 +139,7 @@ router.post('/init-image-search-data', async (req, res) => {
           initialData.push({
             id: svgId,
             file: `/uploads/images/${svgFile}`,
-            pngFallback: hasPng ? `/uploads/images/${pngFile}` : undefined,
+            pngFallback: hasPng ? `/uploads/images/${pngFile}` : '',
             title: `${svgId.replace(/_/g, ' ')}`,
             category: 'アップロード済みSVG',
             keywords: [`${svgId}`, 'SVG', '図面'],
@@ -264,7 +264,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         const newImageItem = {
           id: fileId,
           file: `/uploads/images/${path.basename(filePath)}`,
-          pngFallback: fileExt === '.svg' ? `/uploads/images/${path.basename(pngFallbackPath)}` : undefined,
+          pngFallback: fileExt === '.svg' ? `/uploads/images/${path.basename(pngFallbackPath)}` : '',
           title: title,
           category: category,
           keywords: keywords,
@@ -296,7 +296,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             id: fileId,
             name: file.originalname,
             path: `/uploads/images/${path.basename(filePath)}`,
-            pngFallbackPath: fileExt === '.svg' ? `/uploads/images/${path.basename(pngFallbackPath)}` : undefined,
+            pngFallbackPath: fileExt === '.svg' ? `/uploads/images/${path.basename(pngFallbackPath)}` : '',
             size: file.size,
           },
           imageSearchData: {
