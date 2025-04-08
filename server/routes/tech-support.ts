@@ -13,35 +13,29 @@ function ensureDirectoryExists(directory: string) {
   }
 }
 
-// アップロード先ディレクトリを設定
-const uploadDir = path.join(process.cwd(), 'uploads');
+// アップロード先ディレクトリを設定（public/uploads に統一）
 const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads');
-const imagesDir = path.join(uploadDir, 'images');
 const publicImagesDir = path.join(publicUploadsDir, 'images');
-const dataDir = path.join(uploadDir, 'data');
 const publicDataDir = path.join(publicUploadsDir, 'data');
 
 // ディレクトリが存在することを確認
-ensureDirectoryExists(uploadDir);
 ensureDirectoryExists(publicUploadsDir);
-ensureDirectoryExists(imagesDir);
 ensureDirectoryExists(publicImagesDir);
-ensureDirectoryExists(dataDir);
 ensureDirectoryExists(publicDataDir);
 
 // Multerストレージ設定
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // 処理タイプによって保存先を変更
-    const processingType = req.body.processingType;
+    const processingType = req.body.processingType || 'document';
     
     if (processingType === 'image_search' && 
         (file.mimetype.includes('svg') || file.mimetype.includes('image'))) {
-      // 画像検索用の画像ファイルはimagesディレクトリに直接保存
-      cb(null, imagesDir);
+      // 画像検索用の画像ファイルは公開imagesディレクトリに直接保存
+      cb(null, publicImagesDir);
     } else {
-      // その他のファイルはuploadsディレクトリに保存
-      cb(null, uploadDir);
+      // 文書ファイルも公開uploads直下に保存
+      cb(null, publicUploadsDir);
     }
   },
   filename: function (req, file, cb) {
@@ -101,31 +95,25 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         let pngFallbackPath = '';
         if (fileExt === '.svg') {
           try {
-            pngFallbackPath = path.join(imagesDir, `${path.basename(filePath, '.svg')}.png`);
+            // 公開ディレクトリ内のSVGファイルからPNGを生成
+            const publicSvgPath = path.join(publicImagesDir, path.basename(filePath));
+            pngFallbackPath = path.join(publicImagesDir, `${path.basename(filePath, '.svg')}.png`);
             console.log(`SVGからPNGフォールバックを生成: ${pngFallbackPath}`);
             
             // SVGをPNGに変換
-            const svgContent = fs.readFileSync(filePath, 'utf8');
+            const svgContent = fs.readFileSync(publicSvgPath, 'utf8');
             const svgBuffer = Buffer.from(svgContent);
             
             await sharp(svgBuffer)
               .png()
               .toFile(pngFallbackPath);
             
-            // 公開ディレクトリにもコピー
-            const publicPngPath = path.join(publicImagesDir, path.basename(pngFallbackPath));
-            fs.copyFileSync(pngFallbackPath, publicPngPath);
-            console.log(`PNGフォールバックを公開ディレクトリにコピー: ${publicPngPath}`);
+            console.log(`PNGフォールバックを生成しました: ${pngFallbackPath}`);
           } catch (convErr) {
             console.error("SVGからPNGへの変換エラー:", convErr);
             // 変換に失敗してもそのまま続行
           }
         }
-        
-        // オリジナルファイルを公開ディレクトリにコピー
-        const publicFilePath = path.join(publicImagesDir, path.basename(filePath));
-        fs.copyFileSync(filePath, publicFilePath);
-        console.log(`オリジナルファイルを公開ディレクトリにコピー: ${publicFilePath}`);
         
         // 画像検索データJSONを読み込むか新規作成
         const imageSearchDataPath = path.join(publicDataDir, 'image_search_data.json');

@@ -85,6 +85,12 @@ async function loadImageSearchData() {
 // アプリケーション起動時にデータをロード
 loadImageSearchData();
 
+// データを強制的に再読み込む関数を提供
+export const reloadImageSearchData = () => {
+  console.log('画像検索データを強制的に再読み込みします');
+  loadImageSearchData();
+};
+
 // 画像検索データが更新されたときにリロードするイベントリスナー
 window.addEventListener('image-search-data-updated', () => {
   console.log('画像検索データの更新を検知しました。再読み込みします。');

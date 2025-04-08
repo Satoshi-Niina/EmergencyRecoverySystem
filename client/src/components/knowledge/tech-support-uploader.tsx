@@ -23,6 +23,7 @@ import {
 import { FileText, Upload, Trash2, FileType, File, Presentation, FileBox } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { reloadImageSearchData } from "@/lib/image-search";
 
 interface TechDocument {
   id: string;
@@ -183,7 +184,9 @@ const TechSupportUploader: React.FC = () => {
       if (processingType === 'document') {
         loadVehicleData();
       } else {
-        // 画像検索データが更新されたことを通知するイベント
+        // 画像検索データを直接リロード
+        reloadImageSearchData();
+        // バックアップとしてイベントも発行
         window.dispatchEvent(new Event('image-search-data-updated'));
       }
       

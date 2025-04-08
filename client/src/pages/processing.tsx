@@ -244,18 +244,8 @@ export default function Processing() {
             <h3 className="font-semibold text-cyan-700">ナレッジベース管理</h3>
           </div>
           
-          <Tabs defaultValue="knowledge" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="knowledge">テキストナレッジ</TabsTrigger>
-              <TabsTrigger value="tech-docs">技術文書</TabsTrigger>
-            </TabsList>
-            <TabsContent value="knowledge">
-              <KnowledgeUploader />
-            </TabsContent>
-            <TabsContent value="tech-docs">
-              <TechSupportUploader />
-            </TabsContent>
-          </Tabs>
+          {/* タブを削除し、技術文書アップローダーを直接表示 */}
+          <TechSupportUploader />
         </div>
       </div>
     </div>

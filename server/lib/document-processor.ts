@@ -132,16 +132,12 @@ export async function extractPptxText(filePath: string): Promise<string> {
     const rootDir = process.cwd();
     
     // ======= パス構造の修正 =======
-    // public/uploads ディレクトリを明確に定義（最終的な公開パス）
+    // 公開ディレクトリに統一（public/uploads）
     const publicDir = path.join(rootDir, 'public');
     const publicUploadsDir = path.join(publicDir, 'uploads');
     const publicImagesDir = path.join(publicUploadsDir, 'images');
     const publicJsonDir = path.join(publicUploadsDir, 'json');
-    
-    // 通常のアップロードディレクトリも定義（サーバー内部用）
-    const uploadsDir = path.join(rootDir, 'uploads');
-    const imagesDir = path.join(uploadsDir, 'images');
-    const jsonDir = path.join(uploadsDir, 'json');
+    const publicDataDir = path.join(publicUploadsDir, 'data');
     
     // ディレクトリ構造のログ
     console.log('=== ディレクトリ構造と対応するURLパス ===');
@@ -162,8 +158,7 @@ export async function extractPptxText(filePath: string): Promise<string> {
     // 必要なディレクトリをすべて作成
     console.log('\n=== ディレクトリ作成 ===');
     [
-      publicDir, publicUploadsDir, publicImagesDir, publicJsonDir,
-      uploadsDir, imagesDir, jsonDir
+      publicDir, publicUploadsDir, publicImagesDir, publicJsonDir, publicDataDir
     ].forEach(dir => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -263,9 +258,9 @@ export async function extractPptxText(filePath: string): Promise<string> {
           </text>
         </svg>`;
         
-        // SVGファイルとPNGファイルを保存
-        const svgFilePath = path.join(imagesDir, `${slideFileName}.svg`);
-        const pngFilePath = path.join(imagesDir, `${slideFileName}.png`);
+        // SVGファイルとPNGファイルを直接公開ディレクトリに保存
+        const svgFilePath = path.join(publicImagesDir, `${slideFileName}.svg`);
+        const pngFilePath = path.join(publicImagesDir, `${slideFileName}.png`);
         fs.writeFileSync(svgFilePath, svgContent);
         
         // SVGからPNGへの変換を行う
@@ -287,13 +282,8 @@ export async function extractPptxText(filePath: string): Promise<string> {
           console.log(`変換に失敗したため、SVGコンテンツをPNGとして保存: ${pngFilePath}`);
         }
         
-        // 公開ディレクトリにもコピー
-        const publicSvgPath = path.join(publicImagesDir, `${slideFileName}.svg`);
-        const publicPngPath = path.join(publicImagesDir, `${slideFileName}.png`);
-        fs.copyFileSync(svgFilePath, publicSvgPath);
-        fs.copyFileSync(pngFilePath, publicPngPath);
-        console.log(`公開SVGをコピー: ${publicSvgPath}`);
-        console.log(`公開PNGをコピー: ${publicPngPath}`);
+        // ファイルは既に公開ディレクトリに直接保存済み
+        console.log(`SVGファイルとPNGファイルは公開ディレクトリに保存済み: ${svgFilePath}`);
         
         console.log(`スライド画像を保存: ${slideFileName}`);
         
@@ -316,14 +306,10 @@ export async function extractPptxText(filePath: string): Promise<string> {
       // テキスト内容を設定
       slideInfoData.textContent = extractedText;
       
-      // メタデータをJSON形式で保存
-      const metadataFilePath = path.join(jsonDir, `${slideImageBaseName}_metadata.json`);
-      fs.writeFileSync(metadataFilePath, JSON.stringify(slideInfoData, null, 2));
-      console.log(`メタデータJSONを保存: ${metadataFilePath}`);
-      
-      // 公開ディレクトリにもメタデータをコピー
-      const publicMetadataPath = path.join(publicImagesDir, `${slideImageBaseName}_metadata.json`);
-      fs.copyFileSync(metadataFilePath, publicMetadataPath);
+      // メタデータをJSON形式で公開ディレクトリに直接保存
+      const publicMetadataPath = path.join(publicJsonDir, `${slideImageBaseName}_metadata.json`);
+      fs.writeFileSync(publicMetadataPath, JSON.stringify(slideInfoData, null, 2));
+      console.log(`メタデータJSONを公開ディレクトリに保存: ${publicMetadataPath}`);
       
     } catch (pptxErr) {
       console.error('PowerPointパース中にエラー:', pptxErr);
