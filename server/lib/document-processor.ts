@@ -342,9 +342,16 @@ export async function extractPptxText(filePath: string): Promise<string> {
     
     const vehicleData = extractedData[vehicleDataKey] as any[];
     
-    // スライド情報を明確に宣言するため、変数を定義
-    const slides = typeof slideInfoData !== 'undefined' && slideInfoData && slideInfoData.slides ? 
-      slideInfoData.slides : [];
+    // スライド情報を取得
+    let slides: any[] = [];
+    try {
+      // スライド情報があれば使用
+      if (typeof slideInfoData !== 'undefined' && slideInfoData && Array.isArray(slideInfoData.slides)) {
+        slides = slideInfoData.slides;
+      }
+    } catch (err) {
+      console.error('スライド情報取得エラー:', err);
+    }
     
     console.log(`スライド数: ${slides.length}`);
     

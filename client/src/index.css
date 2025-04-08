@@ -327,6 +327,61 @@ button:disabled {
   }
 }
 
+/* フュージョン検索結果のレスポンシブスタイル */
+.fuse-result-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 横スクロール検索結果：縦画面モード */
+@media screen and (orientation: portrait) {
+  .fuse-result-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .fuse-result-item {
+    min-width: 80vw;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+}
+
+/* 横画面モード用のスタイル */
+@media screen and (orientation: landscape) {
+  .fuse-landscape-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .fuse-result-item {
+    margin-right: 10px;
+    width: calc(50% - 10px);
+    min-width: 300px;
+  }
+  
+  .fuse-landscape {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+  }
+  
+  .fuse-image-landscape {
+    flex: 0 0 50%;
+  }
+  
+  .fuse-content-landscape {
+    flex: 0 0 50%;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+}
+
 /* 検索結果のアニメーション効果 */
 .search-results-animation {
   animation: slideIn 0.3s ease-in-out;
@@ -362,7 +417,8 @@ button:disabled {
 }
 
 /* 画像とコンテンツをより見やすくする */
-.search-results-container img:hover {
+.search-results-container img:hover,
+.fuse-result-container img:hover {
   opacity: 0.9;
   cursor: pointer;
   transition: all 0.2s ease;
