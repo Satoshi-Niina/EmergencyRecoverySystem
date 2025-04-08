@@ -63,8 +63,28 @@ async function loadImageSearchData() {
       console.error("画像検索データの初期化に失敗:", initError);
     }
     
+    // それでも失敗した場合は直接JSONファイルを読み込む（エラーハンドリング用）
+    console.log("直接JSONからの読み込みを試みます");
+    try {
+      const directFetch = await fetch('/uploads/data/image_search_data.json', { 
+        cache: 'no-store',  // キャッシュを無視
+        headers: { 'pragma': 'no-cache', 'cache-control': 'no-cache' }
+      });
+      if (directFetch.ok) {
+        const directData = await directFetch.json();
+        if (Array.isArray(directData) && directData.length > 0) {
+          console.log(`直接JSONから画像検索データを読み込みました: ${directData.length}件`);
+          imageSearchData = directData;
+          return;
+        }
+      }
+    } catch (directError) {
+      console.error("直接JSONからの読み込みに失敗:", directError);
+    }
+    
     // それでも失敗した場合はフォールバックデータ
     console.log("フォールバック画像検索データを使用します");
+    // データ構造は実際のJSONファイルと同じ構造を保持
     imageSearchData = [
       {
         id: "engine_001",
@@ -125,16 +145,18 @@ window.addEventListener('image-search-data-updated', () => {
 const fuseOptions = {
   includeScore: true,
   keys: [
-    { name: 'title', weight: 0.3 },
-    { name: 'category', weight: 0.2 },
+    { name: 'title', weight: 0.4 },
+    { name: 'category', weight: 0.3 },
     { name: 'description', weight: 0.3 },
-    { name: 'keywords', weight: 0.6 }, // キーワードの重みを強化
+    { name: 'keywords', weight: 0.7 }, // キーワードの重みをさらに強化
     { name: 'metadata', weight: 0.2 }, // メタデータも検索対象に
     { name: 'details', weight: 0.4 }
   ],
-  threshold: 0.4, // 高いほど広く検索
+  threshold: 0.5, // 閾値を上げることで、より広く検索結果を取得
   ignoreLocation: true, // 単語の位置を無視して検索
   useExtendedSearch: true, // 拡張検索モード
+  minMatchCharLength: 2, // 最低2文字一致から検索対象に
+  distance: 300, // 単語間の距離制限を緩める（より広く検索）
 };
 
 // 画像検索用のFuseインスタンスを作成するヘルパー関数

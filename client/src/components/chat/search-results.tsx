@@ -43,105 +43,75 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
 
   return (
     <div className={containerClass}>
-      <div className="sticky top-0 bg-white p-3 shadow-sm z-10 border-b border-blue-100 mb-3">
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-lg text-blue-700">検索画像表示</h2>
-          <Button variant="ghost" size="icon" onClick={onClear} className="text-blue-600 hover:bg-blue-100 rounded-full">
-            <X className="h-5 w-5" />
-          </Button>
+      <div className="sticky top-0 bg-blue-600 p-3 shadow-sm z-10 border-b border-blue-700 mb-3">
+        <div className="flex justify-center items-center">
+          <h2 className="font-bold text-lg text-white">検索画像表示</h2>
         </div>
       </div>
       
-      {/* 縦画面時はスクロール可能なコンテナ、横画面時はフレックスレイアウト */}
-      <div className={`fuse-result-container ${isLandscape ? 'fuse-landscape-wrapper' : ''}`}>
+      {/* サムネイルグリッド表示 */}
+      <div className="grid grid-cols-2 gap-4 p-2">
         {results.map((result) => (
           <div 
             key={result.id} 
-            className={`fuse-result-item rounded-lg border border-blue-200 overflow-hidden bg-white shadow-sm mb-4 ${isLandscape ? '' : 'mr-4'}`}
+            className="thumbnail-item rounded-lg overflow-hidden bg-white shadow-sm"
+            onClick={() => {
+              // イメージプレビューモーダルを表示
+              window.dispatchEvent(new CustomEvent('preview-image', { 
+                detail: { 
+                  url: result.url,
+                  pngFallbackUrl: result.pngFallbackUrl,
+                  title: result.title,
+                  content: result.content,
+                  metadata_json: result.metadata_json,
+                  all_slides: result.all_slides
+                } 
+              }));
+            }}
           >
-            <div className={`fuse-wrapper ${isLandscape ? 'fuse-landscape' : ''}`}>
-              <div className={`fuse-image-container ${isLandscape ? 'fuse-image-landscape' : ''}`}>
-                {result.url ? (
-                  // 画像結果 (SVG画像もサポート)
-                  <img 
-                    src={result.url} 
-                    alt={result.title || "保守用車情報"} 
-                    className={`w-full ${isLandscape ? 'h-52' : 'h-40'} object-cover border-b border-blue-100`}
-                    // SVG画像が読み込めない場合はPNG代替を使用
-                    onError={(e) => {
-                      const imgElement = e.currentTarget;
-                      if (result.pngFallbackUrl && result.url !== result.pngFallbackUrl) {
-                        console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
-                        imgElement.src = result.pngFallbackUrl;
-                      }
-                    }}
-                    onClick={() => {
-                      // イメージプレビューモーダルを表示
-                      window.dispatchEvent(new CustomEvent('preview-image', { 
-                        detail: { 
-                          url: result.url,
-                          pngFallbackUrl: result.pngFallbackUrl,
-                          metadata_json: result.metadata_json,
-                          all_slides: result.all_slides
-                        } 
-                      }));
-                    }}
-                  />
-                ) : result.type === 'ai-response' ? (
-                  // AI応答
-                  <div className="p-4 bg-blue-50 border-b border-blue-100">
-                    <div className="flex items-center mb-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2">
-                        <span className="material-icons text-white text-sm">smart_toy</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-blue-700">{result.title}</h3>
-                        <p className="text-xs text-blue-500">
-                          {result.timestamp && new Date(result.timestamp).toLocaleTimeString('ja-JP', {hour: '2-digit', minute:'2-digit'})}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm mt-2">
-                      <p className="text-blue-700 whitespace-pre-wrap">{result.content}</p>
-                    </div>
-                  </div>
-                ) : (
-                  // その他のドキュメント
-                  <div className="h-40 bg-blue-50 flex items-center justify-center border-b border-blue-100">
-                    {result.type === 'text' ? (
-                      <MessageCircle className="h-12 w-12 text-blue-300" />
-                    ) : (
-                      <FileText className="h-12 w-12 text-blue-300" />
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              {/* 画像やAI応答以外のコンテンツの場合のみ表示 */}
-              {result.type !== 'ai-response' && (
-                <div className={`p-3 fuse-content-container ${isLandscape ? 'fuse-content-landscape' : ''}`}>
-                  <h3 className="font-medium text-md text-blue-800">{result.title || "保守用車情報"}</h3>
-                  <p className="text-xs text-blue-400 mt-1">
-                    {result.type?.toUpperCase()}
-                    {result.relevance && ` • 関連度 ${result.relevance.toFixed(0)}%`}
-                  </p>
-                  
-                  {/* コンテンツがある場合は表示 */}
-                  {result.content && (
-                    <p className="text-xs text-blue-700 mt-2 mb-2 bg-blue-50 p-2 rounded">{result.content}</p>
-                  )}
-                  
-                  <div className="mt-2 flex">
-                    <Button className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full mr-2" size="sm">
-                      詳細を見る
-                    </Button>
-                    <Button className="text-xs border border-blue-500 text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-full" size="sm" variant="outline">
-                      共有
-                    </Button>
-                  </div>
+            {result.url ? (
+              // 画像サムネイル (SVG画像もサポート)
+              <div className="relative aspect-square">
+                <img 
+                  src={result.url} 
+                  alt={result.title || "保守用車情報"} 
+                  className="w-full h-full object-cover"
+                  // SVG画像が読み込めない場合はPNG代替を使用
+                  onError={(e) => {
+                    const imgElement = e.currentTarget;
+                    if (result.pngFallbackUrl && result.url !== result.pngFallbackUrl) {
+                      console.log('SVG読み込みエラー、PNG代替に切り替え:', result.url, '->', result.pngFallbackUrl);
+                      imgElement.src = result.pngFallbackUrl;
+                    }
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-blue-700 bg-opacity-80 p-1 text-center">
+                  <p className="text-xs font-medium text-white truncate">{result.title || "保守用車情報"}</p>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : result.type === 'ai-response' ? (
+              // AI応答サムネイル
+              <div className="h-full bg-blue-50 flex items-center justify-center p-2 aspect-square">
+                <div className="flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mb-2">
+                    <span className="material-icons text-white text-sm">smart_toy</span>
+                  </div>
+                  <p className="text-xs text-blue-700 truncate text-center">{result.title || "AI応答"}</p>
+                </div>
+              </div>
+            ) : (
+              // その他のドキュメントサムネイル
+              <div className="h-full bg-blue-50 flex items-center justify-center p-2 aspect-square">
+                <div className="flex flex-col items-center">
+                  {result.type === 'text' ? (
+                    <MessageCircle className="h-10 w-10 text-blue-400 mb-2" />
+                  ) : (
+                    <FileText className="h-10 w-10 text-blue-400 mb-2" />
+                  )}
+                  <p className="text-xs text-blue-700 truncate text-center">{result.title || "ドキュメント"}</p>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

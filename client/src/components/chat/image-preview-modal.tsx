@@ -67,6 +67,9 @@ export default function ImagePreviewModal() {
 
   // PNG代替URL用の状態変数
   const [pngFallbackUrl, setPngFallbackUrl] = useState<string | null>(null);
+  // タイトルとコンテンツの状態変数を追加
+  const [title, setTitle] = useState<string>("画像プレビュー");
+  const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
     // Listen for preview-image event
@@ -84,6 +87,20 @@ export default function ImagePreviewModal() {
           console.log('PNG代替URL設定:', customEvent.detail.pngFallbackUrl);
         } else {
           setPngFallbackUrl(null);
+        }
+        
+        // タイトルを設定
+        if (customEvent.detail.title) {
+          setTitle(customEvent.detail.title);
+        } else {
+          setTitle("画像プレビュー");
+        }
+        
+        // コンテンツ（説明文）を設定
+        if (customEvent.detail.content) {
+          setContent(customEvent.detail.content);
+        } else {
+          setContent(null);
         }
         
         // メタデータJSONへのパスを設定
@@ -108,7 +125,10 @@ export default function ImagePreviewModal() {
           setCurrentSlideIndex(0);
         }
         
+        // モーダルを必ず表示する
         setIsOpen(true);
+        // 画像の説明がある場合は情報パネルを自動的に表示
+        setShowInfo(!!customEvent.detail.content);
       }
     };
     
@@ -137,7 +157,7 @@ export default function ImagePreviewModal() {
       <DialogContent className="max-w-5xl bg-black bg-opacity-90 border border-blue-400 flex flex-col items-center justify-center p-0 rounded-xl">
         <div className="w-full flex justify-between items-center p-2 bg-blue-700 text-white">
           <h3 className="text-sm font-medium ml-2">
-            {metadataJson?.metadata?.タイトル || "画像プレビュー"} 
+            {metadataJson?.metadata?.タイトル || title} 
             {allSlides.length > 1 && ` - スライド ${currentSlideIndex + 1}/${allSlides.length}`}
           </h3>
           <div className="flex items-center">
@@ -208,7 +228,14 @@ export default function ImagePreviewModal() {
               </TabsList>
               
               <TabsContent value="slide">
-                {currentSlideInfo ? (
+                {content ? (
+                  <div className="text-sm mb-3">
+                    <h4 className="font-medium mb-2 text-blue-200">{title}</h4>
+                    <div className="bg-gray-800 p-3 rounded border border-blue-800 mb-3">
+                      <p className="text-gray-200 whitespace-pre-wrap">{content}</p>
+                    </div>
+                  </div>
+                ) : currentSlideInfo ? (
                   <div className="text-sm">
                     <h4 className="font-medium mb-1">
                       {currentSlideInfo.タイトル || `スライド ${currentSlideInfo.スライド番号}`}

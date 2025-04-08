@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
-  const { sendMessage, isLoading, startRecording, stopRecording, isRecording, recordedText, selectedText } = useChat();
+  const { sendMessage, isLoading, startRecording, stopRecording, isRecording, recordedText, selectedText, searchBySelectedText } = useChat();
   const isMobile = useIsMobile();
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,9 +35,38 @@ export default function MessageInput() {
     const textToSend = recordedText.trim() || message.trim();
     if (!textToSend || isLoading) return;
     
+    // メッセージを送信
     await sendMessage(textToSend);
+    
+    // メッセージと同じテキストで画像検索を自動実行
+    try {
+      // 送信したメッセージを使って画像検索を実行
+      await searchBySelectedText(textToSend);
+      
+      // モバイルで検索結果パネルを表示
+      if (isMobile) {
+        const slider = document.getElementById('mobile-search-slider');
+        if (slider) {
+          slider.classList.add('search-panel-visible');
+          const orientation = window.matchMedia('(orientation: landscape)').matches ? 'landscape' : 'portrait';
+          
+          if (orientation === 'landscape') {
+            // 横向きの場合は右から表示
+            slider.style.transform = 'translateX(0)';
+          } else {
+            // 縦向きの場合は下から表示
+            slider.style.transform = 'translateY(0)';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('自動画像検索エラー:', error);
+    }
+    
+    // 入力欄をクリア
     setMessage("");
     
+    // フォーカス処理
     if (isMobile && textareaRef.current) {
       textareaRef.current.focus();
       // モバイルでキーボードが消えないように少し遅延

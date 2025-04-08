@@ -319,35 +319,76 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setSearching(true);
       
-      // テキスト内にエンジン関連の単語が含まれているか確認
+      // テキスト内に特定のキーワードが含まれているか確認（検索の補助用）
       const engineRelatedWords = ['エンジン', 'engine', '故障', '停止', '冷却', '出力'];
+      const frameRelatedWords = ['フレーム', '車体', '構造', 'シャーシ', '台車', '車両'];
+      const cabinRelatedWords = ['運転室', 'キャビン', '操作', 'コックピット', '計器', 'メーター'];
+      
+      // キーワードタイプの判定（複数カテゴリに対応）
       const hasEngineKeyword = engineRelatedWords.some(word => text.toLowerCase().includes(word.toLowerCase()));
+      const hasFrameKeyword = frameRelatedWords.some(word => text.toLowerCase().includes(word.toLowerCase()));
+      const hasCabinKeyword = cabinRelatedWords.some(word => text.toLowerCase().includes(word.toLowerCase()));
       
       console.log("検索キーワード:", text);
+      console.log("キーワードタイプ:", 
+                  hasEngineKeyword ? "エンジン関連あり" : "", 
+                  hasFrameKeyword ? "車体関連あり" : "",
+                  hasCabinKeyword ? "運転室関連あり" : "");
       
       // 検索結果を取得する
       const results = await ImageSearch.searchByText(text);
       
       console.log("検索結果数:", results.length);
       
-      // 検索結果がないが「エンジン」に関するキーワードが含まれる場合、
-      // 関連する画像を検索結果に追加する
-      if (results.length === 0 && hasEngineKeyword) {
-        console.log("エンジン関連キーワードを検出しました。関連画像を表示します。");
+      // 検索結果がない場合にキーワードに応じた画像を提示
+      if (results.length === 0) {
+        if (hasEngineKeyword) {
+          console.log("エンジン関連キーワードを検出しました。関連画像を表示します。");
+          
+          // エンジン関連の画像を表示
+          results.push({
+            id: "engine_related",
+            title: "保守用車のエンジン",
+            type: "svg-image",
+            url: "/uploads/images/engine_001.svg",
+            pngFallbackUrl: "/uploads/images/engine_001.png",
+            content: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用しています。エンジン故障時は点検が必要です。",
+            relevance: 80
+          });
+        }
         
-        // デフォルトでエンジン関連の画像を表示（SVG形式で、PNG代替も設定）
-        results.push({
-          id: "engine_related",
-          title: "保守用車のエンジン",
-          type: "svg-image",
-          url: "/uploads/images/engine_001.svg",
-          pngFallbackUrl: "/uploads/images/engine_001.png", // PNG代替を追加
-          content: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用しています。エンジン故障時は点検が必要です。",
-          relevance: 80
-        });
-      } else if (results.length === 0 || results.length < 2) {
-        // どのキーワードにもマッチしない場合、または結果が1件しかない場合にデフォルト画像を追加
-        console.log("検索結果が少ないため、デフォルト画像を追加します");
+        if (hasFrameKeyword) {
+          console.log("車体関連キーワードを検出しました。関連画像を表示します。");
+          
+          // 車体関連の画像を表示
+          results.push({
+            id: "frame_related",
+            title: "車体フレーム構造",
+            type: "svg-image",
+            url: "/uploads/images/frame_001.svg",
+            pngFallbackUrl: "/uploads/images/frame_001.png",
+            content: "保守用車の車体フレーム構造は、強度と軽量性を両立した設計です。各部材の点検は定期的に行いましょう。",
+            relevance: 80
+          });
+        }
+        
+        if (hasCabinKeyword) {
+          console.log("運転室関連キーワードを検出しました。関連画像を表示します。");
+          
+          // 運転室関連の画像を表示
+          results.push({
+            id: "cabin_related",
+            title: "運転キャビン配置図",
+            type: "svg-image",
+            url: "/uploads/images/cabin_001.svg",
+            pngFallbackUrl: "/uploads/images/cabin_001.png",
+            content: "運転キャビン内の各操作機器は人間工学に基づいて配置されています。定期的に各機器の点検を行いましょう。",
+            relevance: 80
+          });
+        }
+      } else if (results.length < 2) {
+        // 検索結果が1件しかない場合、もう1件追加（ただしカテゴリに応じて）
+        console.log("検索結果が少ないため、追加の画像を表示します");
         
         // 一般的な保守用車の画像を追加
         results.push({
