@@ -356,8 +356,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             id: "engine_related",
             title: "保守用車のエンジン",
             type: "svg-image",
-            url: "/uploads/images/engine_001.svg",
-            pngFallbackUrl: "/uploads/images/engine_001.png",
+            url: "/uploads/images/mc_1744105287766_001.svg",
+            pngFallbackUrl: "/uploads/images/mc_1744105287766_001.png",
             content: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用しています。エンジン故障時は点検が必要です。",
             relevance: 80
           });
@@ -371,8 +371,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             id: "frame_related",
             title: "車体フレーム構造",
             type: "svg-image",
-            url: "/uploads/images/frame_001.svg",
-            pngFallbackUrl: "/uploads/images/frame_001.png",
+            url: "/uploads/images/mc_1744105287766_003.svg",
+            pngFallbackUrl: "/uploads/images/mc_1744105287766_003.png",
             content: "保守用車の車体フレーム構造は、強度と軽量性を両立した設計です。各部材の点検は定期的に行いましょう。",
             relevance: 80
           });
@@ -386,8 +386,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             id: "cabin_related",
             title: "運転キャビン配置図",
             type: "svg-image",
-            url: "/uploads/images/cabin_001.svg",
-            pngFallbackUrl: "/uploads/images/cabin_001.png",
+            url: "/uploads/images/mc_1744105287766_004.svg",
+            pngFallbackUrl: "/uploads/images/mc_1744105287766_004.png",
             content: "運転キャビン内の各操作機器は人間工学に基づいて配置されています。定期的に各機器の点検を行いましょう。",
             relevance: 80
           });
