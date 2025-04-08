@@ -26,10 +26,8 @@ export default function SearchResults({ results, onClear }: SearchResultsProps) 
   const orientation = useOrientation();
   const { isMobile } = useIsMobile();
   
-  // 検索結果がない場合は何も表示しない
-  if (results.length === 0) {
-    return null;
-  }
+  // 検索結果がない場合も空のパネルを表示する
+  // 検索結果の有無に関わらず、常にヘッダーだけは表示する
 
   // デバイスに応じたレイアウトクラス
   // iPhoneの場合は特別なスタイルを適用

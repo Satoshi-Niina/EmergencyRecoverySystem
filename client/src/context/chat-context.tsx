@@ -220,6 +220,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTempMedia([]);
       
       setRecordedText('');
+      
+      // メッセージ送信後に自動的に画像検索を実行
+      searchBySelectedText(content);
     } catch (error) {
       toast({
         title: 'メッセージ送信エラー',
@@ -342,17 +345,30 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           content: "軌道モータカーのエンジンは高トルクが出せるディーゼルエンジンを使用しています。エンジン故障時は点検が必要です。",
           relevance: 80
         });
-      } else if (results.length === 0) {
-        // どのキーワードにもマッチしない場合のデフォルト画像
-        console.log("デフォルト画像を表示します");
+      } else if (results.length === 0 || results.length < 2) {
+        // どのキーワードにもマッチしない場合、または結果が1件しかない場合にデフォルト画像を追加
+        console.log("検索結果が少ないため、デフォルト画像を追加します");
+        
+        // 一般的な保守用車の画像を追加
         results.push({
           id: "default_help",
           title: "保守用車サポート",
           type: "svg-image",
-          url: "/uploads/images/cabin_001.svg",
-          pngFallbackUrl: "/uploads/images/cabin_001.png", // PNG代替を追加
-          content: "保守用車のサポート情報です。より具体的なキーワードで検索してください。",
+          url: "/uploads/images/mc_1744105287766_001.svg",
+          pngFallbackUrl: "/uploads/images/mc_1744105287766_001.png", // PNG代替を追加
+          content: "保守用車の基本情報です。具体的なキーワードで検索するとより詳細な情報が表示されます。",
           relevance: 60
+        });
+        
+        // 2枚目のデフォルト画像も追加
+        results.push({
+          id: "default_help_2",
+          title: "保守車両点検マニュアル",
+          type: "svg-image",
+          url: "/uploads/images/mc_1744105287766_002.svg",
+          pngFallbackUrl: "/uploads/images/mc_1744105287766_002.png", // PNG代替を追加
+          content: "保守用車両の点検手順と安全確認事項です。緊急時は必ず安全を確保してください。",
+          relevance: 55
         });
       }
       
