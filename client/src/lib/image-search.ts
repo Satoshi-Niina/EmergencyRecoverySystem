@@ -108,8 +108,16 @@ loadMaintenanceVehicleData();
 // Fuse.js 検索設定
 const fuseOptions = {
   includeScore: true,
-  keys: ['title', 'category', 'description', 'keywords', 'details'],
-  threshold: 0.4
+  keys: [
+    { name: 'title', weight: 0.3 },
+    { name: 'category', weight: 0.2 },
+    { name: 'description', weight: 0.3 },
+    { name: 'keywords', weight: 0.5 },
+    { name: 'details', weight: 0.4 }
+  ],
+  threshold: 0.4, // 高いほど広く検索
+  ignoreLocation: true, // 単語の位置を無視して検索
+  useExtendedSearch: true, // 拡張検索モード
 };
 
 // データが読み込まれたらFuseインスタンスを作成するヘルパー関数
@@ -124,11 +132,21 @@ function getFuseInstance() {
  */
 export const searchByText = async (text: string): Promise<any[]> => {
   try {
+    console.log('画像検索開始:', text);
+    
+    // 最初にデータが存在することを確認
+    if (maintenanceVehicleData.length === 0) {
+      console.log('データが読み込まれていないため再ロード');
+      await loadMaintenanceVehicleData();
+    }
+    
     // クエリの最適化を試みる
     try {
       const response = await apiRequest('POST', '/api/optimize-search-query', { text });
       const data = await response.json();
-      text = data.optimizedQuery || text;
+      const optimizedQuery = data.optimizedQuery || text;
+      console.log('検索クエリを最適化:', text, '->', optimizedQuery);
+      text = optimizedQuery;
     } catch (error) {
       console.error('Error optimizing search query:', error);
       // 最適化に失敗した場合は元のテキストを使用
@@ -136,7 +154,35 @@ export const searchByText = async (text: string): Promise<any[]> => {
     
     // Fuseインスタンスを取得して検索を実行
     const fuse = getFuseInstance();
-    const searchResults = fuse.search(text);
+    
+    // キーワードを分割して検索
+    const keywords = text.split(/\s+/).filter(k => k.length > 0);
+    let searchResults: Fuse.FuseResult<any>[] = [];
+    
+    if (keywords.length > 1) {
+      console.log(`複数キーワード検索: ${keywords.join(', ')}`);
+      // 複数のキーワードがある場合、各キーワードで検索
+      for (const keyword of keywords) {
+        const results = fuse.search(keyword);
+        searchResults.push(...results);
+      }
+      
+      // 重複を除去（IDをキーとして使用）
+      const uniqueResults = new Map<string | number, Fuse.FuseResult<any>>();
+      searchResults.forEach(result => {
+        const existingResult = uniqueResults.get(result.item.id);
+        if (!existingResult || (existingResult.score && result.score && result.score < existingResult.score)) {
+          uniqueResults.set(result.item.id, result);
+        }
+      });
+      
+      searchResults = Array.from(uniqueResults.values());
+    } else {
+      console.log(`単一キーワード検索: ${text}`);
+      searchResults = fuse.search(text);
+    }
+    
+    console.log(`検索結果: ${searchResults.length}件見つかりました`);
     
     // 検索結果を必要な形式にマッピング
     return searchResults.map(result => {

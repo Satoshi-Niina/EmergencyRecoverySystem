@@ -118,31 +118,47 @@ export async function extractExcelText(filePath: string): Promise<string> {
  */
 export async function extractPptxText(filePath: string): Promise<string> {
   try {
-    const fs = require('fs');
-    const PptxGenJS = require('pptxgenjs');
-    
-    const fileName = path.basename(filePath, path.extname(filePath));
+    const fileName = path.basename(filePath);
+    const fileNameWithoutExt = path.basename(filePath, path.extname(filePath));
     const fileDir = path.dirname(filePath);
     
     console.log(`PowerPoint処理を開始: ${filePath}`);
+    console.log(`ファイル名: ${fileName}`);
+    console.log(`拡張子なしファイル名: ${fileNameWithoutExt}`);
+    console.log(`ディレクトリ: ${fileDir}`);
     
     // アップロードディレクトリを確保（絶対パスを使用）
     const rootDir = process.cwd();
-    const imagesOutputDir = path.join(rootDir, 'uploads/images');
-    const publicImagesDir = path.join(rootDir, 'public/uploads/images');
-    const jsonDir = path.join(rootDir, 'uploads/json');
     
-    // 必要なディレクトリを作成
-    [imagesOutputDir, publicImagesDir, jsonDir].forEach(dir => {
+    // より明確なパス構造で作成
+    const publicDir = path.join(rootDir, 'public');
+    const uploadsDir = path.join(publicDir, 'uploads');
+    const imagesDir = path.join(uploadsDir, 'images');
+    const jsonDir = path.join(uploadsDir, 'json');
+    
+    // 実際に存在確認
+    console.log('ディレクトリ構造と存在確認:');
+    console.log(`- ルートディレクトリ: ${rootDir}, 存在:`, fs.existsSync(rootDir));
+    console.log(`- 公開ディレクトリ: ${publicDir}, 存在:`, fs.existsSync(publicDir));
+    console.log(`- アップロードディレクトリ: ${uploadsDir}, 存在:`, fs.existsSync(uploadsDir));
+    console.log(`- 画像ディレクトリ: ${imagesDir}, 存在:`, fs.existsSync(imagesDir));
+    console.log(`- JSONディレクトリ: ${jsonDir}, 存在:`, fs.existsSync(jsonDir));
+    
+    // 必要なディレクトリをすべて作成
+    [publicDir, uploadsDir, imagesDir, jsonDir].forEach(dir => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
+        console.log(`ディレクトリを作成しました: ${dir}`);
+      } else {
+        console.log(`ディレクトリは既に存在します: ${dir}`);
       }
     });
     
     // ファイル名にタイムスタンプを追加して一意性を確保
     const timestamp = Date.now();
-    const safeFileName = fileName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const safeFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const slideImageBaseName = `${safeFileName}_${timestamp}`;
+    console.log(`生成するファイル名のベース: ${slideImageBaseName}`);
     
     console.log(`生成するファイル名のベース: ${slideImageBaseName}`);
     
@@ -150,9 +166,22 @@ export async function extractPptxText(filePath: string): Promise<string> {
     let extractedText = '';
     const fileBuffer = fs.readFileSync(filePath);
     
+    // スライド情報データ変数を関数スコープで定義
+    let slideInfoData: {
+      metadata: {
+        タイトル: string;
+        作成者: string;
+        作成日: string;
+        修正日: string;
+        説明: string;
+      };
+      slides: any[];
+      textContent: string;
+    };
+    
     try {
       // メタデータを生成 (ユーザー提供の例に合わせた形式)
-      const slideInfoData = {
+      slideInfoData = {
         metadata: {
           タイトル: fileName,
           作成者: "保守用車システム",
@@ -160,8 +189,8 @@ export async function extractPptxText(filePath: string): Promise<string> {
           修正日: new Date().toISOString(),
           説明: "保守用車マニュアル情報"
         },
-        slides: [] as any[],
-        textContent: '' as string
+        slides: [],
+        textContent: ''
       };
       
       // 実際のスライド画像生成（実際の製品環境では実際のスライド内容を使用）
@@ -310,10 +339,14 @@ export async function extractPptxText(filePath: string): Promise<string> {
     
     const vehicleData = extractedData[vehicleDataKey] as any[];
     
-    // 新規データ - 実際のスライド情報からデータを構築
-    const slideInfoArray = slideInfoData && slideInfoData.slides ? slideInfoData.slides : [];
+    // スライド情報を明確に宣言するため、変数を定義
+    const slides = typeof slideInfoData !== 'undefined' && slideInfoData && slideInfoData.slides ? 
+      slideInfoData.slides : [];
+    
+    console.log(`スライド数: ${slides.length}`);
+    
     // 日本語形式のJSONフィールドからの画像パス取得
-    const allSlidesUrls = slideInfoArray.map((slide: any) => {
+    const allSlidesUrls = slides.map((slide: any) => {
       // 日本語形式のJSONの場合
       if (slide.画像テキスト && Array.isArray(slide.画像テキスト) && slide.画像テキスト.length > 0) {
         return slide.画像テキスト[0].画像パス;
@@ -324,6 +357,9 @@ export async function extractPptxText(filePath: string): Promise<string> {
       }
       return null;
     }).filter(Boolean);
+    
+    console.log(`取得したスライド画像URL: ${allSlidesUrls.length}件`);
+    console.log(`スライド画像URL一覧:`, allSlidesUrls);
     
     const newVehicleData = {
       id: slideImageBaseName,
