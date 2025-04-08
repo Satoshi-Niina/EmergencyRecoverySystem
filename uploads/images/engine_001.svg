@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f5f5f7" />
+  <text x="400" y="50" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">エンジン基本構造図</text>
+  <rect x="200" y="150" width="400" height="300" rx="10" fill="#ccc" stroke="#333" stroke-width="3" />
+  <rect x="200" y="150" width="400" height="60" rx="5" fill="#aaa" stroke="#333" stroke-width="2" />
+  <text x="400" y="190" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">シリンダーヘッド</text>
+  <text x="400" y="300" font-family="Arial" font-size="18" text-anchor="middle" fill="#333">エンジンブロック</text>
+  <path d="M200,180 L150,160 L150,200 L200,180" fill="#8cc" stroke="#333" stroke-width="2" />
+  <text x="120" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">吸気</text>
+  <path d="M600,180 L650,160 L650,200 L600,180" fill="#c88" stroke="#333" stroke-width="2" />
+  <text x="680" y="190" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">排気</text>
+  <ellipse cx="400" cy="500" rx="180" ry="20" fill="#999" stroke="#333" stroke-width="2" />
+  <text x="400" y="505" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">クランクシャフト</text>
+  <line x1="400" y1="350" x2="400" y2="485" stroke="#333" stroke-width="4" />
+  <text x="370" y="400" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">コンロッド</text>
+  <rect x="380" y="320" width="40" height="60" rx="5" fill="#bbb" stroke="#333" stroke-width="2" />
+  <text x="440" y="350" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">ピストン</text>
+  <path d="M400,120 L400,150" stroke="#c55" stroke-width="3" />
+  <circle cx="400" cy="120" r="10" fill="#c55" stroke="#333" stroke-width="1" />
+  <text x="460" y="120" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">インジェクター</text>
+  <path d="M200,450 L600,450 L580,500 L220,500 Z" fill="#778" stroke="#333" stroke-width="2" />
+  <text x="400" y="480" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">オイルパン</text>
+  <path d="M220,150 C180,180 180,420 220,450" fill="none" stroke="#333" stroke-width="3" stroke-dasharray="5,5" />
+  <text x="160" y="300" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">タイミングチェーン</text>
+  <text x="400" y="550" font-family="Arial" font-size="12" text-anchor="middle" fill="#555">モデル：400R ディーゼルエンジン</text>
+  <text x="400" y="570" font-family="Arial" font-size="12" text-anchor="middle" fill="#555">出力：95kW/2000rpm</text>
+</svg>

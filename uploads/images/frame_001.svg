@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f5f5f7" />
+  <text x="400" y="50" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">車体フレーム構造</text>
+  
+  <!-- メインフレーム -->
+  <path d="M150,200 L650,200 L650,400 L150,400 Z" fill="none" stroke="#555" stroke-width="5" />
+  
+  <!-- サイドメンバー (左右) -->
+  <rect x="150" y="200" width="500" height="20" fill="#999" stroke="#333" stroke-width="2" />
+  <rect x="150" y="380" width="500" height="20" fill="#999" stroke="#333" stroke-width="2" />
+  <text x="400" y="175" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">サイドメンバー（前）</text>
+  <text x="400" y="420" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">サイドメンバー（後）</text>
+  
+  <!-- クロスメンバー -->
+  <rect x="150" y="250" width="20" height="130" fill="#999" stroke="#333" stroke-width="2" />
+  <rect x="300" y="250" width="20" height="130" fill="#999" stroke="#333" stroke-width="2" />
+  <rect x="450" y="250" width="20" height="130" fill="#999" stroke="#333" stroke-width="2" />
+  <rect x="630" y="250" width="20" height="130" fill="#999" stroke="#333" stroke-width="2" />
+  <text x="160" y="240" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">A</text>
+  <text x="310" y="240" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">B</text>
+  <text x="460" y="240" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">C</text>
+  <text x="640" y="240" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">D</text>
+  
+  <!-- クロスメンバー（補強） -->
+  <line x1="170" y1="250" x2="300" y2="300" stroke="#555" stroke-width="3" />
+  <line x1="170" y1="380" x2="300" y2="330" stroke="#555" stroke-width="3" />
+  <line x1="320" y1="250" x2="450" y2="300" stroke="#555" stroke-width="3" />
+  <line x1="320" y1="380" x2="450" y2="330" stroke="#555" stroke-width="3" />
+  <line x1="470" y1="250" x2="630" y2="300" stroke="#555" stroke-width="3" />
+  <line x1="470" y1="380" x2="630" y2="330" stroke="#555" stroke-width="3" />
+  
+  <!-- エンジンマウント -->
+  <rect x="320" y="280" width="150" height="40" rx="5" fill="#aaa" stroke="#333" stroke-width="2" />
+  <text x="395" y="305" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">エンジンマウント</text>
+  
+  <!-- 車輪位置マーカー -->
+  <circle cx="200" cy="450" r="30" fill="#ddd" stroke="#333" stroke-width="2" />
+  <circle cx="200" cy="450" r="20" fill="#bbb" stroke="#333" stroke-width="1" />
+  <text x="200" y="455" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">LF</text>
+  
+  <circle cx="600" cy="450" r="30" fill="#ddd" stroke="#333" stroke-width="2" />
+  <circle cx="600" cy="450" r="20" fill="#bbb" stroke="#333" stroke-width="1" />
+  <text x="600" y="455" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">RF</text>
+  
+  <circle cx="200" cy="150" r="30" fill="#ddd" stroke="#333" stroke-width="2" />
+  <circle cx="200" cy="150" r="20" fill="#bbb" stroke="#333" stroke-width="1" />
+  <text x="200" y="155" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">LR</text>
+  
+  <circle cx="600" cy="150" r="30" fill="#ddd" stroke="#333" stroke-width="2" />
+  <circle cx="600" cy="150" r="20" fill="#bbb" stroke="#333" stroke-width="1" />
+  <text x="600" y="155" font-family="Arial" font-size="12" text-anchor="middle" fill="#333">RR</text>
+  
+  <!-- キャビン位置マーカー -->
+  <rect x="250" y="220" width="300" height="160" rx="5" fill="none" stroke="#33a" stroke-width="2" stroke-dasharray="5,5" />
+  <text x="400" y="330" font-family="Arial" font-size="18" text-anchor="middle" fill="#33a">キャビン位置</text>
+  
+  <!-- フレーム情報 -->
+  <text x="400" y="520" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">フレーム構造</text>
+  <text x="400" y="540" font-family="Arial" font-size="12" text-anchor="middle" fill="#555">材質：高張力鋼</text>
+  <text x="400" y="560" font-family="Arial" font-size="12" text-anchor="middle" fill="#555">構造：溶接構造</text>
+  <text x="400" y="580" font-family="Arial" font-size="12" text-anchor="middle" fill="#555">特徴：走行振動や応力による捻じれに対応</text>
+</svg>
