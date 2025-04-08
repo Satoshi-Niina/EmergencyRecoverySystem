@@ -370,6 +370,22 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       const vehicleData = extractedData[vehicleDataKey];
       
       // 新規データの追加
+      // メタデータJSONファイル関連の処理
+      // 1. タイムスタンプとファイル名生成
+      const timestamp = Date.now();
+      const prefix = path.basename(filePath, path.extname(filePath)).substring(0, 2).toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+      const metadataFileName = `${prefix}_${timestamp}_metadata.json`;
+      
+      // 2. 公開ディレクトリ内のJSONフォルダ確保
+      const jsonDir = path.join(process.cwd(), 'public', 'uploads', 'json');
+      if (!fs.existsSync(jsonDir)) {
+        fs.mkdirSync(jsonDir, { recursive: true });
+      }
+      
+      // 3. メタデータファイルパス生成
+      const metadataFilePath = path.join(jsonDir, metadataFileName);
+      
+      // 4. 車両データオブジェクト生成（メタデータJSONの参照パスを含む）
       const newData = {
         id: path.basename(filePath, path.extname(filePath)),
         category: fileExt.substring(1).toUpperCase(),
@@ -382,7 +398,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         keywords: [fileExt.substring(1).toUpperCase(), "技術文書", "サポート", file.originalname]
       };
       
-      // JSONメタデータファイルを公開ディレクトリのjsonフォルダに集約して保存
+      // 5. メタデータJSONの内容を準備
       const metadataContent = {
         filename: file.originalname,
         filePath: filePath,
@@ -392,20 +408,6 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         extractedText: extractedText,
         ...metadata
       };
-      
-      // 公開ディレクトリ内のjsonフォルダにメタデータを保存
-      const jsonDir = path.join(process.cwd(), 'public', 'uploads', 'json');
-      
-      // ディレクトリが存在しない場合は作成
-      if (!fs.existsSync(jsonDir)) {
-        fs.mkdirSync(jsonDir, { recursive: true });
-      }
-      
-      // ファイル名を簡略化: 先頭2文字_タイムスタンプ_metadata.json
-      const timestamp = Date.now();
-      const prefix = path.basename(filePath, path.extname(filePath)).substring(0, 2).toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
-      const metadataFileName = `${prefix}_${timestamp}_metadata.json`;
-      const metadataFilePath = path.join(jsonDir, metadataFileName);
       
       fs.writeFileSync(metadataFilePath, JSON.stringify(metadataContent, null, 2));
       console.log(`メタデータJSONを保存: ${metadataFilePath}`);
