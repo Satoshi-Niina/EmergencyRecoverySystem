@@ -351,7 +351,7 @@ export default function Chat() {
         
         {/* モバイル用検索結果スライダー - すべてのモバイル向け表示 (向きに関係なく表示) */}
         {searchResults && searchResults.length > 0 && isMobile && (
-          <div className="fixed bottom-20 right-4 md:hidden mobile-search-button">
+          <div className={`fixed ${orientation === 'landscape' ? 'top-4 right-4' : 'bottom-20 right-4'} md:hidden mobile-search-button`}>
             <Button
               onClick={() => {
                 const slider = document.getElementById('mobile-search-slider');
@@ -374,10 +374,18 @@ export default function Chat() {
         
         <div 
           id="mobile-search-slider" 
-          className="fixed inset-x-0 bottom-0 transform translate-y-full transition-transform duration-300 ease-in-out md:hidden z-50"
+          className={`fixed transition-transform duration-300 ease-in-out md:hidden z-50 ${
+            orientation === 'landscape' 
+              ? 'inset-y-0 right-0 w-2/5 transform translate-x-full' 
+              : 'inset-x-0 bottom-0 transform translate-y-full'
+          }`}
           style={{ display: searchResults && searchResults.length > 0 ? 'block' : 'none' }}
         >
-          <div className="bg-blue-50 border-t border-blue-200 rounded-t-xl overflow-y-auto" style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
+          <div className={`bg-blue-50 overflow-y-auto ${
+            orientation === 'landscape' 
+              ? 'h-full border-l border-blue-200' 
+              : 'border-t border-blue-200 rounded-t-xl'
+          }`} style={{ maxHeight: orientation === 'landscape' ? '100vh' : '70vh' }}>
             <div className="p-3 border-b border-blue-200 flex justify-between items-center bg-blue-100 sticky top-0">
               <h3 className="font-semibold text-blue-800">検索結果</h3>
               <Button
